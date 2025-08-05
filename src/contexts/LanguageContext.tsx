@@ -1,0 +1,230 @@
+
+import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback, useMemo } from 'react';
+import { contactTranslations } from '@/utils/translations';
+import { myJourneysTranslations, rewardsTranslations } from '@/utils/myJourneysTranslations';
+import { adminTranslations } from '@/utils/adminTranslations';
+import { profileTranslations } from '@/utils/profileTranslations';
+import { supabase } from '@/integrations/supabase/client';
+
+export type Language = 'fr' | 'en' | 'de';
+
+interface LanguageContextType {
+  language: Language;
+  currentLanguage: Language;
+  setLanguage: (lang: Language) => void;
+  t: (key: string, params?: Record<string, string | number>) => string;
+  isLoading: boolean;
+  refreshTranslations: () => Promise<void>;
+}
+
+const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
+
+interface LanguageProviderProps {
+  children: ReactNode;
+}
+
+// Create a type for our cached translations
+interface TranslationsCache {
+  [key: string]: {
+    [lang: string]: string;
+  };
+}
+
+export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) => {
+  // Simplified state management - no loading state to avoid render loops
+  const [language, setLanguageState] = useState<Language>(() => {
+    try {
+      const savedLanguage = localStorage.getItem('preferredLanguage');
+      return (savedLanguage as Language) || 'fr';
+    } catch (error) {
+      console.warn('Failed to read language from localStorage:', error);
+      return 'fr';
+    }
+  });
+
+  // Simple translations cache with no complex loading logic
+  const [dbTranslations, setDbTranslations] = useState<TranslationsCache>({});
+  const [isLoading, setIsLoading] = useState(false);
+
+  // Simplified fetch function with minimal logging
+  const fetchTranslations = useCallback(async () => {
+    try {
+      const { data, error } = await supabase
+        .from('ui_translations')
+        .select('key, language, value');
+      
+      if (error) {
+        console.error('[LanguageContext] Database error:', error);
+        return;
+      }
+      
+      if (data) {
+        const translations: TranslationsCache = {};
+        data.forEach(item => {
+          if (!translations[item.key]) {
+            translations[item.key] = {};
+          }
+          translations[item.key][item.language] = item.value;
+        });
+        setDbTranslations(translations);
+      }
+    } catch (error) {
+      console.error('[LanguageContext] Translation fetch error:', error);
+    }
+  }, []);
+
+  // One-time initialization only
+  useEffect(() => {
+    fetchTranslations();
+  }, []); // No dependencies to prevent loops
+
+  // Simplified language setter
+  const setLanguage = useCallback((lang: Language) => {
+    setLanguageState(lang);
+    try {
+      localStorage.setItem('preferredLanguage', lang);
+    } catch (error) {
+      console.warn('Failed to save language:', error);
+    }
+  }, [language]);
+
+  // Simplified refresh function
+  const refreshTranslations = useCallback(async () => {
+    setIsLoading(true);
+    await fetchTranslations();
+    setIsLoading(false);
+  }, [fetchTranslations]);
+
+  // Simplified translation function with minimal logging
+  const t = useCallback((key: string, params?: Record<string, string | number>): string => {
+    // Critical magic link translations with immediate fallbacks
+    const magicLinkFallbacks: Record<string, Record<string, string>> = {
+      magic_link_login: {
+        fr: "Connexion avec Magic Link",
+        en: "Magic Link Login", 
+        de: "Magic Link Anmeldung"
+      },
+      magic_link_instruction: {
+        fr: "Entrez votre adresse email et nous vous enverrons un lien magique pour vous connecter automatiquement. Vous pourrez ensuite changer votre mot de passe dans l'espace de votre Profile.",
+        en: "Enter your email address and we'll send you a Magic Link to log in automatically. You can then change your password in your Profile area.",
+        de: "Geben Sie Ihre E-Mail-Adresse ein und wir senden Ihnen einen Magic Link zum automatischen Anmelden. Sie können dann Ihr Passwort in Ihrem Profil-Bereich ändern."
+      },
+      send_magic_link: {
+        fr: "Envoyer le lien magique",
+        en: "Send Magic Link",
+        de: "Magic Link senden"
+      },
+      email_address: {
+        fr: "Adresse email",
+        en: "Email address", 
+        de: "E-Mail-Adresse"
+      }
+    };
+    
+    // Helper function to process parameters
+    const processParams = (translation: string, params?: Record<string, string | number>): string => {
+      if (!params) return translation;
+      let result = translation;
+      Object.entries(params).forEach(([paramKey, value]) => {
+        result = result.replace(new RegExp(`\\{\\{${paramKey}\\}\\}`, 'g'), String(value));
+        result = result.replace(new RegExp(`\\{${paramKey}\\}`, 'g'), String(value));
+      });
+      return result;
+    };
+
+    // Priority 1: Check if the key exists in Supabase translations
+    if (dbTranslations[key]?.[language]) {
+      return processParams(dbTranslations[key][language], params);
+    }
+    
+    // Priority 2: Fall back to French if the language-specific translation doesn't exist
+    if (dbTranslations[key]?.fr) {
+      return processParams(dbTranslations[key].fr, params);
+    }
+    
+    // Priority 2.5: Magic link fallbacks (before static files)
+    if (magicLinkFallbacks[key]) {
+      const fallbackTranslation = magicLinkFallbacks[key][language] || magicLinkFallbacks[key].fr;
+      return processParams(fallbackTranslation, params);
+    }
+    
+    // Priority 3: Check static translation files
+    // First check contact translations
+    const contactTranslation = contactTranslations[key as keyof typeof contactTranslations];
+    if (contactTranslation) {
+      // Handle both flat and nested translation structures
+      if (typeof contactTranslation === 'object' && contactTranslation !== null) {
+        // Check if it's a direct language object (has 'fr' property)
+        if ('fr' in contactTranslation && typeof contactTranslation.fr === 'string') {
+          return (contactTranslation as any)[language] || contactTranslation.fr || key;
+        }
+      }
+    }
+
+    // Then check myJourneys and rewards translations
+    const myJourneysTranslation = myJourneysTranslations[language]?.[key];
+    if (myJourneysTranslation) {
+      return processParams(myJourneysTranslation, params);
+    }
+
+    const rewardsTranslation = rewardsTranslations[language]?.[key];
+    if (rewardsTranslation) {
+      return processParams(rewardsTranslation, params);
+    }
+
+    // Check admin translations
+    const adminTranslation = adminTranslations[key as keyof typeof adminTranslations];
+    if (adminTranslation) {
+      return adminTranslation[language] || adminTranslation.fr || key;
+    }
+
+    // Check profile translations
+    const profileTranslation = profileTranslations[language]?.[key];
+    if (profileTranslation) {
+      return processParams(profileTranslation, params);
+    }
+
+    // Priority 4: Check for dotted key paths in static translations
+    const keys = key.split('.');
+    let staticValue: any = contactTranslations;
+    for (const k of keys) {
+      staticValue = staticValue?.[k];
+      if (!staticValue) break;
+    }
+    
+    if (staticValue && typeof staticValue === 'object' && staticValue[language]) {
+      return staticValue[language];
+    }
+    
+    if (staticValue && typeof staticValue === 'object' && staticValue['fr']) {
+      return staticValue['fr'];
+    }
+    
+    // Final fallback: return the key itself if no translation is found
+    return key;
+  }, [language, dbTranslations]);
+
+  // Memoized context value to prevent unnecessary re-renders
+  const contextValue = useMemo(() => ({
+    language, 
+    currentLanguage: language,
+    setLanguage, 
+    t,
+    isLoading,
+    refreshTranslations
+  }), [language, setLanguage, t, isLoading, refreshTranslations]);
+
+  return (
+    <LanguageContext.Provider value={contextValue}>
+      {children}
+    </LanguageContext.Provider>
+  );
+};
+
+export const useLanguage = (): LanguageContextType => {
+  const context = useContext(LanguageContext);
+  if (context === undefined) {
+    throw new Error('useLanguage must be used within a LanguageProvider');
+  }
+  return context;
+};

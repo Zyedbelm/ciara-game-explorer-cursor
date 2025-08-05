@@ -1,0 +1,298 @@
+import { useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
+import { StepFormData } from '@/components/admin/StepForm';
+
+interface Step {
+  id: string;
+  name: string;
+  description: string;
+  type: string;
+  latitude: number;
+  longitude: number;
+  address?: string;
+  points_awarded: number;
+  validation_radius: number;
+  has_quiz: boolean;
+  images?: string[];
+  is_active: boolean;
+  city_id: string;
+  created_at: string;
+  updated_at: string;
+  city_name?: string;
+  journey_name?: string;
+}
+
+interface City {
+  id: string;
+  name: string;
+  slug: string;
+}
+
+interface Journey {
+  id: string;
+  name: string;
+  city_id: string;
+}
+
+export const useStepsManagement = (cityId?: string) => {
+  const [steps, setSteps] = useState<Step[]>([]);
+  const [cities, setCities] = useState<City[]>([]);
+  const [journeys, setJourneys] = useState<Journey[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+  const { toast } = useToast();
+
+  const fetchCities = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('cities')
+        .select('id, name, slug')
+        .eq('is_active', true)
+        .order('name');
+
+      if (error) throw error;
+      setCities(data || []);
+    } catch (error) {
+      console.error('Error fetching cities:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de charger les villes",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const fetchJourneys = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('journeys')
+        .select('id, name, city_id')
+        .eq('is_active', true)
+        .order('name');
+
+      if (error) throw error;
+      setJourneys(data || []);
+    } catch (error) {
+      console.error('Error fetching journeys:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de charger les parcours",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const updateJourneyMetadata = async (journeyId: string) => {
+    try {
+      // Récupérer toutes les étapes du parcours
+      const { data: journeySteps, error: stepsError } = await supabase
+        .from('steps')
+        .select('id, points_awarded')
+        .eq('journey_id', journeyId)
+        .eq('is_active', true);
+
+      if (stepsError) throw stepsError;
+
+      // Calculer les métadonnées
+      const totalSteps = journeySteps?.length || 0;
+      const totalPoints = journeySteps?.reduce((sum, step) => sum + (step.points_awarded || 0), 0) || 0;
+
+      // Mettre à jour le parcours
+      const { error: updateError } = await supabase
+        .from('journeys')
+        .update({
+          total_steps: totalSteps,
+          total_points: totalPoints,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', journeyId);
+
+      if (updateError) throw updateError;
+
+      console.log(`✅ Journey metadata updated: ${totalSteps} steps, ${totalPoints} points`);
+    } catch (error) {
+      console.error('Error updating journey metadata:', error);
+    }
+  };
+
+  const fetchSteps = async () => {
+    setLoading(true);
+    try {
+      let query = supabase
+        .from('steps')
+        .select(`
+          *,
+          cities!inner(name),
+          journeys(name)
+        `)
+        .order('created_at', { ascending: false });
+
+      if (cityId) {
+        query = query.eq('city_id', cityId);
+      }
+
+      const { data, error } = await query;
+
+      if (error) throw error;
+
+      const formattedSteps: Step[] = (data || []).map(step => ({
+        ...step,
+        city_name: step.cities?.name,
+        journey_name: step.journeys?.name
+      }));
+
+      setSteps(formattedSteps);
+    } catch (error) {
+      console.error('Error fetching steps:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de charger les étapes",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const createStep = async (data: StepFormData) => {
+    setSubmitting(true);
+    try {
+      const stepData = {
+        ...data,
+        journey_id: data.journey_id || null,
+        images: data.images || []
+      };
+
+      const { error } = await supabase
+        .from('steps')
+        .insert([stepData]);
+
+      if (error) throw error;
+
+      toast({
+        title: "Succès",
+        description: "Étape créée avec succès",
+      });
+
+      // Mettre à jour les métadonnées du parcours si applicable
+      if (data.journey_id) {
+        await updateJourneyMetadata(data.journey_id);
+      }
+
+      await fetchSteps();
+      return { error: null };
+    } catch (error) {
+      console.error('Error creating step:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de créer l'étape",
+        variant: "destructive",
+      });
+      return { error };
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const updateStep = async (stepId: string, data: StepFormData) => {
+    setSubmitting(true);
+    try {
+      const stepData = {
+        ...data,
+        journey_id: data.journey_id || null,
+        images: data.images || []
+      };
+
+      const { error } = await supabase
+        .from('steps')
+        .update(stepData)
+        .eq('id', stepId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Succès",
+        description: "Étape modifiée avec succès",
+      });
+
+      // Mettre à jour les métadonnées du parcours si applicable
+      if (data.journey_id) {
+        await updateJourneyMetadata(data.journey_id);
+      }
+
+      await fetchSteps();
+      return { error: null };
+    } catch (error) {
+      console.error('Error updating step:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de modifier l'étape",
+        variant: "destructive",
+      });
+      return { error };
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const deleteStep = async (stepId: string) => {
+    try {
+      // Récupérer l'étape pour connaître son parcours
+      const { data: step, error: fetchError } = await supabase
+        .from('steps')
+        .select('journey_id')
+        .eq('id', stepId)
+        .single();
+
+      if (fetchError) throw fetchError;
+
+      // Supprimer l'étape
+      const { error } = await supabase
+        .from('steps')
+        .delete()
+        .eq('id', stepId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Succès",
+        description: "Étape supprimée avec succès",
+      });
+
+      // Mettre à jour les métadonnées du parcours si applicable
+      if (step?.journey_id) {
+        await updateJourneyMetadata(step.journey_id);
+      }
+
+      await fetchSteps();
+      return { error: null };
+    } catch (error) {
+      console.error('Error deleting step:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de supprimer l'étape",
+        variant: "destructive",
+      });
+      return { error };
+    }
+  };
+
+  useEffect(() => {
+    fetchCities();
+    fetchJourneys();
+    fetchSteps();
+  }, [cityId]);
+
+  return {
+    steps,
+    cities,
+    journeys,
+    loading,
+    submitting,
+    createStep,
+    updateStep,
+    deleteStep,
+    fetchSteps
+  };
+}; 

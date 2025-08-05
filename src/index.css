@@ -1,0 +1,317 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
+All colors MUST be HSL.
+*/
+
+@layer base {
+  :root {
+    /* CIARA Tourism Design System */
+    
+    /* Core Colors - Inspired by Swiss Alpine Beauty */
+    --background: 0 0% 100%;
+    --foreground: 215 25% 15%;
+    --card: 0 0% 100%;
+    --card-foreground: 215 25% 15%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 215 25% 15%;
+    
+    /* Primary - Alpine Rose */
+    --primary: 345 82% 55%;
+    --primary-foreground: 0 0% 98%;
+    --primary-light: 345 82% 70%;
+    --primary-dark: 345 82% 40%;
+    
+    /* Secondary - Mountain Gold */
+    --secondary: 43 96% 56%;
+    --secondary-foreground: 30 25% 15%;
+    --secondary-light: 43 96% 70%;
+    --secondary-dark: 43 96% 40%;
+    
+    /* Accent - Sky Blue */
+    --accent: 200 95% 60%;
+    --accent-foreground: 0 0% 98%;
+    --accent-light: 200 95% 75%;
+    --accent-dark: 200 95% 45%;
+    
+    /* Nature Green */
+    --nature: 142 76% 36%;
+    --nature-foreground: 0 0% 98%;
+    --nature-light: 142 76% 50%;
+    --nature-dark: 142 76% 25%;
+    
+    /* Neutral System */
+    --muted: 215 15% 96%;
+    --muted-foreground: 215 10% 45%;
+    --border: 215 15% 88%;
+    --input: 215 15% 92%;
+    --ring: 345 82% 55%;
+    
+    /* Status Colors */
+    --success: 142 76% 36%;
+    --success-foreground: 0 0% 98%;
+    --warning: 43 96% 56%;
+    --warning-foreground: 30 25% 15%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 98%;
+    
+    /* Special Effects */
+    --gradient-primary: linear-gradient(135deg, hsl(345 82% 55%), hsl(345 82% 70%));
+    --gradient-secondary: linear-gradient(135deg, hsl(43 96% 56%), hsl(43 96% 70%));
+    --gradient-nature: linear-gradient(135deg, hsl(142 76% 36%), hsl(142 76% 50%));
+    --gradient-sky: linear-gradient(135deg, hsl(200 95% 60%), hsl(200 95% 75%));
+    --gradient-alpine: linear-gradient(135deg, hsl(345 82% 55%), hsl(43 96% 56%));
+    
+    /* Shadows */
+    --shadow-sm: 0 1px 3px 0 hsl(215 25% 15% / 0.1);
+    --shadow-md: 0 4px 15px 0 hsl(215 25% 15% / 0.1);
+    --shadow-lg: 0 10px 40px 0 hsl(215 25% 15% / 0.15);
+    --shadow-glow: 0 0 30px hsl(345 82% 55% / 0.3);
+    
+    /* Animations */
+    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-bounce: all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    
+    /* Typography */
+    --font-display: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    
+    /* Spacing */
+    --radius: 1rem;
+    --radius-sm: 0.5rem;
+    --radius-lg: 1.5rem;
+    
+    /* Charts */
+    --chart-1: 345 82% 55%;
+    --chart-2: 43 96% 56%;
+    --chart-3: 200 95% 60%;
+    --chart-4: 142 76% 36%;
+    --chart-5: 280 65% 60%;
+    
+    /* Sidebar */
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 215 25% 15%;
+    --sidebar-primary: 345 82% 55%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 215 15% 94%;
+    --sidebar-accent-foreground: 215 25% 15%;
+    --sidebar-border: 215 15% 88%;
+    --sidebar-ring: 345 82% 55%;
+  }
+
+  .dark {
+    /* Dark Mode - Alpine Night Theme */
+    --background: 215 30% 8%;
+    --foreground: 0 0% 95%;
+    --card: 215 25% 10%;
+    --card-foreground: 0 0% 95%;
+    --popover: 215 25% 10%;
+    --popover-foreground: 0 0% 95%;
+    
+    /* Primary - Bright Alpine Rose */
+    --primary: 345 82% 65%;
+    --primary-foreground: 215 30% 8%;
+    --primary-light: 345 82% 75%;
+    --primary-dark: 345 82% 50%;
+    
+    /* Secondary - Bright Mountain Gold */
+    --secondary: 43 96% 65%;
+    --secondary-foreground: 215 30% 8%;
+    --secondary-light: 43 96% 75%;
+    --secondary-dark: 43 96% 50%;
+    
+    /* Accent - Bright Sky Blue */
+    --accent: 200 95% 70%;
+    --accent-foreground: 215 30% 8%;
+    --accent-light: 200 95% 80%;
+    --accent-dark: 200 95% 55%;
+    
+    /* Nature Green */
+    --nature: 142 76% 45%;
+    --nature-foreground: 215 30% 8%;
+    --nature-light: 142 76% 55%;
+    --nature-dark: 142 76% 35%;
+    
+    /* Neutral System */
+    --muted: 215 20% 15%;
+    --muted-foreground: 215 10% 65%;
+    --border: 215 20% 20%;
+    --input: 215 20% 18%;
+    --ring: 345 82% 65%;
+    
+    /* Status Colors */
+    --success: 142 76% 45%;
+    --success-foreground: 215 30% 8%;
+    --warning: 43 96% 65%;
+    --warning-foreground: 215 30% 8%;
+    --destructive: 0 84% 65%;
+    --destructive-foreground: 215 30% 8%;
+    
+    /* Shadows for dark mode */
+    --shadow-sm: 0 1px 3px 0 hsl(0 0% 0% / 0.3);
+    --shadow-md: 0 4px 15px 0 hsl(0 0% 0% / 0.3);
+    --shadow-lg: 0 10px 40px 0 hsl(0 0% 0% / 0.4);
+    --shadow-glow: 0 0 30px hsl(345 82% 65% / 0.4);
+    
+    /* Sidebar Dark */
+    --sidebar-background: 215 25% 10%;
+    --sidebar-foreground: 0 0% 95%;
+    --sidebar-primary: 345 82% 65%;
+    --sidebar-primary-foreground: 215 30% 8%;
+    --sidebar-accent: 215 20% 15%;
+    --sidebar-accent-foreground: 0 0% 95%;
+    --sidebar-border: 215 20% 20%;
+    --sidebar-ring: 345 82% 65%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+@layer components {
+  /* Boutons avec animations et effets visuels */
+  .btn {
+    @apply cursor-pointer transition-all duration-300 ease-in-out transform hover:scale-105 active:scale-95;
+  }
+
+  /* Effet de main sur les éléments cliquables */
+  .clickable {
+    @apply cursor-pointer transition-all duration-200 ease-in-out;
+  }
+
+  /* Animations pour les boutons de navigation */
+  .nav-btn {
+    @apply relative overflow-hidden transition-all duration-300 ease-in-out;
+  }
+
+  .nav-btn::before {
+    content: '';
+    @apply absolute inset-0 bg-gradient-to-r from-primary/20 to-secondary/20 opacity-0 transition-opacity duration-300 ease-in-out;
+  }
+
+  .nav-btn:hover::before {
+    @apply opacity-100;
+  }
+
+  /* Effet de glow sur les boutons primaires */
+  .btn-primary-glow {
+    @apply relative overflow-hidden transition-all duration-300 ease-in-out hover:shadow-lg hover:shadow-primary/25;
+  }
+
+  .btn-primary-glow::after {
+    content: '';
+    @apply absolute inset-0 bg-gradient-to-r from-primary/0 via-primary/10 to-primary/0 opacity-0 transition-opacity duration-500 ease-in-out;
+    transform: translateX(-100%);
+  }
+
+  .btn-primary-glow:hover::after {
+    @apply opacity-100;
+    transform: translateX(100%);
+  }
+
+  /* Animations pour les cartes */
+  .card-hover {
+    @apply transition-all duration-300 ease-in-out hover:shadow-lg hover:-translate-y-1;
+  }
+
+  /* Effet de pulsation pour les éléments importants */
+  .pulse-glow {
+    animation: pulse-glow 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+
+  @keyframes pulse-glow {
+    0%, 100% {
+      opacity: 1;
+      transform: scale(1);
+      box-shadow: 0 0 0 0 hsl(var(--primary) / 0.3);
+    }
+    50% {
+      opacity: 0.95;
+      transform: scale(1.02);
+      box-shadow: 0 0 0 6px hsl(var(--primary) / 0);
+    }
+  }
+
+  /* Animations pour les liens */
+  .link-hover {
+    @apply relative transition-all duration-300 ease-in-out;
+  }
+
+  .link-hover::after {
+    content: '';
+    @apply absolute bottom-0 left-0 w-0 h-0.5 bg-primary transition-all duration-300 ease-in-out;
+  }
+
+  .link-hover:hover::after {
+    @apply w-full;
+  }
+
+  /* Effet de rebond pour les boutons */
+  .bounce-hover {
+    @apply transition-all duration-300 ease-in-out hover:scale-110 active:scale-95;
+  }
+
+  /* Gradient animé pour les boutons spéciaux */
+  .gradient-btn {
+    @apply relative overflow-hidden transition-all duration-300 ease-in-out;
+    background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--secondary)));
+    background-size: 200% 200%;
+  }
+
+  .gradient-btn:hover {
+    background-position: right center;
+    @apply shadow-lg shadow-primary/25;
+  }
+
+  /* Effet de ripple pour les boutons */
+  .ripple-btn {
+    @apply relative overflow-hidden transition-all duration-300 ease-in-out;
+  }
+
+  .ripple-btn::before {
+    content: '';
+    @apply absolute top-1/2 left-1/2 w-0 h-0 bg-white/20 rounded-full transition-all duration-500 ease-out;
+    transform: translate(-50%, -50%);
+  }
+
+  .ripple-btn:active::before {
+    @apply w-32 h-32;
+  }
+
+  /* Animation subtile pour attirer l'attention */
+  .attention-glow {
+    animation: attention-glow 4s ease-in-out infinite;
+  }
+
+  @keyframes attention-glow {
+    0%, 100% {
+      box-shadow: 0 0 0 0 hsl(var(--primary) / 0.2);
+    }
+    50% {
+      box-shadow: 0 0 0 4px hsl(var(--primary) / 0);
+    }
+  }
+
+  /* Animation de rebond subtile */
+  .gentle-bounce {
+    animation: gentle-bounce 2s ease-in-out infinite;
+  }
+
+  @keyframes gentle-bounce {
+    0%, 100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-2px);
+    }
+  }
+}
