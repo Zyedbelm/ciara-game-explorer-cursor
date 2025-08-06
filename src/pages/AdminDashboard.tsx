@@ -117,7 +117,9 @@ const AdminDashboard = () => {
   const fetchDashboardStats = async () => {
     try {
       const isSuperAdmin = profile?.role === 'super_admin';
-      const cityFilter = isSuperAdmin ? {} : { city_id: profile?.city_id };
+      
+      // Éviter les erreurs 400 en vérifiant que city_id existe
+      const cityFilter = isSuperAdmin || !profile?.city_id ? {} : { city_id: profile.city_id };
 
       const [usersResult, journeysResult, pointsResult] = await Promise.all([
         supabase.from('profiles').select('*', { count: 'exact' }).match(cityFilter),
