@@ -20,6 +20,12 @@ npm run clear:cache
 npm run dev
 ```
 
+#### Solution avec Force
+```bash
+# Si le problème persiste, utiliser le mode forcé :
+npm run dev:force
+```
+
 #### Solution Manuelle
 ```bash
 # 1. Arrêter tous les processus Vite
@@ -86,6 +92,16 @@ npm run clear:cache
 ### Démarrage Propre
 ```bash
 npm run dev:clean
+```
+
+### Démarrage Forcé
+```bash
+npm run dev:force
+```
+
+### Reset Complet
+```bash
+npm run reset:complete
 ```
 
 ### Vérification de Sécurité
