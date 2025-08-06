@@ -1,5 +1,5 @@
 
-import React, { Suspense } from "react";
+import React, { Suspense, useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -12,6 +12,8 @@ import { JourneyCardsProvider } from "@/contexts/JourneyCardsContext";
 import ErrorBoundary from "@/components/common/ErrorBoundary";
 import AuthGuard from "@/components/auth/AuthGuard";
 import LoadingSpinner from "@/components/common/LoadingSpinner";
+import { websocketService } from "@/services/websocketStabilizationService";
+import { resilientService } from "@/services/supabaseResilientService";
 
 // Lazy load pages for better performance  
 const LandingPage = React.lazy(() => import("./pages/OptimizedLandingPage"));
@@ -70,7 +72,43 @@ const queryClient = new QueryClient({
 });
 
 function App() {
-  
+  // Initialiser les services de résilience
+  useEffect(() => {
+    console.log('🚀 Initializing resilient services...');
+    
+    // Écouter les événements WebSocket pour le debug
+    websocketService.addEventListener('connected', () => {
+      console.log('✅ WebSocket stabilized');
+    });
+    
+    websocketService.addEventListener('disconnected', () => {
+      console.log('⚠️ WebSocket disconnected, attempting reconnection...');
+    });
+    
+    websocketService.addEventListener('error', (error) => {
+      console.error('❌ WebSocket error:', error);
+    });
+    
+    // Log des statistiques périodiquement
+    const statsInterval = setInterval(() => {
+      const stats = resilientService.getStats();
+      const wsStatus = websocketService.getConnectionStatus();
+      
+      if (stats.cacheSize > 0 || stats.activeRequests > 0 || !wsStatus.isConnected) {
+        console.log('📊 Resilient Service Stats:', {
+          cacheSize: stats.cacheSize,
+          activeRequests: stats.activeRequests,
+          circuitBreakers: stats.circuitBreakers.filter(cb => cb.isOpen).length,
+          wsConnected: wsStatus.isConnected,
+          wsReconnectAttempts: wsStatus.reconnectAttempts
+        });
+      }
+    }, 30000); // Toutes les 30 secondes
+    
+    return () => {
+      clearInterval(statsInterval);
+    };
+  }, []);
   
   return (
     <ErrorBoundary>

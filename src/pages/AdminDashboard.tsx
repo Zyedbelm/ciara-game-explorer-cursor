@@ -4,6 +4,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useAdminTranslation } from '@/utils/adminTranslations';
 import { useRecentActivity } from '@/hooks/useRecentActivity';
 import { supabase } from '@/integrations/supabase/client';
+import { useAdminResilientData } from '@/hooks/useResilientSupabase';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -57,6 +58,7 @@ const AdminDashboard = () => {
   const { toast } = useToast();
   const t = useAdminTranslation();
   const { activities, loading: activitiesLoading, getTimeAgo, getActivityColor } = useRecentActivity();
+  const { getProfilesWithFilters, getJourneysWithFilters } = useAdminResilientData();
   const [stats, setStats] = useState<DashboardStats>({
     totalUsers: 0,
     totalJourneys: 0,
@@ -116,24 +118,19 @@ const AdminDashboard = () => {
 
   const fetchDashboardStats = async () => {
     try {
-      const isSuperAdmin = profile?.role === 'super_admin';
-      
-      // Éviter les erreurs 400 en vérifiant que city_id existe
-      const cityFilter = isSuperAdmin || !profile?.city_id ? {} : { city_id: profile.city_id };
-
       const [usersResult, journeysResult, pointsResult] = await Promise.all([
-        supabase.from('profiles').select('*', { count: 'exact' }).match(cityFilter),
-        supabase.from('journeys').select('*', { count: 'exact' }).match(cityFilter),
-        supabase.from('profiles').select('total_points').match(cityFilter)
+        getProfilesWithFilters(),
+        getJourneysWithFilters(),
+        getProfilesWithFilters() // Pour les points
       ]);
 
-      const totalPoints = pointsResult.data?.reduce((sum, profile) => sum + (profile.total_points || 0), 0) || 0;
+      const totalPoints = (pointsResult.data as any[])?.reduce((sum, profile) => sum + (profile.total_points || 0), 0) || 0;
 
       setStats({
-        totalUsers: usersResult.count || 0,
-        totalJourneys: journeysResult.count || 0,
+        totalUsers: (usersResult.data as any[])?.length || 0,
+        totalJourneys: (journeysResult.data as any[])?.length || 0,
         totalPoints,
-        activeUsers: Math.floor((usersResult.count || 0) * 0.3)
+        activeUsers: Math.floor(((usersResult.data as any[])?.length || 0) * 0.3)
       });
     } catch (error) {
       toast({
