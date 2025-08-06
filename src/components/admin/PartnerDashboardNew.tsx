@@ -5,6 +5,11 @@ import { Progress } from '@/components/ui/progress';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Switch } from '@/components/ui/switch';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -41,6 +46,7 @@ interface RedemptionData {
 interface OfferData {
   id: string;
   title: string;
+  description?: string;
   points_required: number;
   value_chf: number;
   is_active: boolean;
@@ -65,6 +71,18 @@ const PartnerDashboardNew: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('dashboard');
   const [activeSubTab, setActiveSubTab] = useState('overview');
+  
+  // États pour les modales et formulaires
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingOffer, setEditingOffer] = useState<OfferData | null>(null);
+  const [formData, setFormData] = useState({
+    title: '',
+    description: '',
+    points_required: 0,
+    value_chf: 0,
+    is_active: true
+  });
 
   // Récupérer les données du partenaire
   useEffect(() => {
@@ -288,6 +306,127 @@ const PartnerDashboardNew: React.FC = () => {
       style: 'currency',
       currency: 'CHF'
     }).format(amount);
+  };
+
+  // Fonctions pour gérer les offres
+  const handleCreateOffer = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('rewards')
+        .insert({
+          title: formData.title,
+          description: formData.description,
+          points_required: formData.points_required,
+          value_chf: formData.value_chf,
+          is_active: formData.is_active,
+          partner_id: (profile as any).partner_id
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      toast({
+        title: "Succès",
+        description: "Offre créée avec succès",
+        variant: "default",
+      });
+
+      setShowCreateModal(false);
+      setFormData({ title: '', description: '', points_required: 0, value_chf: 0, is_active: true });
+      
+      // Recharger les données
+      window.location.reload();
+    } catch (error) {
+      console.error('Erreur création offre:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de créer l'offre",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleEditOffer = async () => {
+    if (!editingOffer) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('rewards')
+        .update({
+          title: formData.title,
+          description: formData.description,
+          points_required: formData.points_required,
+          value_chf: formData.value_chf,
+          is_active: formData.is_active
+        })
+        .eq('id', editingOffer.id)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      toast({
+        title: "Succès",
+        description: "Offre modifiée avec succès",
+        variant: "default",
+      });
+
+      setShowEditModal(false);
+      setEditingOffer(null);
+      setFormData({ title: '', description: '', points_required: 0, value_chf: 0, is_active: true });
+      
+      // Recharger les données
+      window.location.reload();
+    } catch (error) {
+      console.error('Erreur modification offre:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de modifier l'offre",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDeleteOffer = async (offerId: string, offerTitle: string) => {
+    if (!confirm(`Êtes-vous sûr de vouloir supprimer l'offre "${offerTitle}" ?`)) return;
+
+    try {
+      const { error } = await supabase
+        .from('rewards')
+        .delete()
+        .eq('id', offerId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Succès",
+        description: `Offre "${offerTitle}" supprimée`,
+        variant: "default",
+      });
+      
+      // Recharger les données
+      window.location.reload();
+    } catch (error) {
+      console.error('Erreur suppression offre:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de supprimer l'offre",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const openEditModal = (offer: OfferData) => {
+    setEditingOffer(offer);
+    setFormData({
+      title: offer.title,
+      description: offer.description || '',
+      points_required: offer.points_required,
+      value_chf: offer.value_chf,
+      is_active: offer.is_active
+    });
+    setShowEditModal(true);
   };
 
   if (loading) {
@@ -574,15 +713,7 @@ const PartnerDashboardNew: React.FC = () => {
             <CardContent>
               <div className="flex justify-between items-center mb-4">
                 <h3 className="text-lg font-medium">Vos Offres</h3>
-                <Button onClick={() => {
-                  // TODO: Implémenter la création d'offre
-                  console.log('Créer nouvelle offre pour partenaire:', (profile as any).partner_id);
-                  toast({
-                    title: "Création d'offre",
-                    description: "Redirection vers le formulaire de création...",
-                    variant: "default",
-                  });
-                }}>
+                <Button onClick={() => setShowCreateModal(true)}>
                   Nouvelle Offre
                 </Button>
               </div>
@@ -616,15 +747,7 @@ const PartnerDashboardNew: React.FC = () => {
                             variant="outline" 
                             size="sm" 
                             className="p-2"
-                            onClick={() => {
-                              console.log('Modifier offre:', offer.id, offer.title);
-                              toast({
-                                title: "Modification",
-                                description: `Modifier l'offre: ${offer.title}`,
-                                variant: "default",
-                              });
-                              // TODO: Ouvrir modal de modification
-                            }}
+                            onClick={() => openEditModal(offer)}
                           >
                             <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -634,17 +757,7 @@ const PartnerDashboardNew: React.FC = () => {
                             variant="outline" 
                             size="sm" 
                             className="p-2"
-                            onClick={() => {
-                              console.log('Supprimer offre:', offer.id, offer.title);
-                              if (confirm(`Êtes-vous sûr de vouloir supprimer l'offre "${offer.title}" ?`)) {
-                                toast({
-                                  title: "Suppression",
-                                  description: `Offre "${offer.title}" supprimée`,
-                                  variant: "destructive",
-                                });
-                                // TODO: Appel API pour supprimer
-                              }
-                            }}
+                            onClick={() => handleDeleteOffer(offer.id, offer.title)}
                           >
                             <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -660,6 +773,138 @@ const PartnerDashboardNew: React.FC = () => {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Modal de création d'offre */}
+      <Dialog open={showCreateModal} onOpenChange={setShowCreateModal}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Créer une nouvelle offre</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label htmlFor="title">Titre</Label>
+              <Input
+                id="title"
+                value={formData.title}
+                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                placeholder="Titre de l'offre"
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="description">Description</Label>
+              <Textarea
+                id="description"
+                value={formData.description}
+                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                placeholder="Description de l'offre"
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="points">Points requis</Label>
+              <Input
+                id="points"
+                type="number"
+                value={formData.points_required}
+                onChange={(e) => setFormData({ ...formData, points_required: parseInt(e.target.value) || 0 })}
+                placeholder="0"
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="value">Valeur CHF</Label>
+              <Input
+                id="value"
+                type="number"
+                step="0.01"
+                value={formData.value_chf}
+                onChange={(e) => setFormData({ ...formData, value_chf: parseFloat(e.target.value) || 0 })}
+                placeholder="0.00"
+              />
+            </div>
+            <div className="flex items-center space-x-2">
+              <Switch
+                id="active"
+                checked={formData.is_active}
+                onCheckedChange={(checked) => setFormData({ ...formData, is_active: checked })}
+              />
+              <Label htmlFor="active">Offre active</Label>
+            </div>
+          </div>
+          <div className="flex justify-end space-x-2">
+            <Button variant="outline" onClick={() => setShowCreateModal(false)}>
+              Annuler
+            </Button>
+            <Button onClick={handleCreateOffer}>
+              Créer
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal de modification d'offre */}
+      <Dialog open={showEditModal} onOpenChange={setShowEditModal}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Modifier l'offre</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label htmlFor="edit-title">Titre</Label>
+              <Input
+                id="edit-title"
+                value={formData.title}
+                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                placeholder="Titre de l'offre"
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="edit-description">Description</Label>
+              <Textarea
+                id="edit-description"
+                value={formData.description}
+                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                placeholder="Description de l'offre"
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="edit-points">Points requis</Label>
+              <Input
+                id="edit-points"
+                type="number"
+                value={formData.points_required}
+                onChange={(e) => setFormData({ ...formData, points_required: parseInt(e.target.value) || 0 })}
+                placeholder="0"
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="edit-value">Valeur CHF</Label>
+              <Input
+                id="edit-value"
+                type="number"
+                step="0.01"
+                value={formData.value_chf}
+                onChange={(e) => setFormData({ ...formData, value_chf: parseFloat(e.target.value) || 0 })}
+                placeholder="0.00"
+              />
+            </div>
+            <div className="flex items-center space-x-2">
+              <Switch
+                id="edit-active"
+                checked={formData.is_active}
+                onCheckedChange={(checked) => setFormData({ ...formData, is_active: checked })}
+              />
+              <Label htmlFor="edit-active">Offre active</Label>
+            </div>
+          </div>
+          <div className="flex justify-end space-x-2">
+            <Button variant="outline" onClick={() => setShowEditModal(false)}>
+              Annuler
+            </Button>
+            <Button onClick={handleEditOffer}>
+              Modifier
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
