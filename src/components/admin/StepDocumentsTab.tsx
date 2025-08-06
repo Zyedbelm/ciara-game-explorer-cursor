@@ -78,12 +78,13 @@ interface DocumentType {
   is_active: boolean;
   created_at: string;
   step_id?: string;
-  city_id: string;
+  city_id?: string;
+  [key: string]: any; // Pour gérer les propriétés supplémentaires
 }
 
 interface StepDocumentsTabProps {
   stepId?: string;
-  cityId: string;
+  cityId?: string;
 }
 
 export function StepDocumentsTab({ stepId, cityId }: StepDocumentsTabProps) {
@@ -113,10 +114,15 @@ export function StepDocumentsTab({ stepId, cityId }: StepDocumentsTabProps) {
     try {
       let query = supabase
         .from('content_documents')
-        .select('*')
-        .eq('city_id', cityId);
+        .select('*');
 
-      if (stepId) {
+      // Ne filtrer par city_id que si cityId n'est pas vide
+      if (cityId && cityId.trim() !== '') {
+        query = query.eq('city_id', cityId);
+      }
+
+      // Ne filtrer par step_id que si stepId n'est pas vide
+      if (stepId && stepId.trim() !== '') {
         query = query.eq('step_id', stepId);
       }
 
@@ -230,8 +236,8 @@ export function StepDocumentsTab({ stepId, cityId }: StepDocumentsTabProps) {
         file_name: fileName || null,
         file_size: fileSize || null,
         mime_type: mimeType || null,
-        city_id: cityId,
-        step_id: stepId || null,
+        city_id: cityId && cityId.trim() !== '' ? cityId : null,
+        step_id: stepId && stepId.trim() !== '' ? stepId : null,
         is_active: true,
       };
 

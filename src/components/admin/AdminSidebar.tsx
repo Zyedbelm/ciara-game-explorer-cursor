@@ -33,6 +33,7 @@ interface AdminSidebarProps {
   canViewAnalytics: () => boolean;
   isSuperAdmin: () => boolean;
   isTenantAdmin: () => boolean;
+  isPartner: () => boolean;
   cityName?: string | null;
 }
 
@@ -52,6 +53,7 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({
   canViewAnalytics,
   isSuperAdmin,
   isTenantAdmin,
+  isPartner,
   cityName
 }) => {
   const [openGroups, setOpenGroups] = React.useState<Set<string>>(new Set(['main', 'management']));
@@ -113,28 +115,26 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({
           label: 'Articles de blog',
           icon: FileText,
         }] : []),
-        {
+        ...(isPartner() ? [{
           id: 'reward-offers',
           label: 'Gestion des offres Récompenses',
           icon: Trophy,
-        },
-        {
+        }] : [{
+          id: 'reward-offers',
+          label: 'Gestion des offres Récompenses',
+          icon: Trophy,
+        }]),
+        ...(isPartner() ? [] : [{
           id: 'partners',
           label: 'Gestion des Partenaires',
           icon: Building,
-        },
+        }]),
         ...(isSuperAdmin() ? [{
           id: 'partner-links',
           label: 'Liens Partenaires',
           icon: Link,
           badge: 'Super Admin'
         }] : []),
-        {
-          id: 'partner-dashboard',
-          label: 'Tableau de bord Partenaire',
-          icon: Building,
-          badge: 'Analytics'
-        }
       ].filter(Boolean)
     },
     ...(canViewAnalytics() ? [{

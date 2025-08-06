@@ -19,6 +19,7 @@ import { SystemHealthMonitor } from '@/components/admin/SystemHealthMonitor';
 import { SecurityConfigDashboard } from '@/components/admin/SecurityConfigDashboard';
 import RewardOffersManagement from '@/components/admin/RewardOffersManagement';
 import PartnersManagement from '@/components/admin/PartnersManagement';
+import PartnerDashboard from '@/components/admin/PartnerDashboard';
 import CityAssignment from '@/components/admin/CityAssignment';
 import CityManagement from '@/components/admin/CityManagement';
 import CountryManagement from '@/components/admin/CountryManagement';
@@ -32,7 +33,6 @@ import { ImplementationSummary } from '@/components/admin/ImplementationSummary'
 import { JourneyDataDebugger } from '@/components/admin/JourneyDataDebugger';
 import EmailDiagnosticDashboard from '@/components/admin/EmailDiagnosticDashboard';
 import { PartnerLinkManagement } from '@/components/admin/PartnerLinkManagement';
-import PartnerDashboard from '@/components/admin/PartnerDashboard';
 
 import {
   Users,
@@ -194,16 +194,17 @@ const AdminDashboard = () => {
   return (
     <div className="min-h-screen bg-background flex">
       {/* Sidebar Navigation */}
-      <AdminSidebar
-        activeTab={activeTab}
-        onTabChange={setActiveTab}
-        canManageUsers={canManageUsers}
-        canManageContent={canManageContent}
-        canViewAnalytics={canViewAnalytics}
-        isSuperAdmin={isSuperAdmin}
-        isTenantAdmin={isTenantAdmin}
-        cityName={cityName}
-      />
+                  <AdminSidebar
+              activeTab={activeTab}
+              onTabChange={setActiveTab}
+              canManageUsers={canManageUsers}
+              canManageContent={canManageContent}
+              canViewAnalytics={canViewAnalytics}
+              isSuperAdmin={isSuperAdmin}
+              isTenantAdmin={isTenantAdmin}
+              isPartner={isPartner}
+              cityName={cityName}
+            />
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col">
@@ -439,19 +440,13 @@ const AdminDashboard = () => {
 
               {activeTab === 'partners' && (
                 <div className="space-y-6">
-                  <PartnersManagement cityId={isTenantAdmin() ? profile?.city_id : undefined} />
+                  <PartnerDashboard />
                 </div>
               )}
 
               {activeTab === 'partner-links' && isSuperAdmin() && (
                 <div className="space-y-6">
                   <PartnerLinkManagement />
-                </div>
-              )}
-
-              {activeTab === 'partner-dashboard' && (
-                <div className="space-y-6">
-                  <PartnerDashboard />
                 </div>
               )}
 

@@ -71,7 +71,7 @@ export function useAuth() {
     let profileSubscription: any = null;
     console.log('🔧 Initializing auth state');
 
-    const handleAuthStateChange = (event: string, session: Session | null) => {
+    const handleAuthStateChange = async (event: string, session: Session | null) => {
       if (!mounted) {
         console.log('🚫 Component unmounted, ignoring auth change');
         return;
@@ -102,39 +102,35 @@ export function useAuth() {
       setUser(session?.user ?? null);
       
       if (session?.user) {
-        // Defer profile fetch to avoid blocking auth state change
-        setTimeout(async () => {
+        // Fetch profile only if we don't already have it or if user changed
+        if (!profile || profile.user_id !== session.user.id) {
+          const profileData = await fetchProfileRef.current!(session.user.id);
           if (mounted) {
-            const profileData = await fetchProfileRef.current!(session.user.id);
-            if (mounted) {
-              setProfile(profileData);
-              
-              // Set up real-time profile updates
-              if (profileSubscription) {
-                supabase.removeChannel(profileSubscription);
-              }
-              
-              profileSubscription = supabase
-                .channel('profile_updates')
-                .on(
-                  'postgres_changes',
-                  {
-                    event: 'UPDATE',
-                    schema: 'public',
-                    table: 'profiles',
-                    filter: `user_id=eq.${session.user.id}`
-                  },
-                  (payload) => {
-                    console.log('🔄 Profile updated in real-time:', payload);
-                    if (mounted && payload.new) {
-                      setProfile(payload.new as Profile);
-                    }
-                  }
-                )
-                .subscribe();
-            }
+            setProfile(profileData);
           }
-        }, 0);
+        }
+        
+        // Set up real-time profile updates only once
+        if (!profileSubscription) {
+          profileSubscription = supabase
+            .channel('profile_updates')
+            .on(
+              'postgres_changes',
+              {
+                event: 'UPDATE',
+                schema: 'public',
+                table: 'profiles',
+                filter: `user_id=eq.${session.user.id}`
+              },
+              (payload) => {
+                console.log('🔄 Profile updated in real-time:', payload);
+                if (mounted && payload.new) {
+                  setProfile(payload.new as Profile);
+                }
+              }
+            )
+            .subscribe();
+        }
       } else {
         setProfile(null);
         // Clean up profile subscription
@@ -163,12 +159,14 @@ export function useAuth() {
     // Set up custom event listener for immediate profile updates
     window.addEventListener('profile-updated', handleProfileUpdate as EventListener);
 
-    // Check initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (mounted) {
-        handleAuthStateChange('INITIAL_SESSION', session);
-      }
-    });
+    // Check initial session only if no session is already set and no user
+    if (!session && !user) {
+      supabase.auth.getSession().then(({ data: { session } }) => {
+        if (mounted) {
+          handleAuthStateChange('INITIAL_SESSION', session);
+        }
+      });
+    }
 
     return () => {
       console.log('🧹 Cleaning up auth state');
@@ -465,7 +463,7 @@ export function useAuth() {
   }, [hasRole]);
 
   const canViewAnalytics = useCallback((): boolean => {
-    return hasRole(['super_admin', 'tenant_admin']);
+    return hasRole(['super_admin', 'tenant_admin', 'partner']);
   }, [hasRole]);
 
   const canManageUsers = useCallback((): boolean => {

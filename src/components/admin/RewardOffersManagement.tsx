@@ -136,7 +136,7 @@ const RewardOffersManagement: React.FC<RewardOffersManagementProps> = ({ cityId 
   });
 
   const { toast } = useToast();
-  const { user, profile, loading: authLoading, isAuthenticated, hasRole, signOut } = useAuth();
+  const { user, profile, loading: authLoading, isAuthenticated, hasRole, isTenantAdmin, isPartner, signOut } = useAuth();
   const { city } = useCityOptional();
   const { sendPartnerOfferNotificationEmail } = useEmailNotifications();
   const { currentLanguage } = useOptimizedTranslations();
@@ -186,6 +186,10 @@ const RewardOffersManagement: React.FC<RewardOffersManagementProps> = ({ cityId 
       if (isTenantAdmin() && profile?.city_id) {
         partnersQuery = partnersQuery.eq('city_id', profile.city_id);
       }
+      // For partners, filter by their own partner ID
+      else if (isPartner() && profile?.partner_id) {
+        partnersQuery = partnersQuery.eq('id', profile.partner_id);
+      }
       // For super admins with cityId prop, filter by that city
       else if (cityId) {
         partnersQuery = partnersQuery.eq('city_id', cityId);
@@ -212,6 +216,10 @@ const RewardOffersManagement: React.FC<RewardOffersManagementProps> = ({ cityId 
       if (isTenantAdmin() && profile?.city_id) {
         filteredRewards = filteredRewards.filter(reward => 
           partnersData?.some(partner => partner.id === reward.partner_id)
+        );
+      } else if (isPartner() && profile?.partner_id) {
+        filteredRewards = filteredRewards.filter(reward => 
+          reward.partner_id === profile.partner_id
         );
       } else if (cityId) {
         filteredRewards = filteredRewards.filter(reward => 

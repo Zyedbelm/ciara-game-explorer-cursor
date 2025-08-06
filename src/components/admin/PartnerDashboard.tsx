@@ -1,614 +1,767 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import { useAuth } from '@/hooks/useAuth';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Progress } from '@/components/ui/progress';
-import { 
-  TrendingUp, 
-  Users, 
-  Gift, 
-  Clock, 
-  MapPin, 
-  Calendar,
-  BarChart3,
-  Activity,
-  Target,
-  Award,
-  Store,
-  Filter
-} from 'lucide-react';
-import { useAuth } from '@/hooks/useAuth';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import Header from '@/components/common/Header';
+import Footer from '@/components/common/Footer';
+import AdminSidebar from '@/components/admin/AdminSidebar';
+import {
+  Building2,
+  TrendingUp,
+  Users,
+  Star,
+  Calendar,
+  Activity,
+  Award,
+  CreditCard,
+  ShoppingCart,
+  Eye,
+  Filter,
+  Download
+} from 'lucide-react';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
+// Types optimisés
 interface PartnerAnalytics {
-  totalVouchers: number;
+  totalPartners: number;
+  totalOffers: number;
   totalRedemptions: number;
-  totalRevenue: number;
+  totalValue: number;
   averageRating: number;
-  topOffers: Array<{
+  topPartners: Array<{
+    id: string;
     name: string;
     redemptions: number;
-    revenue: number;
+    value: number;
   }>;
-  recentRedemptions: Array<{
-    id: string;
-    voucherName: string;
-    customerName: string;
-    redeemedAt: string;
-    amount: number;
-    status: 'pending' | 'validated' | 'expired';
-  }>;
-  dailyStats: Array<{
-    date: string;
-    redemptions: number;
-    revenue: number;
-  }>;
-  customerInsights: {
-    totalCustomers: number;
-    repeatCustomers: number;
-    averageSpend: number;
-    topCustomerSegments: string[];
-  };
-  journeyInsights: {
-    totalJourneys: number;
-    completedJourneys: number;
-    averageCompletionRate: number;
-    popularJourneys: Array<{
-      name: string;
-      completions: number;
-      averageRating: number;
-    }>;
-  };
 }
 
 interface PartnerFilter {
-  countryId?: string;
-  cityId?: string;
-  partnerId?: string;
-  dateRange?: {
-    start: string;
-    end: string;
+  country: string;
+  city: string;
+  partner: string;
+}
+
+interface Country {
+  id: string;
+  name_fr: string;
+  is_active: boolean;
+}
+
+interface City {
+  id: string;
+  name: string;
+  country_id: string;
+}
+
+interface Partner {
+  id: string;
+  name: string;
+  city_id: string;
+  cities?: {
+    name: string;
+    country_id: string;
   };
 }
 
-const PartnerDashboard: React.FC = () => {
-  const { user, profile, loading: authLoading, isAuthenticated, hasRole, signOut } = useAuth();
-  const { toast } = useToast();
-  const [analytics, setAnalytics] = useState<PartnerAnalytics | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState<PartnerFilter>({});
-  const [countries, setCountries] = useState<Array<{ id: string; name: string }>>([]);
-  const [cities, setCities] = useState<Array<{ id: string; name: string; country_id: string }>>([]);
-  const [partners, setPartners] = useState<Array<{ id: string; name: string; city_id: string }>>([]);
-  const [selectedPartner, setSelectedPartner] = useState<string>('');
-
-  const isSuperAdmin = user?.user_metadata?.role === 'super_admin';
-  const isCityAdmin = user?.user_metadata?.role === 'tenant_admin';
-  const isPartner = user?.user_metadata?.role === 'partner';
-
-  useEffect(() => {
-    fetchFilterData();
-  }, []);
-
-  useEffect(() => {
-    if (partners.length > 0) {
-      // Si c'est un partenaire, utiliser le premier partenaire disponible
-      if (isPartner && !selectedPartner) {
-        setSelectedPartner(partners[0]?.id || '');
-      }
-      // Si c'est un admin ville et qu'aucun partenaire n'est sélectionné, en sélectionner un automatiquement
-      else if (isCityAdmin && !selectedPartner) {
-        const userCityPartner = partners.find(p => p.city_id === user?.user_metadata?.city_id);
-        if (userCityPartner) {
-          setSelectedPartner(userCityPartner.id);
-        } else {
-          setSelectedPartner(partners[0]?.id || '');
-        }
-      }
-      // Si c'est un super admin et qu'aucun partenaire n'est sélectionné, en sélectionner un
-      else if (isSuperAdmin && !selectedPartner) {
-        setSelectedPartner(partners[0]?.id || '');
-      }
-    }
-  }, [partners, isPartner, isCityAdmin, isSuperAdmin, selectedPartner, user?.user_metadata?.city_id]);
-
-  useEffect(() => {
-    if (selectedPartner) {
-      fetchPartnerAnalytics();
-    }
-  }, [selectedPartner, filter]);
-
-  const fetchFilterData = async () => {
-    try {
-      // Mock data pour l'instant
-      const mockCountries = [
-        { id: '1', name: 'Suisse' },
-        { id: '2', name: 'France' }
-      ];
-      
-      const mockCities = [
-        { id: '1', name: 'Sion', country_id: '1' },
-        { id: '2', name: 'Martigny', country_id: '1' },
-        { id: '3', name: 'Carcassonne', country_id: '2' }
-      ];
-      
-      const mockPartners = [
-        { id: '1', name: 'Restaurant Le Verre à Pied', city_id: '1' },
-        { id: '2', name: 'Café Central', city_id: '1' },
-        { id: '3', name: 'Boulangerie Artisanale', city_id: '2' }
-      ];
-
-      setCountries(mockCountries);
-      setCities(mockCities);
-      setPartners(mockPartners);
-    } catch (error) {
-      console.error('Error fetching filter data:', error);
-    }
+interface RedemptionDetail {
+  id: string;
+  redeemed_at: string;
+  points_spent: number;
+  status: string;
+  rewards: {
+    title: string;
+    value_chf: number;
+    partner_id: string;
   };
+  profiles?: {
+    full_name: string;
+    email: string;
+  };
+  partners?: {
+    name: string;
+  };
+}
 
-  const fetchPartnerAnalytics = async () => {
-    if (!selectedPartner) {
-      setLoading(false);
-      return;
-    }
+// Hook personnalisé pour les données du dashboard
+const usePartnerDashboardData = () => {
+  const [analytics, setAnalytics] = useState<PartnerAnalytics>({
+    totalPartners: 0,
+    totalOffers: 0,
+    totalRedemptions: 0,
+    totalValue: 0,
+    averageRating: 0,
+    topPartners: []
+  });
+  
+  const [loading, setLoading] = useState(true);
+  const [countries, setCountries] = useState<Country[]>([]);
+  const [cities, setCities] = useState<City[]>([]);
+  const [partners, setPartners] = useState<Partner[]>([]);
+  const [redemptionDetails, setRedemptionDetails] = useState<RedemptionDetail[]>([]);
 
+  const fetchFilterData = useCallback(async () => {
     setLoading(true);
     try {
-      // Simuler des données dynamiques basées sur le partenaire
-      const mockAnalytics: PartnerAnalytics = {
-        totalVouchers: Math.floor(Math.random() * 100) + 50,
-        totalRedemptions: Math.floor(Math.random() * 80) + 30,
-        totalRevenue: Math.floor(Math.random() * 5000) + 2000,
-        averageRating: Number((Math.random() * 2 + 3).toFixed(1)),
-        topOffers: [
-          { name: 'Menu Dégustation', redemptions: 25, revenue: 1250 },
-          { name: 'Cours de Cuisine', redemptions: 18, revenue: 900 },
-          { name: 'Dégustation Vins', redemptions: 15, revenue: 750 },
-        ],
-        recentRedemptions: [
-          {
-            id: '1',
-            voucherName: 'Menu Dégustation',
-            customerName: 'Marie Dupont',
-            redeemedAt: '2025-01-15 14:30',
-            amount: 50,
-            status: 'validated'
-          },
-          {
-            id: '2',
-            voucherName: 'Cours de Cuisine',
-            customerName: 'Jean Martin',
-            redeemedAt: '2025-01-14 16:45',
-            amount: 45,
-            status: 'pending'
-          },
-          {
-            id: '3',
-            voucherName: 'Dégustation Vins',
-            customerName: 'Sophie Bernard',
-            redeemedAt: '2025-01-13 19:20',
-            amount: 35,
-            status: 'validated'
-          }
-        ],
-        dailyStats: Array.from({ length: 7 }, (_, i) => ({
-          date: new Date(Date.now() - i * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-          redemptions: Math.floor(Math.random() * 10) + 1,
-          revenue: Math.floor(Math.random() * 500) + 100
-        })).reverse(),
-        customerInsights: {
-          totalCustomers: Math.floor(Math.random() * 200) + 100,
-          repeatCustomers: Math.floor(Math.random() * 50) + 20,
-          averageSpend: Math.floor(Math.random() * 50) + 30,
-          topCustomerSegments: ['Touristes', 'Locaux', 'Groupes']
-        },
-        journeyInsights: {
-          totalJourneys: Math.floor(Math.random() * 20) + 10,
-          completedJourneys: Math.floor(Math.random() * 15) + 8,
-          averageCompletionRate: Math.floor(Math.random() * 30) + 70,
-          popularJourneys: [
-            { name: 'Découverte Gastronomique', completions: 45, averageRating: 4.2 },
-            { name: 'Circuit Historique', completions: 38, averageRating: 4.5 },
-            { name: 'Balade Culturelle', completions: 32, averageRating: 4.1 }
-          ]
-        }
-      };
+      // Requêtes parallèles pour optimiser les performances
+      const [countriesResponse, citiesResponse, partnersResponse] = await Promise.all([
+        supabase
+          .from('countries')
+          .select('id, name_fr, is_active')
+          .eq('is_active', true)
+          .order('name_fr'),
+        
+        supabase
+          .from('cities')
+          .select(`
+            id, 
+            name, 
+            country_id,
+            countries!inner(id, is_active)
+          `)
+          .eq('countries.is_active', true)
+          .order('name'),
+        
+        supabase
+          .from('partners')
+          .select(`
+            id, 
+            name, 
+            city_id,
+            cities(name, country_id)
+          `)
+          .eq('is_active', true)
+      ]);
 
-      setAnalytics(mockAnalytics);
+      setCountries(countriesResponse.data || []);
+      setCities(citiesResponse.data || []);
+      setPartners(partnersResponse.data || []);
     } catch (error) {
-      console.error('Error fetching partner analytics:', error);
-      toast({
-        title: 'Erreur',
-        description: 'Impossible de charger les données du partenaire.',
-        variant: 'destructive',
-      });
+      console.error('Error fetching filter data:', error);
     } finally {
       setLoading(false);
     }
+  }, []);
+
+  const fetchAnalytics = useCallback(async () => {
+    try {
+      const [partnersResponse, redemptionsResponse] = await Promise.all([
+        supabase
+          .from('partners')
+          .select(`
+            id,
+            name,
+            rewards(
+              id,
+              value_chf
+            )
+          `)
+          .eq('is_active', true),
+        
+        supabase
+          .from('reward_redemptions')
+          .select(`
+            id,
+            points_spent,
+            rewards(
+              partner_id,
+              value_chf
+            )
+          `)
+      ]);
+
+      const partnersData = partnersResponse.data || [];
+      const redemptionsData = redemptionsResponse.data || [];
+
+      // Calculer les statistiques
+      const totalPartners = partnersData.length;
+      const totalOffers = partnersData.reduce((sum, p) => sum + (p.rewards?.length || 0), 0);
+      const totalRedemptions = redemptionsData.length;
+      const totalValue = redemptionsData.reduce((sum, r) => sum + (r.rewards?.value_chf || 0), 0);
+
+      // Top 3 partenaires
+      const partnerStats = partnersData.map(partner => {
+        const partnerRedemptions = redemptionsData.filter(r => 
+          r.rewards?.partner_id === partner.id
+        );
+        
+        return {
+          id: partner.id,
+          name: partner.name,
+          redemptions: partnerRedemptions.length,
+          value: partnerRedemptions.reduce((sum, r) => sum + (r.rewards?.value_chf || 0), 0)
+        };
+      });
+
+      const topPartners = partnerStats
+        .sort((a, b) => b.redemptions - a.redemptions)
+        .slice(0, 3);
+
+      setAnalytics({
+        totalPartners,
+        totalOffers,
+        totalRedemptions,
+        totalValue,
+        averageRating: 4.5,
+        topPartners
+      });
+    } catch (error) {
+      console.error('Error fetching analytics:', error);
+    }
+  }, []);
+
+  const fetchPartnerData = useCallback(async (partnerId: string) => {
+    try {
+      const { data: redemptionsData } = await supabase
+        .from('reward_redemptions')
+        .select(`
+          id,
+          redeemed_at,
+          points_spent,
+          status,
+          rewards(
+            title,
+            value_chf,
+            partner_id
+          )
+        `)
+        .eq('rewards.partner_id', partnerId)
+        .order('redeemed_at', { ascending: false });
+
+      // Transformer les données pour correspondre à l'interface
+      const transformedData = (redemptionsData || []).map(item => ({
+        ...item,
+        profiles: { full_name: 'N/A', email: 'N/A' },
+        partners: { name: 'N/A' }
+      }));
+
+      setRedemptionDetails(transformedData);
+    } catch (error) {
+      console.error('Error fetching partner data:', error);
+    }
+  }, []);
+
+  return {
+    analytics,
+    loading,
+    countries,
+    cities,
+    partners,
+    redemptionDetails,
+    fetchFilterData,
+    fetchAnalytics,
+    fetchPartnerData
   };
+};
 
-  const getStatusBadge = (status: string) => {
-    const variants = {
-      pending: 'secondary',
-      validated: 'default',
-      expired: 'destructive'
-    } as const;
+const PartnerDashboard: React.FC = () => {
+  const { user, profile, isPartner, isSuperAdmin, isTenantAdmin } = useAuth();
+  const { toast } = useToast();
+  
+  const {
+    analytics,
+    loading,
+    countries,
+    cities,
+    partners,
+    redemptionDetails,
+    fetchFilterData,
+    fetchAnalytics,
+    fetchPartnerData
+  } = usePartnerDashboardData();
 
-    return (
-      <Badge variant={variants[status as keyof typeof variants]}>
-        {status === 'pending' ? 'En attente' : 
-         status === 'validated' ? 'Validé' : 'Expiré'}
-      </Badge>
-    );
-  };
+  const [selectedPartner, setSelectedPartner] = useState<string>('');
+  const [filterStates, setFilterStates] = useState<PartnerFilter>({
+    country: 'all',
+    city: 'all',
+    partner: 'all'
+  });
+  const [userPartnerId, setUserPartnerId] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState('insights');
 
-  const formatCurrency = (amount: number) => {
+  // Déterminer l'ID du partenaire de l'utilisateur connecté
+  useEffect(() => {
+    if (isPartner() && (profile as any)?.partner_id) {
+      setUserPartnerId((profile as any).partner_id);
+      setFilterStates({
+        country: 'locked',
+        city: 'locked',
+        partner: (profile as any).partner_id
+      });
+    }
+  }, [isPartner, profile]);
+
+  // Charger les données de base
+  useEffect(() => {
+    fetchFilterData();
+    fetchAnalytics();
+  }, [fetchFilterData, fetchAnalytics]);
+
+  // Charger les données du partenaire sélectionné
+  useEffect(() => {
+    if (selectedPartner) {
+      fetchPartnerData(selectedPartner);
+    }
+  }, [selectedPartner, fetchPartnerData]);
+
+  // Données pour les graphiques (mémorisées pour éviter les recalculs)
+  const hourlyData = useMemo(() => {
+    const hours = Array.from({ length: 24 }, (_, i) => i);
+    return hours.map(hour => ({
+      hour: `${hour}:00`,
+      count: Math.floor(Math.random() * 10) // À remplacer par de vraies données
+    }));
+  }, []);
+
+  const dailyData = useMemo(() => {
+    const days = Array.from({ length: 30 }, (_, i) => {
+      const date = new Date();
+      date.setDate(date.getDate() - i);
+      return date.toISOString().split('T')[0];
+    }).reverse();
+    
+    return days.map(date => ({
+      date: new Date(date).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' }),
+      count: Math.floor(Math.random() * 20) // À remplacer par de vraies données
+    }));
+  }, []);
+
+  const handleFilterChange = useCallback((filterType: keyof PartnerFilter, value: string) => {
+    if (isPartner()) return; // Les filtres sont bloqués pour les partenaires
+    
+    setFilterStates(prev => ({
+      ...prev,
+      [filterType]: value
+    }));
+  }, [isPartner]);
+
+  const formatCurrency = useCallback((amount: number) => {
     return new Intl.NumberFormat('fr-CH', {
       style: 'currency',
       currency: 'CHF'
     }).format(amount);
-  };
+  }, []);
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      <div className="min-h-screen bg-background">
+        <Header />
+        <div className="flex">
+          <AdminSidebar 
+            activeTab="partner-dashboard"
+            onTabChange={() => {}}
+            canManageUsers={false}
+            canManageContent={false}
+            canViewAnalytics={true}
+            isSuperAdmin={isSuperAdmin()}
+            isTenantAdmin={isTenantAdmin()}
+            isPartner={isPartner()}
+          />
+          <div className="flex-1 p-6">
+            <div className="flex items-center justify-center h-64">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+            </div>
+          </div>
+        </div>
+        <Footer />
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header avec filtres */}
-      <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">Tableau de bord Partenaire</h1>
-          <p className="text-muted-foreground">
-            {isSuperAdmin ? 'Analytics et insights des partenaires' : 'Vos performances et analytics'}
-          </p>
-        </div>
-
-        {/* Filtres */}
-        <div className="flex flex-wrap gap-2">
-          {isSuperAdmin && (
-            <>
-              <Select
-                value={filter.countryId || ''}
-                onValueChange={(value) => setFilter(prev => ({ ...prev, countryId: value }))}
-              >
-                <SelectTrigger className="w-48">
-                  <SelectValue placeholder="Sélectionner un pays" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="">Tous les pays</SelectItem>
-                  {countries.map(country => (
-                    <SelectItem key={country.id} value={country.id}>
-                      {country.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-
-              <Select
-                value={filter.cityId || ''}
-                onValueChange={(value) => setFilter(prev => ({ ...prev, cityId: value }))}
-                disabled={!filter.countryId}
-              >
-                <SelectTrigger className="w-48">
-                  <SelectValue placeholder="Sélectionner une ville" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="">Toutes les villes</SelectItem>
-                  {cities
-                    .filter(city => !filter.countryId || city.country_id === filter.countryId)
-                    .map(city => (
-                      <SelectItem key={city.id} value={city.id}>
-                        {city.name}
-                      </SelectItem>
-                    ))}
-                </SelectContent>
-              </Select>
-            </>
-          )}
-
-          <Select
-            value={selectedPartner}
-            onValueChange={setSelectedPartner}
-            disabled={isCityAdmin || isPartner}
-          >
-            <SelectTrigger className="w-48">
-              <SelectValue placeholder={isCityAdmin || isPartner ? "Partenaire automatique" : "Sélectionner un partenaire"} />
-            </SelectTrigger>
-            <SelectContent>
-              {partners
-                .filter(partner => !filter.cityId || partner.city_id === filter.cityId)
-                .map(partner => (
-                  <SelectItem key={partner.id} value={partner.id}>
-                    {partner.name}
-                  </SelectItem>
-                ))}
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
-
-      {!analytics ? (
-        <Card>
-          <CardContent className="flex items-center justify-center h-32">
-            <p className="text-muted-foreground">
-              {isSuperAdmin ? 'Sélectionnez un partenaire pour voir ses analytics' : 'Aucune donnée disponible'}
-            </p>
-          </CardContent>
-        </Card>
-      ) : (
-        <>
-          {/* Métriques principales */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Total Vouchers</CardTitle>
-                <Gift className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{analytics.totalVouchers}</div>
-                <p className="text-xs text-muted-foreground">
-                  +{Math.floor(Math.random() * 20) + 5}% ce mois
+    <div className="min-h-screen bg-background">
+      <Header />
+      <div className="flex">
+        <AdminSidebar 
+          activeTab="partner-dashboard"
+          onTabChange={() => {}}
+          canManageUsers={false}
+          canManageContent={false}
+          canViewAnalytics={true}
+          isSuperAdmin={isSuperAdmin}
+          isTenantAdmin={isTenantAdmin}
+          isPartner={isPartner}
+        />
+        <div className="flex-1 p-6">
+          <div className="space-y-6">
+            {/* En-tête */}
+            <div className="flex items-center justify-between">
+              <div>
+                <h1 className="text-3xl font-bold">Tableau de Bord Partenaire</h1>
+                <p className="text-muted-foreground">
+                  Analysez les performances de vos partenaires
                 </p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Rédemptions</CardTitle>
-                <TrendingUp className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{analytics.totalRedemptions}</div>
-                <p className="text-xs text-muted-foreground">
-                  +{Math.floor(Math.random() * 15) + 3}% ce mois
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Revenus</CardTitle>
-                <Award className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{formatCurrency(analytics.totalRevenue)}</div>
-                <p className="text-xs text-muted-foreground">
-                  +{Math.floor(Math.random() * 25) + 8}% ce mois
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Note Moyenne</CardTitle>
-                <BarChart3 className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{analytics.averageRating}/5</div>
-                <p className="text-xs text-muted-foreground">
-                  Basé sur {Math.floor(Math.random() * 50) + 20} avis
-                </p>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Tabs pour les détails */}
-          <Tabs defaultValue="overview" className="space-y-4">
-            <TabsList>
-              <TabsTrigger value="overview">Vue d'ensemble</TabsTrigger>
-              <TabsTrigger value="redemptions">Rédemptions récentes</TabsTrigger>
-              <TabsTrigger value="offers">Meilleures offres</TabsTrigger>
-              <TabsTrigger value="customers">Insights clients</TabsTrigger>
-              <TabsTrigger value="journeys">Parcours liés</TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="overview" className="space-y-4">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                {/* Activité quotidienne */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Activité quotidienne</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      {analytics.dailyStats.map((stat, index) => (
-                        <div key={index} className="flex items-center justify-between">
-                          <div className="flex items-center space-x-2">
-                            <Calendar className="h-4 w-4 text-muted-foreground" />
-                            <span className="text-sm">{stat.date}</span>
-                          </div>
-                          <div className="flex items-center space-x-4">
-                            <span className="text-sm">{stat.redemptions} rédemptions</span>
-                            <span className="text-sm font-medium">{formatCurrency(stat.revenue)}</span>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-
-                {/* Performance des offres */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Performance des offres</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      {analytics.topOffers.map((offer, index) => (
-                        <div key={index} className="space-y-2">
-                          <div className="flex items-center justify-between">
-                            <span className="text-sm font-medium">{offer.name}</span>
-                            <span className="text-sm text-muted-foreground">
-                              {offer.redemptions} rédemptions
-                            </span>
-                          </div>
-                          <Progress value={(offer.redemptions / analytics.totalRedemptions) * 100} />
-                          <div className="flex justify-between text-xs text-muted-foreground">
-                            <span>{formatCurrency(offer.revenue)}</span>
-                            <span>{((offer.redemptions / analytics.totalRedemptions) * 100).toFixed(1)}%</span>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
               </div>
-            </TabsContent>
+            </div>
 
-            <TabsContent value="redemptions" className="space-y-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Rédemptions récentes</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Voucher</TableHead>
-                        <TableHead>Client</TableHead>
-                        <TableHead>Date</TableHead>
-                        <TableHead>Montant</TableHead>
-                        <TableHead>Statut</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {analytics.recentRedemptions.map((redemption) => (
-                        <TableRow key={redemption.id}>
-                          <TableCell className="font-medium">{redemption.voucherName}</TableCell>
-                          <TableCell>{redemption.customerName}</TableCell>
-                          <TableCell>{redemption.redeemedAt}</TableCell>
-                          <TableCell>{formatCurrency(redemption.amount)}</TableCell>
-                          <TableCell>{getStatusBadge(redemption.status)}</TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            <TabsContent value="offers" className="space-y-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Meilleures offres</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    {analytics.topOffers.map((offer, index) => (
-                      <div key={index} className="flex items-center justify-between p-4 border rounded-lg">
-                        <div className="flex items-center space-x-4">
-                          <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
-                            <span className="text-sm font-medium">{index + 1}</span>
-                          </div>
-                          <div>
-                            <h4 className="font-medium">{offer.name}</h4>
-                            <p className="text-sm text-muted-foreground">
-                              {offer.redemptions} rédemptions
-                            </p>
-                          </div>
-                        </div>
-                        <div className="text-right">
-                          <div className="font-medium">{formatCurrency(offer.revenue)}</div>
-                          <div className="text-sm text-muted-foreground">
-                            {formatCurrency(offer.revenue / offer.redemptions)} en moyenne
-                          </div>
-                        </div>
-                      </div>
-                    ))}
+            {/* Filtres */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Filter className="h-5 w-5" />
+                  Filtres
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <Label>Pays</Label>
+                    <Select 
+                      value={filterStates.country} 
+                      onValueChange={(value) => handleFilterChange('country', value)}
+                      disabled={isPartner}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Sélectionner un pays" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">Tous les pays</SelectItem>
+                        {countries.map(country => (
+                          <SelectItem key={country.id} value={country.id}>
+                            {country.name_fr}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
+                  
+                  <div>
+                    <Label>Ville</Label>
+                    <Select 
+                      value={filterStates.city} 
+                      onValueChange={(value) => handleFilterChange('city', value)}
+                      disabled={isPartner}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Sélectionner une ville" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">Toutes les villes</SelectItem>
+                        {cities.map(city => (
+                          <SelectItem key={city.id} value={city.id}>
+                            {city.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  <div>
+                    <Label>Partenaire</Label>
+                    <Select 
+                      value={filterStates.partner} 
+                      onValueChange={(value) => {
+                        handleFilterChange('partner', value);
+                        setSelectedPartner(value === 'all' ? '' : value);
+                      }}
+                      disabled={isPartner}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Sélectionner un partenaire" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">Tous les partenaires</SelectItem>
+                        {partners.map(partner => (
+                          <SelectItem key={partner.id} value={partner.id}>
+                            {partner.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
 
-            <TabsContent value="customers" className="space-y-4">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Insights clients</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      <div className="flex items-center justify-between">
-                        <span>Total clients</span>
-                        <span className="font-medium">{analytics.customerInsights.totalCustomers}</span>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <span>Clients fidèles</span>
-                        <span className="font-medium">{analytics.customerInsights.repeatCustomers}</span>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <span>Dépense moyenne</span>
-                        <span className="font-medium">{formatCurrency(analytics.customerInsights.averageSpend)}</span>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Segments clients</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-2">
-                      {analytics.customerInsights.topCustomerSegments.map((segment, index) => (
-                        <div key={index} className="flex items-center justify-between">
-                          <span className="text-sm">{segment}</span>
-                          <Badge variant="secondary">
-                            {Math.floor(Math.random() * 40) + 20}%
-                          </Badge>
-                        </div>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-            </TabsContent>
-
-            <TabsContent value="journeys" className="space-y-4">
+            {/* Statistiques principales */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               <Card>
-                <CardHeader>
-                  <CardTitle>Parcours populaires</CardTitle>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Total Partenaires</CardTitle>
+                  <Building2 className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-4">
-                    {analytics.journeyInsights.popularJourneys.map((journey, index) => (
-                      <div key={index} className="flex items-center justify-between p-4 border rounded-lg">
-                        <div>
-                          <h4 className="font-medium">{journey.name}</h4>
-                          <p className="text-sm text-muted-foreground">
-                            {journey.completions} complétions
-                          </p>
-                        </div>
-                        <div className="text-right">
-                          <div className="flex items-center space-x-2">
-                            <span className="text-sm">{journey.averageRating}/5</span>
-                            <div className="flex">
-                              {[...Array(5)].map((_, i) => (
-                                <span key={i} className={`text-xs ${i < Math.floor(journey.averageRating) ? 'text-yellow-400' : 'text-gray-300'}`}>
-                                  ★
-                                </span>
-                              ))}
+                  <div className="text-2xl font-bold">{analytics.totalPartners}</div>
+                  <p className="text-xs text-muted-foreground">
+                    Partenaires actifs
+                  </p>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Total Offres</CardTitle>
+                  <Star className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{analytics.totalOffers}</div>
+                  <p className="text-xs text-muted-foreground">
+                    Offres disponibles
+                  </p>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Total Rédemptions</CardTitle>
+                  <ShoppingCart className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{analytics.totalRedemptions}</div>
+                  <p className="text-xs text-muted-foreground">
+                    Vouchers utilisés
+                  </p>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Valeur Totale</CardTitle>
+                  <TrendingUp className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{formatCurrency(analytics.totalValue)}</div>
+                  <p className="text-xs text-muted-foreground">
+                    Valeur des rédemptions
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Onglets */}
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+              <TabsList className="grid w-full grid-cols-3">
+                <TabsTrigger value="insights">Insights</TabsTrigger>
+                <TabsTrigger value="analytics">Analytics de Calendrier</TabsTrigger>
+                <TabsTrigger value="details">Détail des Offres</TabsTrigger>
+              </TabsList>
+
+              {/* Onglet Insights */}
+              <TabsContent value="insights" className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Top 3 Partenaires</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-4">
+                        {analytics.topPartners.map((partner, index) => (
+                          <div key={partner.id} className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                              <Badge variant={index === 0 ? "default" : "secondary"}>
+                                #{index + 1}
+                              </Badge>
+                              <span className="font-medium">{partner.name}</span>
+                            </div>
+                            <div className="text-right">
+                              <div className="font-semibold">{partner.redemptions} rédemptions</div>
+                              <div className="text-sm text-muted-foreground">
+                                {formatCurrency(partner.value)}
+                              </div>
                             </div>
                           </div>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Métriques Clés</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-4">
+                        <div>
+                          <div className="flex justify-between text-sm">
+                            <span>Taux d'utilisation</span>
+                            <span>75%</span>
+                          </div>
+                          <Progress value={75} className="mt-1" />
+                        </div>
+                        <div>
+                          <div className="flex justify-between text-sm">
+                            <span>Couverture géographique</span>
+                            <span>{cities.length} villes</span>
+                          </div>
+                        </div>
+                        <div>
+                          <div className="flex justify-between text-sm">
+                            <span>Heure de pointe</span>
+                            <span>14:00</span>
+                          </div>
                         </div>
                       </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-          </Tabs>
-        </>
-      )}
+                    </CardContent>
+                  </Card>
+                </div>
+              </TabsContent>
+
+              {/* Onglet Analytics de Calendrier */}
+              <TabsContent value="analytics" className="space-y-6">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Utilisation par Heure</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <ResponsiveContainer width="100%" height={300}>
+                        <BarChart data={hourlyData}>
+                          <CartesianGrid strokeDasharray="3 3" />
+                          <XAxis dataKey="hour" />
+                          <YAxis />
+                          <Tooltip />
+                          <Bar dataKey="count" fill="#3b82f6" />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </CardContent>
+                  </Card>
+
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Utilisation par Jour (30 derniers jours)</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <ResponsiveContainer width="100%" height={300}>
+                        <BarChart data={dailyData}>
+                          <CartesianGrid strokeDasharray="3 3" />
+                          <XAxis dataKey="date" />
+                          <YAxis />
+                          <Tooltip />
+                          <Bar dataKey="count" fill="#10b981" />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </CardContent>
+                  </Card>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Insights Temporels</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-4">
+                        <div className="flex items-center gap-3">
+                          <Calendar className="h-5 w-5 text-blue-500" />
+                          <div>
+                            <div className="font-medium">Jour le plus actif</div>
+                            <div className="text-sm text-muted-foreground">Samedi</div>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <Activity className="h-5 w-5 text-green-500" />
+                          <div>
+                            <div className="font-medium">Heure de pointe</div>
+                            <div className="text-sm text-muted-foreground">14:00 - 16:00</div>
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              </TabsContent>
+
+              {/* Onglet Détail des Offres */}
+              <TabsContent value="details" className="space-y-6">
+                <Card>
+                  <CardHeader>
+                    <div className="flex items-center justify-between">
+                      <CardTitle>Détails des Rédemptions</CardTitle>
+                      <Button variant="outline" size="sm">
+                        <Download className="h-4 w-4 mr-2" />
+                        Exporter CSV
+                      </Button>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      {/* Filtres pour le tableau */}
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                          <Label>Date de début</Label>
+                          <Input type="date" />
+                        </div>
+                        <div>
+                          <Label>Date de fin</Label>
+                          <Input type="date" />
+                        </div>
+                        <div>
+                          <Label>Utilisateur</Label>
+                          <Select>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Rechercher un utilisateur" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="all">Tous les utilisateurs</SelectItem>
+                              {/* Options des utilisateurs */}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+
+                      {/* Tableau des rédemptions */}
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Date</TableHead>
+                            <TableHead>Utilisateur</TableHead>
+                            <TableHead>Offre</TableHead>
+                            <TableHead>Partenaire</TableHead>
+                            <TableHead>Points</TableHead>
+                            <TableHead>Statut</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {redemptionDetails.map((redemption) => (
+                            <TableRow key={redemption.id}>
+                              <TableCell>
+                                {new Date(redemption.redeemed_at).toLocaleDateString('fr-FR')}
+                              </TableCell>
+                              <TableCell>
+                                {redemption.profiles?.full_name || 'N/A'}
+                                <br />
+                                <span className="text-sm text-muted-foreground">
+                                  {redemption.profiles?.email || 'N/A'}
+                                </span>
+                              </TableCell>
+                              <TableCell>
+                                {redemption.rewards?.title || 'N/A'}
+                                <br />
+                                <span className="text-sm text-muted-foreground">
+                                  {formatCurrency(redemption.rewards?.value_chf || 0)}
+                                </span>
+                              </TableCell>
+                              <TableCell>
+                                {redemption.partners?.name || 'N/A'}
+                              </TableCell>
+                              <TableCell>{redemption.points_spent}</TableCell>
+                              <TableCell>
+                                <Badge variant={redemption.status === 'used' ? 'default' : 'secondary'}>
+                                  {redemption.status === 'used' ? 'Utilisé' : 'En attente'}
+                                </Badge>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+            </Tabs>
+          </div>
+        </div>
+      </div>
+      <Footer />
     </div>
   );
 };

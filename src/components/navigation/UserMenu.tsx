@@ -99,6 +99,7 @@ const UserMenu: React.FC<UserMenuProps> = ({ variant = 'default' }) => {
     switch (profile.role) {
       case 'super_admin': return t('role.super_admin') || 'Super Admin';
       case 'tenant_admin': return t('role.tenant_admin') || 'Admin Ville';
+      case 'partner': return t('role.partner') || 'Partenaire';
       default: return t('role.explorer') || 'Explorateur';
     }
   };
@@ -172,9 +173,9 @@ const UserMenu: React.FC<UserMenuProps> = ({ variant = 'default' }) => {
           <>
             <DropdownMenuSeparator />
             <DropdownMenuItem asChild>
-              <Link to="/admin" className="flex items-center">
+              <Link to={profile?.role === 'partner' ? "/partner-dashboard" : "/admin"} className="flex items-center">
                 <Settings className="mr-2 h-4 w-4" />
-                <span>{t('administration')}</span>
+                <span>{profile?.role === 'partner' ? 'Tableau de bord Partenaire' : t('administration')}</span>
               </Link>
             </DropdownMenuItem>
           </>

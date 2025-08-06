@@ -22,10 +22,10 @@ const JourneyDetailPage = React.lazy(() => import("./pages/JourneyDetailPage"));
 const RewardsPage = React.lazy(() => import("./pages/RewardsPage"));
 const MyRewardsPage = React.lazy(() => import("./pages/MyRewardsPage"));
 const AdminDashboard = React.lazy(() => import("./pages/AdminDashboard"));
+const PartnerDashboard = React.lazy(() => import("./components/admin/PartnerDashboard"));
 const ResetPasswordPage = React.lazy(() => import("./pages/ResetPasswordPage"));
 const ProfilePage = React.lazy(() => import("./pages/ProfilePage"));
 const MyJourneysPage = React.lazy(() => import("./pages/MyJourneysPage"));
-const PartnerDashboard = React.lazy(() => import("./pages/PartnerDashboard"));
 const FAQPage = React.lazy(() => import("./pages/FAQPage"));
 const ContactPage = React.lazy(() => import("./pages/ContactPage"));
 const PrivacyPage = React.lazy(() => import("./pages/PrivacyPage"));
@@ -131,14 +131,14 @@ function App() {
                     </JourneyCardsProvider>
                   </AuthGuard>
                 } />
-                <Route path="/partner-dashboard" element={
-                  <AuthGuard>
-                    <PartnerDashboard />
+                <Route path="/admin" element={
+                  <AuthGuard requiredRole={['super_admin', 'tenant_admin']}>
+                    <AdminDashboard />
                   </AuthGuard>
                 } />
-                <Route path="/admin" element={
-                  <AuthGuard requiredRole={['super_admin', 'tenant_admin', 'partner']}>
-                    <AdminDashboard />
+                <Route path="/partner-dashboard" element={
+                  <AuthGuard requiredRole={['partner']}>
+                    <PartnerDashboard />
                   </AuthGuard>
                 } />
                 <Route path="/faq" element={<FAQPage />} />

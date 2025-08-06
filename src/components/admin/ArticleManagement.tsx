@@ -51,7 +51,7 @@ interface City {
 }
 
 export default function ArticleManagement() {
-  const { user, profile, loading: authLoading, isAuthenticated, hasRole, signOut } = useAuth();
+  const { user, profile, loading: authLoading, isAuthenticated, hasRole, isTenantAdmin, signOut } = useAuth();
   const { toast } = useToast();
   const [articles, setArticles] = useState<Article[]>([]);
   const [cities, setCities] = useState<City[]>([]);
@@ -143,9 +143,17 @@ export default function ArticleManagement() {
 
   const fetchCities = async () => {
     try {
+      // Fetch cities with country information and filter out archived countries
       const { data, error } = await supabase
         .from('cities')
-        .select('id, name, country_id')
+        .select(`
+          id, 
+          name, 
+          country_id,
+          countries!inner(id, is_active)
+        `)
+        .eq('is_archived', false)
+        .eq('countries.is_active', true)
         .order('name');
 
       if (error) {
@@ -153,7 +161,15 @@ export default function ArticleManagement() {
         return;
       }
 
-      setCities(data || []);
+      // Filter cities based on user role
+      let filteredCities = data || [];
+      
+      // For tenant admins, only show their city
+      if (isTenantAdmin() && profile?.city_id) {
+        filteredCities = filteredCities.filter(city => city.id === profile.city_id);
+      }
+
+      setCities(filteredCities);
     } catch (error) {
       console.error('Error:', error);
     }

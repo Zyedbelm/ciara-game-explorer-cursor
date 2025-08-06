@@ -103,7 +103,7 @@ export const StepsTable: React.FC<StepsTableProps> = ({
 
   return (
     <div className="space-y-4">
-      {/* Filtres */}
+      {/* Recherche uniquement */}
       <div className="flex flex-col sm:flex-row gap-4">
         <div className="flex-1">
           <div className="relative">
@@ -116,34 +116,6 @@ export const StepsTable: React.FC<StepsTableProps> = ({
             />
           </div>
         </div>
-        
-        <Select value={typeFilter} onValueChange={onTypeFilterChange}>
-          <SelectTrigger className="w-full sm:w-48">
-            <SelectValue placeholder="Type" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Tous les types</SelectItem>
-            {Object.keys(getTypeLabel('')).map((type) => (
-              <SelectItem key={type} value={type}>
-                {getTypeLabel(type)}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        
-        <Select value={cityFilter} onValueChange={onCityFilterChange}>
-          <SelectTrigger className="w-full sm:w-48">
-            <SelectValue placeholder="Ville" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Toutes les villes</SelectItem>
-            {cities.map((city) => (
-              <SelectItem key={city.id} value={city.id}>
-                {city.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
       </div>
 
       {/* Tableau */}

@@ -253,7 +253,14 @@ const RewardsPage = () => {
     try {
       const { data, error } = await supabase
         .from('cities')
-        .select('id, name, country_id')
+        .select(`
+          id, 
+          name, 
+          country_id,
+          countries!inner(id, is_active)
+        `)
+        .eq('is_archived', false)
+        .eq('countries.is_active', true)
         .order('name');
 
       if (error) throw error;

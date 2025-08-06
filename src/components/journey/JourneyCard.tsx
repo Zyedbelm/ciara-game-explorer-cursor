@@ -445,15 +445,15 @@ const JourneyCard: React.FC<JourneyCardProps> = ({ journey, variant, onStatusCha
                   ) : steps.length > 0 ? (
                     steps.map((stepData, index) => {
                       const step = stepData.steps;
-                      const stepName = step.name_en && currentLanguage === 'en' ? step.name_en :
-                                     step.name_de && currentLanguage === 'de' ? step.name_de :
-                                     step.name;
+                      const stepName = step?.name_en && currentLanguage === 'en' ? step.name_en :
+                                     step?.name_de && currentLanguage === 'de' ? step.name_de :
+                                     step?.name || `Étape ${index + 1}`;
                       
                       return (
-                        <div key={step.id} className="flex items-center justify-between p-1 text-xs">
+                        <div key={step?.id || index} className="flex items-center justify-between p-1 text-xs">
                           <span className="truncate flex-1">{index + 1}. {stepName}</span>
                           <Badge variant="outline" className="ml-2 text-xs px-1 py-0">
-                            {step.points_awarded} pts
+                            {step?.points_awarded || 0} pts
                           </Badge>
                         </div>
                       );

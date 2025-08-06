@@ -45,10 +45,17 @@ export const useStepsManagement = (cityId?: string) => {
 
   const fetchCities = async () => {
     try {
+      // Fetch cities with country information and filter out archived countries
       const { data, error } = await supabase
         .from('cities')
-        .select('id, name, slug')
-        .eq('is_active', true)
+        .select(`
+          id, 
+          name, 
+          slug,
+          countries!inner(id, is_active)
+        `)
+        .eq('is_archived', false)
+        .eq('countries.is_active', true)
         .order('name');
 
       if (error) throw error;
@@ -123,9 +130,12 @@ export const useStepsManagement = (cityId?: string) => {
         .from('steps')
         .select(`
           *,
-          cities!inner(name),
-          journeys(name)
+          cities!inner(
+            name,
+            countries!inner(id, is_active)
+          )
         `)
+        .eq('cities.countries.is_active', true)
         .order('created_at', { ascending: false });
 
       if (cityId) {
@@ -139,7 +149,7 @@ export const useStepsManagement = (cityId?: string) => {
       const formattedSteps: Step[] = (data || []).map(step => ({
         ...step,
         city_name: step.cities?.name,
-        journey_name: step.journeys?.name
+        journey_name: undefined // Les étapes n'ont pas de relation directe avec les parcours
       }));
 
       setSteps(formattedSteps);

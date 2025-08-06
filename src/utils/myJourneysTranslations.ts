@@ -51,6 +51,7 @@ export const myJourneysTranslations = {
     'level': 'Niveau',
     'role.super_admin': 'Super Admin',
     'role.tenant_admin': 'Admin Ville',
+    'role.partner': 'Partenaire',
     'role.explorer': 'Explorateur'
   },
   en: {
@@ -159,6 +160,7 @@ export const myJourneysTranslations = {
     'level': 'Level',
     'role.super_admin': 'Super Admin',
     'role.tenant_admin': 'Stadt Admin',
+    'role.partner': 'Partner',
     'role.explorer': 'Entdecker'
   }
 };

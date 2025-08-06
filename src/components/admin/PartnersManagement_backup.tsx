@@ -515,20 +515,12 @@ const PartnersManagement: React.FC<PartnersManagementProps> = ({ cityId }) => {
   // Filtrer les données selon les sélections
   const filteredPartnerStats = useMemo(() => {
     return partnerStats.filter(partner => {
-      // Trouver la ville du partenaire
-      const partnerCity = cities.find(city => city.id === partner.city_id);
-      const partnerCountry = countries.find(country => 
-        partnerCity && country.id === (partnerCity as any).country_id
-      );
-      
-      const countryMatch = selectedCountry === 'all' || 
-        (partnerCountry && partnerCountry.id === selectedCountry);
-      const cityMatch = selectedCity === 'all' || partner.city_id === selectedCity;
+      const countryMatch = selectedCountry === 'all' || partner.country === selectedCountry;
+      const cityMatch = selectedCity === 'all' || partner.city === selectedCity;
       const partnerMatch = selectedPartnerFilter === 'all' || partner.id === selectedPartnerFilter;
-      
       return countryMatch && cityMatch && partnerMatch;
     });
-  }, [partnerStats, selectedCountry, selectedCity, selectedPartnerFilter, cities, countries]);
+  }, [partnerStats, selectedCountry, selectedCity, selectedPartnerFilter]);
 
   const filteredCityStats = useMemo(() => {
     return cityStats.filter(city => {
@@ -979,7 +971,7 @@ const PartnersManagement: React.FC<PartnersManagementProps> = ({ cityId }) => {
                             <SelectContent>
                               <SelectItem value="all">Tous les pays</SelectItem>
                               {countries.map(country => (
-                                <SelectItem key={country.id} value={country.id}>
+                                <SelectItem key={country.id} value={country.name_fr}>
                                   {country.name_fr}
                                 </SelectItem>
                               ))}
@@ -996,7 +988,7 @@ const PartnersManagement: React.FC<PartnersManagementProps> = ({ cityId }) => {
                             <SelectContent>
                               <SelectItem value="all">Toutes les villes</SelectItem>
                               {cities.map(city => (
-                                <SelectItem key={city.id} value={city.id}>
+                                <SelectItem key={city.id} value={city.name}>
                                   {city.name}
                                 </SelectItem>
                               ))}

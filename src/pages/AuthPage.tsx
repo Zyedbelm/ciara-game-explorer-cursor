@@ -15,7 +15,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 
 const AuthPage = () => {
   const navigate = useNavigate();
-  const { user, profile, loading: authLoading, isAuthenticated, hasRole, signOut } = useAuth();
+  const { user, profile, loading: authLoading, isAuthenticated, hasRole, signOut, signIn, signUp } = useAuth();
   const { toast } = useToast();
   const { t, refreshTranslations } = useLanguage();
   

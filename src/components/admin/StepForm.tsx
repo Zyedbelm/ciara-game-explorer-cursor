@@ -275,7 +275,7 @@ export const StepForm: React.FC<StepFormProps> = ({
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    <SelectItem value="">Aucun parcours</SelectItem>
+                    <SelectItem value="none">Aucun parcours</SelectItem>
                     {filteredJourneys.map((journey) => (
                       <SelectItem key={journey.id} value={journey.id}>
                         {journey.name}
