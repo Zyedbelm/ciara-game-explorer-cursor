@@ -38,10 +38,6 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
     params: {
       eventsPerSecond: 2, // Réduire la fréquence pour éviter la surcharge
     },
-    // Configuration pour éviter les erreurs de connexion
-    transport: 'websocket',
-    timeout: 20000, // Timeout plus long
-    heartbeatIntervalMs: 30000, // Heartbeat moins fréquent
   },
 });
 

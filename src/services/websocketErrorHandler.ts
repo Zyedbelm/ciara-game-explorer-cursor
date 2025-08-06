@@ -49,7 +49,10 @@ class WebSocketErrorHandler {
       'WebSocket connection to',
       'realtime/v1/websocket',
       'Connection timeout',
-      'WebSocket connection was closed'
+      'WebSocket connection was closed',
+      '"websocket" is not a constructor',
+      'TypeError: "websocket" is not a constructor',
+      'RealtimeClient.ts'
     ];
 
     return suppressedPatterns.some(pattern => 
