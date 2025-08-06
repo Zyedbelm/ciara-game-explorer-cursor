@@ -114,24 +114,35 @@ const PartnerDashboardNew: React.FC = () => {
           `)
           .order('redeemed_at', { ascending: false });
 
+        console.log('Raw redemptions data:', redemptionsData);
+        console.log('Redemptions error:', redemptionsError);
+
         if (redemptionsError) throw redemptionsError;
 
         console.log('Raw redemptions data:', redemptionsData);
 
-        // Récupérer les détails des récompenses pour les rédactions
-        const rewardIds = [...new Set(redemptionsData?.map(r => r.reward_id) || [])];
-        console.log('Reward IDs found:', rewardIds);
-        const { data: rewardsData, error: rewardsError } = await supabase
+        // Récupérer TOUTES les récompenses du partenaire
+        const { data: allRewardsData, error: allRewardsError } = await supabase
           .from('rewards')
           .select('id, title, value_chf, partner_id')
-          .in('id', rewardIds)
           .eq('partner_id', (profile as any).partner_id);
 
-        if (rewardsError) throw rewardsError;
+        if (allRewardsError) throw allRewardsError;
+
+        console.log('All rewards for partner:', allRewardsData);
+
+        // Filtrer les rédactions qui correspondent aux récompenses du partenaire
+        const partnerRewardIds = allRewardsData?.map(r => r.id) || [];
+        const partnerRedemptions = redemptionsData?.filter(r => 
+          partnerRewardIds.includes(r.reward_id)
+        ) || [];
+
+        console.log('Partner reward IDs:', partnerRewardIds);
+        console.log('Filtered redemptions for partner:', partnerRedemptions);
 
         // Combiner les données
-        const enrichedRedemptions = redemptionsData?.map(redemption => {
-          const reward = rewardsData?.find(r => r.id === redemption.reward_id);
+        const enrichedRedemptions = partnerRedemptions?.map(redemption => {
+          const reward = allRewardsData?.find(r => r.id === redemption.reward_id);
           return {
             ...redemption,
             rewards: reward || { title: 'Offre supprimée', value_chf: 0, partner_id: '' },
@@ -572,11 +583,15 @@ const PartnerDashboardNew: React.FC = () => {
             <CardContent>
               <div className="flex justify-between items-center mb-4">
                 <h3 className="text-lg font-medium">Vos Offres</h3>
-                <Button onClick={() => toast({
-                  title: "Fonctionnalité à venir",
-                  description: "La création d'offres sera bientôt disponible",
-                  variant: "default",
-                })}>
+                <Button onClick={() => {
+                  // TODO: Implémenter la création d'offre
+                  console.log('Créer nouvelle offre pour partenaire:', (profile as any).partner_id);
+                  toast({
+                    title: "Création d'offre",
+                    description: "Redirection vers le formulaire de création...",
+                    variant: "default",
+                  });
+                }}>
                   Nouvelle Offre
                 </Button>
               </div>
@@ -610,11 +625,15 @@ const PartnerDashboardNew: React.FC = () => {
                             variant="outline" 
                             size="sm" 
                             className="p-2"
-                            onClick={() => toast({
-                              title: "Modification",
-                              description: `Modifier l'offre: ${offer.title}`,
-                              variant: "default",
-                            })}
+                            onClick={() => {
+                              console.log('Modifier offre:', offer.id, offer.title);
+                              toast({
+                                title: "Modification",
+                                description: `Modifier l'offre: ${offer.title}`,
+                                variant: "default",
+                              });
+                              // TODO: Ouvrir modal de modification
+                            }}
                           >
                             <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -624,11 +643,17 @@ const PartnerDashboardNew: React.FC = () => {
                             variant="outline" 
                             size="sm" 
                             className="p-2"
-                            onClick={() => toast({
-                              title: "Suppression",
-                              description: `Supprimer l'offre: ${offer.title}`,
-                              variant: "destructive",
-                            })}
+                            onClick={() => {
+                              console.log('Supprimer offre:', offer.id, offer.title);
+                              if (confirm(`Êtes-vous sûr de vouloir supprimer l'offre "${offer.title}" ?`)) {
+                                toast({
+                                  title: "Suppression",
+                                  description: `Offre "${offer.title}" supprimée`,
+                                  variant: "destructive",
+                                });
+                                // TODO: Appel API pour supprimer
+                              }
+                            }}
                           >
                             <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
