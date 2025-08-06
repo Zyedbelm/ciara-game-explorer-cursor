@@ -79,7 +79,7 @@ interface DocumentType {
   created_at: string;
   step_id?: string;
   city_id?: string;
-  [key: string]: any; // Pour gérer les propriétés supplémentaires
+  [key: string]: any;
 }
 
 interface StepDocumentsTabProps {
@@ -231,7 +231,7 @@ export function StepDocumentsTab({ stepId, cityId }: StepDocumentsTabProps) {
 
       const documentData = {
         title: data.title,
-        content: finalContent, // Always populate content field
+        content: finalContent,
         description: data.description || null,
         ai_content: data.ai_content || null,
         document_type: data.document_type,
@@ -289,8 +289,6 @@ export function StepDocumentsTab({ stepId, cityId }: StepDocumentsTabProps) {
       form.reset();
       fetchDocuments();
     } catch (error) {
-      
-      // Handle specific database errors
       let errorMessage = 'Erreur inconnue';
       if (error instanceof Error) {
         if (error.message.includes('violates not-null constraint')) {
@@ -303,9 +301,9 @@ export function StepDocumentsTab({ stepId, cityId }: StepDocumentsTabProps) {
           errorMessage = error.message;
         }
       }
-      
+
       toast({
-        title: "Erreur de sauvegarde",
+        title: "Erreur",
         description: errorMessage,
         variant: "destructive",
       });
@@ -321,14 +319,14 @@ export function StepDocumentsTab({ stepId, cityId }: StepDocumentsTabProps) {
       document_type: document.document_type,
       file_url: document.file_url || '',
       file_name: document.file_name || '',
-      file_size: document.file_size,
-      mime_type: document.mime_type || '',
     });
     setCreateDialogOpen(true);
   };
 
   const handleDelete = async (document: DocumentType) => {
-    if (!confirm('Êtes-vous sûr de vouloir supprimer ce document ?')) return;
+    if (!confirm('Êtes-vous sûr de vouloir supprimer ce document ?')) {
+      return;
+    }
 
     try {
       const { error } = await supabase
@@ -342,6 +340,7 @@ export function StepDocumentsTab({ stepId, cityId }: StepDocumentsTabProps) {
         title: "Succès",
         description: "Document supprimé avec succès",
       });
+
       fetchDocuments();
     } catch (error) {
       toast({
@@ -353,49 +352,26 @@ export function StepDocumentsTab({ stepId, cityId }: StepDocumentsTabProps) {
   };
 
   const handleDownload = async (document: DocumentType) => {
-    try {
-      // Check if document has a file URL
-      if (!document.file_url) {
-        toast({
-          title: "Aucun fichier",
-          description: "Ce document n'a pas de fichier associé",
-          variant: "destructive",
-        });
-        return;
-      }
+    if (!document.file_url) {
+      toast({
+        title: "Erreur",
+        description: "Aucun fichier à télécharger",
+        variant: "destructive",
+      });
+      return;
+    }
 
-      // Extract file path from URL for Supabase storage files
-      const isSupabaseFile = document.file_url.includes('supabase.co/storage/v1/object/public/documents/');
-      
-      if (isSupabaseFile) {
-        // Extract the file path from the URL
-        const urlParts = document.file_url.split('/documents/');
-        const filePath = urlParts[1];
-        
-        if (filePath) {
-          // Download from Supabase storage
-          const { data, error } = await supabase.storage
-            .from('documents')
-            .download(filePath);
-          
-          if (error) throw error;
-          
-          // Create blob URL and trigger download
-          const url = URL.createObjectURL(data);
-          const a = window.document.createElement('a');
-          a.href = url;
-          a.download = document.file_name || 'document';
-          window.document.body.appendChild(a);
-          a.click();
-          window.document.body.removeChild(a);
-          URL.revokeObjectURL(url);
-        } else {
-          throw new Error('Impossible d\'extraire le chemin du fichier');
-        }
-      } else {
-        // For external URLs, open in new tab
-        window.open(document.file_url, '_blank');
-      }
+    try {
+      const response = await fetch(document.file_url);
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = document.file_name || document.title;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
     } catch (error) {
       toast({
         title: "Erreur",
@@ -427,7 +403,7 @@ export function StepDocumentsTab({ stepId, cityId }: StepDocumentsTabProps) {
             }
           </p>
         </div>
-        {stepId && stepId.trim() !== '' ? (
+        {stepId && stepId.trim() !== '' && (
           <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
             <DialogTrigger asChild>
               <Button 
@@ -442,183 +418,174 @@ export function StepDocumentsTab({ stepId, cityId }: StepDocumentsTabProps) {
                 Nouveau document
               </Button>
             </DialogTrigger>
-          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>
-                {editingDocument ? 'Modifier le Document' : 'Ajouter un Nouveau Document'}
-              </DialogTitle>
-              <DialogDescription>
-                {editingDocument ? 'Modifiez les détails de ce document' : 'Ajoutez un nouveau document'}
-              </DialogDescription>
-            </DialogHeader>
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                <FormField
-                  control={form.control}
-                  name="title"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Titre</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Titre du document..." {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="description"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Description (optionnel)</FormLabel>
-                      <FormControl>
-                        <Textarea 
-                          placeholder="Description du document..."
-                          className="min-h-20"
-                          {...field} 
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                 />
-
-                <FormField
-                  control={form.control}
-                  name="ai_content"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="flex items-center gap-2">
-                        <Brain className="h-4 w-4 text-primary" />
-                        Contenu IA pour le Chat (prioritaire)
-                      </FormLabel>
-                      <FormControl>
-                        <RichTextEditor
-                          value={field.value || ''}
-                          onChange={field.onChange}
-                          placeholder="Saisissez le contenu que l'IA doit utiliser en priorité pour répondre aux questions sur cette étape..."
-                          className="min-h-[300px]"
-                        />
-                      </FormControl>
-                      <div className="text-xs text-muted-foreground">
-                        Ce contenu sera utilisé en priorité par l'IA de conversation pour donner des informations sur cette étape.
-                      </div>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="document_type"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Type de document</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>
+                  {editingDocument ? 'Modifier le Document' : 'Ajouter un Nouveau Document'}
+                </DialogTitle>
+                <DialogDescription>
+                  {editingDocument ? 'Modifiez les détails de ce document' : 'Ajoutez un nouveau document'}
+                </DialogDescription>
+              </DialogHeader>
+              <Form {...form}>
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                  <FormField
+                    control={form.control}
+                    name="title"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Titre</FormLabel>
                         <FormControl>
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
+                          <Input placeholder="Titre du document..." {...field} />
                         </FormControl>
-                        <SelectContent>
-                          <SelectItem value="guide">Guide</SelectItem>
-                          <SelectItem value="map">Carte</SelectItem>
-                          <SelectItem value="audio_transcript">Transcription audio</SelectItem>
-                          <SelectItem value="historical_document">Document historique</SelectItem>
-                          <SelectItem value="menu">Menu</SelectItem>
-                          <SelectItem value="brochure">Brochure</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-                <div className="space-y-4">
-                  <FormLabel>Fichier</FormLabel>
-                  <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-6 hover:border-primary/50 transition-colors">
-                    <div className="text-center">
-                      <input
-                        type="file"
-                        onChange={(e) => {
-                          const file = e.target.files?.[0];
-                          if (file) {
-                            setSelectedFile(file);
-                            form.setValue('file_name', file.name);
-                            form.setValue('file_size', file.size);
-                            form.setValue('mime_type', file.type);
-                            // Clear URL since we're uploading a file
-                            form.setValue('file_url', '');
-                          }
-                        }}
-                        className="w-full cursor-pointer"
-                        accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png,.gif,.mp3,.wav,.mp4,.avi"
-                      />
-                      <p className="text-sm text-muted-foreground mt-2">
-                        Formats acceptés: PDF, DOC, DOCX, TXT, images, audio, vidéo
-                      </p>
-                      {selectedFile && (
-                        <div className="mt-3 p-2 bg-green-50 border border-green-200 rounded text-sm">
-                          <p className="text-green-700 font-medium">
-                            ✅ Fichier sélectionné: {selectedFile.name}
-                          </p>
-                          <p className="text-green-600 text-xs">
-                            Taille: {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
-                          </p>
+                  <FormField
+                    control={form.control}
+                    name="description"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Description (optionnel)</FormLabel>
+                        <FormControl>
+                          <Textarea 
+                            placeholder="Description du document..."
+                            className="min-h-20"
+                            {...field} 
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="ai_content"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="flex items-center gap-2">
+                          <Brain className="h-4 w-4 text-primary" />
+                          Contenu IA pour le Chat (prioritaire)
+                        </FormLabel>
+                        <FormControl>
+                          <RichTextEditor
+                            value={field.value || ''}
+                            onChange={field.onChange}
+                            placeholder="Saisissez le contenu que l'IA doit utiliser en priorité pour répondre aux questions sur cette étape..."
+                            className="min-h-[300px]"
+                          />
+                        </FormControl>
+                        <div className="text-xs text-muted-foreground">
+                          Ce contenu sera utilisé en priorité par l'IA de conversation pour donner des informations sur cette étape.
                         </div>
-                      )}
-                    </div>
-                  </div>
-                  
-                  {!selectedFile && (
-                    <div>
-                      <FormLabel>Ou saisissez une URL</FormLabel>
-                      <FormField
-                        control={form.control}
-                        name="file_url"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormControl>
-                              <Input 
-                                placeholder="https://exemple.com/document.pdf" 
-                                {...field}
-                                onChange={(e) => {
-                                  field.onChange(e);
-                                  if (e.target.value) {
-                                    // Clear file selection if URL is provided
-                                    setSelectedFile(null);
-                                    form.setValue('file_name', e.target.value.split('/').pop() || '');
-                                  }
-                                }}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-                  )}
-                </div>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-                <DialogFooter>
-                  <Button 
-                    type="button" 
-                    variant="outline" 
-                    onClick={() => setCreateDialogOpen(false)}
-                  >
-                    Annuler
-                  </Button>
-                  <Button type="submit">
-                    {editingDocument ? 'Modifier' : 'Créer'} le Document
-                  </Button>
-                </DialogFooter>
-              </form>
-            </Form>
-          </DialogContent>
-        </Dialog>
-        ) : null}
+                  <FormField
+                    control={form.control}
+                    name="document_type"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Type de document</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="guide">Guide</SelectItem>
+                            <SelectItem value="map">Carte</SelectItem>
+                            <SelectItem value="audio_transcript">Transcription audio</SelectItem>
+                            <SelectItem value="historical_document">Document historique</SelectItem>
+                            <SelectItem value="menu">Menu</SelectItem>
+                            <SelectItem value="brochure">Brochure</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <div>
+                    <FormLabel>Fichier</FormLabel>
+                    <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-6 hover:border-primary/50 transition-colors">
+                      <div className="text-center">
+                        <input
+                          type="file"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) {
+                              setSelectedFile(file);
+                              form.setValue('file_name', file.name);
+                              form.setValue('file_size', file.size);
+                              form.setValue('mime_type', file.type);
+                              form.setValue('file_url', '');
+                            }
+                          }}
+                          className="w-full cursor-pointer"
+                          accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png,.gif,.mp3,.wav,.mp4,.avi"
+                        />
+                        <p className="text-sm text-muted-foreground mt-2">
+                          Formats acceptés: PDF, DOC, DOCX, TXT, images, audio, vidéo
+                        </p>
+                        {selectedFile && (
+                          <div className="mt-3 p-2 bg-green-50 border border-green-200 rounded text-sm">
+                            <p className="text-green-700 font-medium">
+                              ✅ Fichier sélectionné: {selectedFile.name}
+                            </p>
+                            <p className="text-green-600 text-xs">
+                              Taille: {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    
+                    {!selectedFile && (
+                      <div>
+                        <FormField
+                          control={form.control}
+                          name="file_url"
+                          render={({ field }) => (
+                            <FormItem className="mt-4">
+                              <FormLabel>Ou URL du fichier</FormLabel>
+                              <FormControl>
+                                <Input 
+                                  placeholder="https://..." 
+                                  {...field} 
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                    )}
+                  </div>
+
+                  <DialogFooter>
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      onClick={() => setCreateDialogOpen(false)}
+                    >
+                      Annuler
+                    </Button>
+                    <Button type="submit">
+                      {editingDocument ? 'Modifier' : 'Créer'} le Document
+                    </Button>
+                  </DialogFooter>
+                </form>
+              </Form>
+            </DialogContent>
+          </Dialog>
+        )}
       </div>
 
       {/* Filtres */}
@@ -715,17 +682,17 @@ export function StepDocumentsTab({ stepId, cityId }: StepDocumentsTabProps) {
                   <TableCell>
                     {new Date(document.created_at).toLocaleDateString('fr-FR')}
                   </TableCell>
-                   <TableCell className="text-right">
-                     <div className="flex items-center gap-2 justify-end">
-                       {document.file_url && (
-                         <Button
-                           variant="ghost"
-                           size="sm"
-                           onClick={() => handleDownload(document)}
-                         >
-                           <Download className="h-4 w-4" />
-                         </Button>
-                       )}
+                  <TableCell className="text-right">
+                    <div className="flex items-center gap-2 justify-end">
+                      {document.file_url && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleDownload(document)}
+                        >
+                          <Download className="h-4 w-4" />
+                        </Button>
+                      )}
                       <Button
                         variant="ghost"
                         size="sm"
@@ -737,6 +704,7 @@ export function StepDocumentsTab({ stepId, cityId }: StepDocumentsTabProps) {
                         variant="ghost"
                         size="sm"
                         onClick={() => handleDelete(document)}
+                        className="text-red-600 hover:text-red-700"
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
@@ -750,4 +718,4 @@ export function StepDocumentsTab({ stepId, cityId }: StepDocumentsTabProps) {
       </div>
     </div>
   );
-}
+} 
