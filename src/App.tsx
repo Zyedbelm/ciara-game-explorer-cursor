@@ -22,7 +22,9 @@ const JourneyDetailPage = React.lazy(() => import("./pages/JourneyDetailPage"));
 const RewardsPage = React.lazy(() => import("./pages/RewardsPage"));
 const MyRewardsPage = React.lazy(() => import("./pages/MyRewardsPage"));
 const AdminDashboard = React.lazy(() => import("./pages/AdminDashboard"));
-const PartnerDashboard = React.lazy(() => import("./components/admin/PartnerDashboard"));
+const PartnerDashboard = React.lazy(() => import("./pages/PartnerDashboardPage"));
+const PartnerRewardsManagement = React.lazy(() => import("./components/admin/PartnerRewardsManagement"));
+const PartnerAnalytics = React.lazy(() => import("./components/admin/PartnerAnalytics"));
 const ResetPasswordPage = React.lazy(() => import("./pages/ResetPasswordPage"));
 const ProfilePage = React.lazy(() => import("./pages/ProfilePage"));
 const MyJourneysPage = React.lazy(() => import("./pages/MyJourneysPage"));
@@ -139,6 +141,16 @@ function App() {
                 <Route path="/partner-dashboard" element={
                   <AuthGuard requiredRole={['partner']}>
                     <PartnerDashboard />
+                  </AuthGuard>
+                } />
+                <Route path="/partner-rewards" element={
+                  <AuthGuard requiredRole={['partner']}>
+                    <PartnerRewardsManagement />
+                  </AuthGuard>
+                } />
+                <Route path="/partner-analytics" element={
+                  <AuthGuard requiredRole={['partner']}>
+                    <PartnerAnalytics />
                   </AuthGuard>
                 } />
                 <Route path="/faq" element={<FAQPage />} />
