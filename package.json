@@ -18,7 +18,9 @@
     "audit:full": "npm run security:audit && npm run cleanup:logs",
     "test:security": "npm run security:audit",
     "optimize": "npm run cleanup:logs && npm run build:prod",
-    "deploy:check": "npm run security:audit && npm run build:prod && npm run test:performance"
+    "deploy:check": "npm run security:audit && npm run build:prod && npm run test:performance",
+    "clear:cache": "./scripts/clear-vite-cache.sh",
+    "dev:clean": "./scripts/clear-vite-cache.sh && npm run dev"
   },
   "dependencies": {
     "@googlemaps/js-api-loader": "^1.16.10",
