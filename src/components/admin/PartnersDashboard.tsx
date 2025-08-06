@@ -133,16 +133,38 @@ const PartnersDashboard = () => {
   };
 
   const fetchPartners = async () => {
-    let query = supabase
-      .from('partners')
-      .select(`
-        id,
-        name,
-        category,
-        email,
-        city_id,
-        is_active,
-        cities (
+    try {
+      // Récupérer d'abord les partenaires de base
+      let query = supabase
+        .from('partners')
+        .select('id, name, category, email, city_id, is_active')
+        .eq('is_active', true);
+
+      // Filtres selon le rôle
+      if (isTenantAdmin() && profile?.city_id) {
+        query = query.eq('city_id', profile.city_id);
+      }
+
+      // Appliquer les filtres de ville directement
+      if (selectedCity !== 'all') {
+        query = query.eq('city_id', selectedCity);
+      }
+
+      const { data: partnersData, error: partnersError } = await query;
+      if (partnersError) throw partnersError;
+
+      // Récupérer les informations des villes et pays séparément
+      const cityIds = [...new Set(partnersData?.map(p => p.city_id) || [])];
+      
+      if (cityIds.length === 0) {
+        setPartners([]);
+        return;
+      }
+
+      const { data: citiesData, error: citiesError } = await supabase
+        .from('cities')
+        .select(`
+          id,
           name,
           country_id,
           countries (
@@ -150,35 +172,36 @@ const PartnersDashboard = () => {
             name_en,
             name_de
           )
-        )
-      `)
-      .eq('is_active', true);
+        `)
+        .in('id', cityIds);
 
-    // Filtres selon le rôle
-    if (isTenantAdmin() && profile?.city_id) {
-      query = query.eq('city_id', profile.city_id);
+      if (citiesError) throw citiesError;
+
+      // Combiner les données
+      const partnersWithCities = partnersData?.map(partner => {
+        const city = citiesData?.find(c => c.id === partner.city_id);
+        return {
+          ...partner,
+          city
+        };
+      }) || [];
+
+      // Appliquer le filtre de pays après la combinaison
+      let filteredPartners = partnersWithCities;
+      if (selectedCountry !== 'all') {
+        filteredPartners = filteredPartners.filter(p => p.city?.country_id === selectedCountry);
+      }
+
+      // Appliquer le filtre partenaire
+      if (selectedPartner !== 'all') {
+        filteredPartners = filteredPartners.filter(p => p.id === selectedPartner);
+      }
+
+      setPartners(filteredPartners);
+    } catch (error) {
+      console.error('Erreur fetchPartners:', error);
+      throw error;
     }
-
-    // Appliquer les filtres de pays et ville directement dans la requête
-    if (selectedCountry !== 'all') {
-      query = query.eq('cities.country_id', selectedCountry);
-    }
-    
-    if (selectedCity !== 'all') {
-      query = query.eq('city_id', selectedCity);
-    }
-
-    const { data, error } = await query;
-    if (error) throw error;
-
-    // Appliquer le filtre partenaire après la requête
-    let filteredPartners = data || [];
-    
-    if (selectedPartner !== 'all') {
-      filteredPartners = filteredPartners.filter(p => p.id === selectedPartner);
-    }
-
-    setPartners(filteredPartners);
   };
 
   const fetchCountries = async () => {

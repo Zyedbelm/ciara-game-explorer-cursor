@@ -106,7 +106,7 @@ const PartnersOffersManagement = ({
 
   useEffect(() => {
     fetchOffers();
-  }, [selectedPartner]);
+  }, [selectedPartner, partners]);
 
   // Pour les Admin Ville, auto-sélectionner le partenaire si disponible
   useEffect(() => {
@@ -133,28 +133,57 @@ const PartnersOffersManagement = ({
   const fetchOffers = async () => {
     setLoading(true);
     try {
-      let query = supabase
-        .from('rewards')
-        .select(`
-          *,
-          partner:partners(name, city_id)
-        `)
-        .order('created_at', { ascending: false });
+      let partnerIds: string[] = [];
 
-      // Pour Admin Ville, filtrer automatiquement par sa ville assignée
+      // Pour Admin Ville, récupérer d'abord les partenaires de sa ville
       if (isTenantAdmin() && profile?.city_id) {
-        query = query.eq('partners.city_id', profile.city_id);
+        const { data: partnersData, error: partnersError } = await supabase
+          .from('partners')
+          .select('id')
+          .eq('city_id', profile.city_id);
+        
+        if (partnersError) throw partnersError;
+        partnerIds = partnersData?.map(p => p.id) || [];
       } else {
-        // Pour Super Admin, appliquer les filtres sélectionnés
+        // Pour Super Admin, utiliser les partenaires filtrés
+        partnerIds = partners.map(p => p.id);
         if (selectedPartner !== 'all') {
-          query = query.eq('partner_id', selectedPartner);
+          partnerIds = [selectedPartner];
         }
       }
 
-      const { data, error } = await query;
-      if (error) throw error;
-      setOffers(data || []);
+      // Si aucun partenaire, pas d'offres
+      if (partnerIds.length === 0) {
+        setOffers([]);
+        return;
+      }
+
+      // Récupérer les offres pour ces partenaires
+      const { data: offersData, error: offersError } = await supabase
+        .from('rewards')
+        .select('*')
+        .in('partner_id', partnerIds)
+        .order('created_at', { ascending: false });
+
+      if (offersError) throw offersError;
+
+      // Récupérer les noms des partenaires
+      const { data: partnersData, error: partnersError } = await supabase
+        .from('partners')
+        .select('id, name')
+        .in('id', partnerIds);
+
+      if (partnersError) throw partnersError;
+
+      // Combiner les données
+      const offersWithPartners = offersData?.map(offer => ({
+        ...offer,
+        partner: partnersData?.find(p => p.id === offer.partner_id)
+      })) || [];
+
+      setOffers(offersWithPartners);
     } catch (error) {
+      console.error('Erreur fetchOffers:', error);
       toast({
         title: "Erreur",
         description: "Impossible de charger les offres",
