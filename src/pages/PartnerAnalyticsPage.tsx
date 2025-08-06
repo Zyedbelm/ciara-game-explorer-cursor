@@ -1,11 +1,11 @@
 import React from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
-import PartnerDashboardNew from '@/components/admin/PartnerDashboardNew';
+import PartnerAnalytics from '@/components/admin/PartnerAnalytics';
 import Header from '@/components/common/Header';
 import Footer from '@/components/common/Footer';
 
-const PartnerDashboardPage: React.FC = () => {
+const PartnerAnalyticsPage: React.FC = () => {
   const { isAuthenticated, isPartner, loading } = useAuth();
 
   // Redirection si non authentifié
@@ -31,11 +31,11 @@ const PartnerDashboardPage: React.FC = () => {
     <div className="min-h-screen bg-background">
       <Header />
       <main className="container mx-auto px-4 py-8">
-        <PartnerDashboardNew />
+        <PartnerAnalytics />
       </main>
       <Footer />
     </div>
   );
 };
 
-export default PartnerDashboardPage; 
+export default PartnerAnalyticsPage; 
