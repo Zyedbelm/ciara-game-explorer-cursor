@@ -94,6 +94,13 @@ const PartnersManagement = () => {
     fetchData();
   }, [selectedCountry, selectedCity]);
 
+  // Pour les Admin Ville, sélectionner automatiquement leur ville assignée
+  useEffect(() => {
+    if (isTenantAdmin() && cities.length > 0 && !formData.city_id) {
+      setFormData(prev => ({ ...prev, city_id: cities[0].id }));
+    }
+  }, [cities, isTenantAdmin]);
+
   const fetchData = async () => {
     setLoading(true);
     try {
@@ -186,6 +193,8 @@ const PartnersManagement = () => {
       
       if (cityData) {
         setCities([cityData]);
+        // Pour les Admin Ville, définir automatiquement la ville sélectionnée
+        setSelectedCity(cityData.id);
       }
     } else {
       let query = supabase
@@ -334,7 +343,7 @@ const PartnersManagement = () => {
       latitude: '',
       longitude: '',
       logo_url: '',
-      city_id: '',
+      city_id: isTenantAdmin() && cities.length > 0 ? cities[0].id : '',
       is_active: true
     });
   };
@@ -382,19 +391,25 @@ const PartnersManagement = () => {
             </Select>
           )}
 
-          <Select value={selectedCity} onValueChange={setSelectedCity}>
-            <SelectTrigger className="w-40">
-              <SelectValue placeholder="Ville" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Toutes les villes</SelectItem>
-              {cities.map(city => (
-                <SelectItem key={city.id} value={city.id}>
-                  {city.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          {isSuperAdmin() ? (
+            <Select value={selectedCity} onValueChange={setSelectedCity}>
+              <SelectTrigger className="w-40">
+                <SelectValue placeholder="Ville" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Toutes les villes</SelectItem>
+                {cities.map(city => (
+                  <SelectItem key={city.id} value={city.id}>
+                    {city.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          ) : (
+            <div className="w-40 px-3 py-2 text-sm text-muted-foreground bg-muted rounded-md border">
+              {cities.length > 0 ? cities[0].name : 'Ville assignée'}
+            </div>
+          )}
 
           {/* Bouton de création */}
           <Dialog open={showCreateModal} onOpenChange={setShowCreateModal}>
@@ -441,18 +456,24 @@ const PartnersManagement = () => {
 
                 <div className="space-y-2">
                   <Label htmlFor="city">Ville *</Label>
-                  <Select value={formData.city_id} onValueChange={(value) => setFormData({...formData, city_id: value})}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Sélectionner une ville" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {cities.map(city => (
-                        <SelectItem key={city.id} value={city.id}>
-                          {city.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  {isSuperAdmin() ? (
+                    <Select value={formData.city_id} onValueChange={(value) => setFormData({...formData, city_id: value})}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Sélectionner une ville" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {cities.map(city => (
+                          <SelectItem key={city.id} value={city.id}>
+                            {city.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  ) : (
+                    <div className="px-3 py-2 text-sm text-muted-foreground bg-muted rounded-md border">
+                      {cities.length > 0 ? cities[0].name : 'Ville assignée'}
+                    </div>
+                  )}
                 </div>
 
                 <div className="space-y-2">
