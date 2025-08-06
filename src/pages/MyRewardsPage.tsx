@@ -223,7 +223,21 @@ const MyRewardsPage = () => {
     try {
       const { data, error } = await supabase
         .from('cities')
-        .select('id, name, country_id')
+        .select(`
+          id, 
+          name, 
+          country_id,
+          countries!inner (
+            name_fr,
+            name_en, 
+            name_de,
+            code,
+            is_active
+          )
+        `)
+        .eq('is_archived', false)
+        .eq('is_visible_on_homepage', true)
+        .eq('countries.is_active', true)
         .order('name');
 
       if (error) throw error;

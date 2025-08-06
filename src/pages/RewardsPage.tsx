@@ -250,6 +250,7 @@ const RewardsPage = () => {
           countries!inner(id, is_active)
         `)
         .eq('is_archived', false)
+        .eq('is_visible_on_homepage', true)
         .eq('countries.is_active', true)
         .order('name');
 
