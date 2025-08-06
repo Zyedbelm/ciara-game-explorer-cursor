@@ -22,6 +22,7 @@ import {
 import PartnersOffersManagement from './PartnersOffersManagement';
 import PartnersRewardsAnalytics from './PartnersRewardsAnalytics';
 import PartnersAdvancedAnalytics from './PartnersAdvancedAnalytics';
+import PartnersManagement from './PartnersManagement';
 
 interface PartnerData {
   id: string;
@@ -549,8 +550,9 @@ const PartnersDashboard = () => {
 
       {/* Navigation par onglets */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="overview">Tableau de Bord</TabsTrigger>
+          <TabsTrigger value="partners">Gestion des Partenaires</TabsTrigger>
           <TabsTrigger value="management">Gestion des Offres</TabsTrigger>
         </TabsList>
 
@@ -706,6 +708,10 @@ const PartnersDashboard = () => {
               />
             </TabsContent>
           </Tabs>
+        </TabsContent>
+
+        <TabsContent value="partners" className="space-y-6">
+          <PartnersManagement />
         </TabsContent>
 
         <TabsContent value="management" className="space-y-6">
