@@ -126,7 +126,7 @@ const PartnersRewardsAnalytics = ({
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Rédactions/Partenaires</CardTitle>
+                            <CardTitle className="text-sm font-medium">Récompenses/Partenaires</CardTitle>
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -160,7 +160,7 @@ const PartnersRewardsAnalytics = ({
               {stats.totalRewards > 0 ? Math.round((stats.totalRedemptions / stats.totalRewards) * 100) : 0}%
             </div>
             <p className="text-xs text-muted-foreground">
-              rédactions vs offres créées
+              récompenses vs offres créées
             </p>
           </CardContent>
         </Card>
@@ -181,7 +181,7 @@ const PartnersRewardsAnalytics = ({
                 <TableRow>
                   <TableHead>Partenaire</TableHead>
                   <TableHead>Catégorie</TableHead>
-                  <TableHead>Rédactions</TableHead>
+                  <TableHead>Récompenses</TableHead>
                   <TableHead>Revenus</TableHead>
                   <TableHead>Performance</TableHead>
                 </TableRow>
@@ -221,7 +221,7 @@ const PartnersRewardsAnalytics = ({
           <CardHeader>
             <CardTitle>Activité Quotidienne</CardTitle>
             <CardDescription>
-              Rédactions et revenus par jour de la semaine
+              Récompenses et revenus par jour de la semaine
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -234,7 +234,7 @@ const PartnersRewardsAnalytics = ({
                   </div>
                   <div className="flex items-center space-x-4">
                     <div className="text-right">
-                      <div className="text-sm font-medium">{day.redemptions} rédactions</div>
+                      <div className="text-sm font-medium">{day.redemptions} récompenses</div>
                       <div className="text-xs text-muted-foreground">{formatCurrency(day.revenue)}</div>
                     </div>
                     <Progress 
@@ -266,7 +266,7 @@ const PartnersRewardsAnalytics = ({
                   </div>
                   <div className="flex items-center space-x-4">
                     <div className="text-right">
-                      <div className="text-sm font-medium">{hour.redemptions} rédactions</div>
+                      <div className="text-sm font-medium">{hour.redemptions} récompenses</div>
                       <div className="text-xs text-muted-foreground">{formatCurrency(hour.revenue)}</div>
                     </div>
                     <Progress 
@@ -297,7 +297,7 @@ const PartnersRewardsAnalytics = ({
                   <TableHead>Offre</TableHead>
                   <TableHead>Points</TableHead>
                   <TableHead>Valeur</TableHead>
-                  <TableHead>Rédactions</TableHead>
+                  <TableHead>Récompenses</TableHead>
                   <TableHead>Statut</TableHead>
                   <TableHead>Performance</TableHead>
                 </TableRow>

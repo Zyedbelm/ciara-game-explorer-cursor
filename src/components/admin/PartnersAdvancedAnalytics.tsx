@@ -119,7 +119,7 @@ const PartnersAdvancedAnalytics = ({
         value: stats.totalRewards > 0 ? Math.round((stats.totalRedemptions / stats.totalRewards) * 100) : 0,
         unit: "%",
         trend: "up",
-        description: "Rédactions vs offres"
+        description: "Récompenses vs offres"
       },
       {
         metric: "Revenu Moyen",
@@ -208,7 +208,7 @@ const PartnersAdvancedAnalytics = ({
               <TableHeader>
                 <TableRow>
                   <TableHead>Période</TableHead>
-                  <TableHead>Rédactions</TableHead>
+                                      <TableHead>Récompenses</TableHead>
                   <TableHead>Revenus</TableHead>
                   <TableHead>Tendance</TableHead>
                   <TableHead>Performance</TableHead>
@@ -321,7 +321,7 @@ const PartnersAdvancedAnalytics = ({
               <div className="text-3xl font-bold text-blue-600">
                 {stats.totalPartners > 0 ? (stats.totalRedemptions / stats.totalPartners).toFixed(1) : 0}
               </div>
-              <div className="text-sm text-muted-foreground">Rédactions moyennes par partenaire</div>
+              <div className="text-sm text-muted-foreground">Récompenses moyennes par partenaire</div>
             </div>
             
             <div className="text-center">
@@ -342,7 +342,7 @@ const PartnersAdvancedAnalytics = ({
               <div className="text-3xl font-bold text-orange-600">
                 {stats.totalRedemptions > 0 ? (stats.totalRevenue / stats.totalRedemptions).toFixed(2) : 0}
               </div>
-              <div className="text-sm text-muted-foreground">Revenu moyen par rédaction (CHF)</div>
+                              <div className="text-sm text-muted-foreground">Revenu moyen par récompense (CHF)</div>
             </div>
             
             <div className="text-center">
@@ -388,7 +388,7 @@ const PartnersAdvancedAnalytics = ({
               <div>
                 <h4 className="font-medium text-green-900">Performance Exceptionnelle</h4>
                 <p className="text-sm text-green-700">
-                  Les heures de pointe (12:00-14:00) génèrent 40% des rédactions. 
+                  Les heures de pointe (12:00-14:00) génèrent 40% des récompenses. 
                   Optimisez les offres pour ces créneaux horaires.
                 </p>
               </div>

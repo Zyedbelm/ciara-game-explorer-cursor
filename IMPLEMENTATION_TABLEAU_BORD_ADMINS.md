@@ -33,17 +33,17 @@
 
 ### **Statistiques Calculées**
 - **Total des récompenses** : Nombre d'offres actives
-- **Total des rédactions** : Nombre de rédactions validées
+- **Total des récompenses** : Nombre de récompenses validées
 - **Revenus totaux** : Calcul basé sur `value_chf × redemptions`
 - **Note moyenne** : Placeholder pour système de notation futur
 
 ### **Données Temporelles**
-- **Jours actifs** : Rédactions groupées par jour de la semaine
+- **Jours actifs** : Récompenses groupées par jour de la semaine
 - **Heures actives** : Top 5 des heures les plus actives
 - **Période** : 7 jours pour les jours, 24h pour les heures
 
 ### **Meilleures Offres**
-- **Tri par popularité** : Nombre de rédactions
+- **Tri par popularité** : Nombre de récompenses
 - **Top 5** des offres les plus utilisées
 - **Statut** : Active/Inactive
 
@@ -112,7 +112,7 @@ GROUP BY rewards.id
 
 ### **Données Temporelles**
 ```sql
--- Rédactions par jour/heure
+-- Récompenses par jour/heure
 SELECT 
   DATE(created_at) as day,
   EXTRACT(HOUR FROM created_at) as hour,

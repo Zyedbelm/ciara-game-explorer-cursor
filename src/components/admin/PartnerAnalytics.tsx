@@ -82,7 +82,7 @@ const PartnerAnalytics: React.FC = () => {
       try {
         setLoading(true);
 
-        // Récupérer les rédactions du partenaire
+        // Récupérer les récompenses du partenaire
         const { data: redemptionsData, error: redemptionsError } = await supabase
           .from('reward_redemptions')
           .select(`
@@ -266,7 +266,7 @@ const PartnerAnalytics: React.FC = () => {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Rédactions</CardTitle>
+                            <CardTitle className="text-sm font-medium">Récompenses</CardTitle>
             <ShoppingCart className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -311,7 +311,7 @@ const PartnerAnalytics: React.FC = () => {
           <CardContent>
             <div className="text-2xl font-bold">{analytics.conversionRate}%</div>
             <p className="text-xs text-muted-foreground">
-              rédactions/offres
+              récompenses/offres
             </p>
           </CardContent>
         </Card>
@@ -409,7 +409,7 @@ const PartnerAnalytics: React.FC = () => {
             <TableHeader>
               <TableRow>
                 <TableHead>Récompense</TableHead>
-                <TableHead>Rédactions</TableHead>
+                                    <TableHead>Récompenses</TableHead>
                 <TableHead>Revenus</TableHead>
                 <TableHead>Note</TableHead>
                 <TableHead>Performance</TableHead>

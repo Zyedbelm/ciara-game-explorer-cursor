@@ -121,7 +121,7 @@ FOR SELECT USING (
 - **Données contextuelles** : Analytics du partenaire sélectionné
 
 #### **Pour Partenaire**
-- **Données propres** : Uniquement ses offres et rédactions
+- **Données propres** : Uniquement ses offres et récompenses
 - **Interface standard** : Même design, données filtrées
 
 ### **2. Gestion des Liens**

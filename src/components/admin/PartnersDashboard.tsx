@@ -458,7 +458,7 @@ const PartnersDashboard = () => {
       };
     }) || [];
 
-    // Trier par nombre de rédactions et prendre le top 5
+    // Trier par nombre de récompenses et prendre le top 5
     const topOffers = offersWithStats
       .sort((a, b) => b.redemptions - a.redemptions)
       .slice(0, 5);
@@ -625,7 +625,7 @@ const PartnersDashboard = () => {
                     <div className="space-y-3">
                       {dailyStats.map((day, index) => (
                         <div key={index} className="flex items-center justify-between">
-                          <span className="text-sm">{day.day} {day.redemptions} rédactions</span>
+                          <span className="text-sm">{day.day} {day.redemptions} récompenses</span>
                           <span className="text-sm font-medium">{formatCurrency(day.revenue)}</span>
                         </div>
                       ))}
@@ -642,7 +642,7 @@ const PartnersDashboard = () => {
                     <div className="space-y-3">
                       {hourlyStats.map((hour, index) => (
                         <div key={index} className="flex items-center justify-between">
-                          <span className="text-sm">{hour.hour} {hour.redemptions} rédactions</span>
+                          <span className="text-sm">{hour.hour} {hour.redemptions} récompenses</span>
                           <span className="text-sm font-medium">{formatCurrency(hour.revenue)}</span>
                         </div>
                       ))}
@@ -664,7 +664,7 @@ const PartnersDashboard = () => {
                           <th className="text-left py-2">Offre</th>
                           <th className="text-left py-2">Points</th>
                           <th className="text-left py-2">Valeur</th>
-                          <th className="text-left py-2">Rédactions</th>
+                          <th className="text-left py-2">Récompenses</th>
                           <th className="text-left py-2">Statut</th>
                         </tr>
                       </thead>

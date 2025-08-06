@@ -19,7 +19,7 @@ expirationDate.setDate(expirationDate.getDate() + (reward.validity_days || 30));
 - ✅ **Champ `max_redemptions_per_user`** dans le formulaire (défaut: 5)
 - ✅ **Fonction `can_user_redeem_reward()`** vérifie la limite par utilisateur
 - ✅ **Affichage dans l'interface** : "Par user: 5" dans le tableau partenaire
-- ✅ **Validation automatique** empêche les rédactions au-delà de la limite
+- ✅ **Validation automatique** empêche les récompenses au-delà de la limite
 
 **Code vérifié :**
 ```sql
@@ -140,7 +140,7 @@ WHERE r.is_active = true
 1. ✅ **Date de validité dynamique** : Calculée automatiquement
 2. ✅ **Compteur par utilisateur** : Limite N/N comme dans l'image
 3. ✅ **Compteur global** : Limite totale pour l'offre
-4. ✅ **Validation automatique** : Empêche les rédactions au-delà des limites
+4. ✅ **Validation automatique** : Empêche les récompenses au-delà des limites
 5. ✅ **Visibilité conditionnelle** : Offre invisible quand limite globale atteinte
 
 **Le système respecte exactement le processus de l'image avec les compteurs 0/5 et la gestion complète des limites !**

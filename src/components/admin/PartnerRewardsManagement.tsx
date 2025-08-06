@@ -75,7 +75,7 @@ const PartnerRewardsManagement: React.FC = () => {
 
         if (error) throw error;
 
-        // Transformer les données pour inclure le nombre de rédactions
+        // Transformer les données pour inclure le nombre de récompenses
         const transformedRewards = data?.map(reward => ({
           ...reward,
           total_redemptions: reward.reward_redemptions?.[0]?.count || 0,
@@ -295,7 +295,7 @@ const PartnerRewardsManagement: React.FC = () => {
                 />
               </div>
               <div>
-                <Label htmlFor="max_redemptions">Max rédactions</Label>
+                <Label htmlFor="max_redemptions">Max récompenses</Label>
                 <Input
                   id="max_redemptions"
                   type="number"
@@ -366,7 +366,7 @@ const PartnerRewardsManagement: React.FC = () => {
                 <TableHead>Récompense</TableHead>
                 <TableHead>Points</TableHead>
                 <TableHead>Valeur</TableHead>
-                <TableHead>Rédactions</TableHead>
+                                    <TableHead>Récompenses</TableHead>
                 <TableHead>Note</TableHead>
                 <TableHead>Statut</TableHead>
                 <TableHead>Actions</TableHead>

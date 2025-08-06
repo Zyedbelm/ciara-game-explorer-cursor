@@ -132,7 +132,7 @@ const PartnerDashboardNew: React.FC = () => {
 
         if (offersError) throw offersError;
 
-        // Récupérer TOUTES les rédactions
+        // Récupérer TOUTES les récompenses
         const { data: allRedemptionsData, error: redemptionsError } = await supabase
           .from('reward_redemptions')
           .select('*')
@@ -153,7 +153,7 @@ const PartnerDashboardNew: React.FC = () => {
 
         console.log('All rewards for partner:', allRewardsData);
 
-        // Filtrer les rédactions qui correspondent aux récompenses du partenaire
+        // Filtrer les récompenses qui correspondent aux récompenses du partenaire
         const partnerRewardIds = allRewardsData?.map(r => r.id) || [];
         const partnerRedemptions = allRedemptionsData?.filter(r => 
           partnerRewardIds.includes(r.reward_id)
@@ -178,7 +178,7 @@ const PartnerDashboardNew: React.FC = () => {
         const totalRedemptions = enrichedRedemptions?.length || 0;
         const totalRevenue = enrichedRedemptions?.reduce((sum, r) => sum + (r.rewards?.value_chf || 0), 0) || 0;
 
-        // Calculer les rédactions par offre
+        // Calculer les récompenses par offre
         const offersWithStats = offersData?.map(offer => {
           const offerRedemptions = enrichedRedemptions?.filter(r => r.reward_id === offer.id) || [];
           return {
@@ -589,7 +589,7 @@ const PartnerDashboardNew: React.FC = () => {
                           <div key={day.date} className="flex items-center justify-between">
                             <div className="flex items-center space-x-2">
                               <span className="text-sm font-medium">{day.day}</span>
-                              <Badge variant="outline">{day.redemptions} rédactions</Badge>
+                              <Badge variant="outline">{day.redemptions} récompenses</Badge>
                             </div>
                             <span className="text-sm text-muted-foreground">
                               {formatCurrency(day.revenue)}
@@ -615,7 +615,7 @@ const PartnerDashboardNew: React.FC = () => {
                           <div key={hour.hour} className="flex items-center justify-between">
                             <div className="flex items-center space-x-2">
                               <span className="text-sm font-medium">{hour.hour}</span>
-                              <Badge variant="outline">{hour.redemptions} rédactions</Badge>
+                              <Badge variant="outline">{hour.redemptions} récompenses</Badge>
                             </div>
                             <span className="text-sm text-muted-foreground">
                               {formatCurrency(hour.revenue)}
@@ -642,7 +642,7 @@ const PartnerDashboardNew: React.FC = () => {
                         <TableHead>Offre</TableHead>
                         <TableHead>Points</TableHead>
                         <TableHead>Valeur</TableHead>
-                        <TableHead>Rédactions</TableHead>
+                        <TableHead>Récompenses</TableHead>
                         <TableHead>Statut</TableHead>
                       </TableRow>
                     </TableHeader>
@@ -769,7 +769,7 @@ const PartnerDashboardNew: React.FC = () => {
                         <TableHead>Titre</TableHead>
                         <TableHead>Points Requis</TableHead>
                         <TableHead>Valeur CHF</TableHead>
-                        <TableHead>Rédactions</TableHead>
+                        <TableHead>Récompenses</TableHead>
                         <TableHead>Limites</TableHead>
                         <TableHead>Validité</TableHead>
                         <TableHead>Statut</TableHead>

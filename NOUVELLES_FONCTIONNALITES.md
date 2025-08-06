@@ -87,19 +87,19 @@ await generateTravelJournalPDF(journalData);
 
 ##### **A. Analytics en Temps Réel**
 - **Offres actives** : Nombre d'offres actives vs total
-- **Rédactions du mois** : Statistiques mensuelles
+- **Récompenses du mois** : Statistiques mensuelles
 - **Revenus totaux** : Calcul automatique des revenus
 - **Note moyenne** : Évaluation des offres par les utilisateurs
 
-##### **B. Gestion des Rédactions**
-- **Liste des rédactions** : Toutes les rédactions de récompenses
+##### **B. Gestion des Récompenses**
+- **Liste des récompenses** : Toutes les récompenses de récompenses
 - **Filtres avancés** : Par statut, date, recherche textuelle
-- **Actions rapides** : Validation/rejet des rédactions en attente
+- **Actions rapides** : Validation/rejet des récompenses en attente
 - **Statuts** : En attente, Validée, Expirée, Annulée
 
 ##### **C. Gestion des Offres**
 - **Vue d'ensemble** : Toutes les offres du partenaire
-- **Métriques** : Points requis, rédactions, revenus, notes
+- **Métriques** : Points requis, récompenses, revenus, notes
 - **Performance** : Comparaison entre offres
 
 ##### **D. Analytics Détaillées**
@@ -182,7 +182,7 @@ const canViewAnalytics = (): boolean => hasRole(['super_admin', 'tenant_admin', 
 ### **3. Profil Partenaire**
 - ✅ **Gestion simplifiée** : Interface dédiée aux partenaires
 - ✅ **Insights précieux** : Analytics pour optimiser les offres
-- ✅ **Validation en temps réel** : Gestion des rédactions
+- ✅ **Validation en temps réel** : Gestion des récompenses
 - ✅ **Revenus tracés** : Suivi financier automatisé
 
 ## 🚀 **Prochaines Étapes Recommandées**
