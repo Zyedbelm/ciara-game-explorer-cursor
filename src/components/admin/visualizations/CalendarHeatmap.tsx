@@ -64,7 +64,6 @@ export const CalendarHeatmap: React.FC<CalendarHeatmapProps> = ({ cityId, timeRa
 
         setData(calendarData);
       } catch (error) {
-        console.error('Error fetching calendar data:', error);
       } finally {
         setLoading(false);
       }

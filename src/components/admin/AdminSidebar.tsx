@@ -71,51 +71,34 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({
   const navigationGroups = [
     {
       id: 'main',
-      label: 'Principal',
+      label: 'Navigation',
       items: [
         {
           id: 'overview',
           label: 'Vue d\'ensemble',
           icon: Home,
-        }
-      ]
-    },
-    {
-      id: 'management',
-      label: 'Gestion',
-      items: [
-        ...(canManageUsers() ? [{
+        },
+        ...(typeof canManageUsers === 'function' && canManageUsers() ? [{
           id: 'users',
           label: 'Utilisateurs',
           icon: Users,
         }] : []),
-        ...(isSuperAdmin() ? [{
-          id: 'cities',
-          label: 'Villes & Pays',
-          icon: MapPin,
-          children: [
-            { id: 'cities', label: 'Gestion des villes', icon: Building },
-            { id: 'countries', label: 'Gestion des pays', icon: Globe },
-            { id: 'homepage', label: 'Visibilité homepage', icon: Eye }
-          ]
-        }] : [])
-      ].filter(Boolean)
-    },
-    {
-      id: 'content',
-      label: 'Contenu & Parcours',
-      items: [
-        ...(canManageContent() ? [{
+        ...(typeof isSuperAdmin === 'function' && isSuperAdmin() ? [
+          { id: 'cities', label: 'Gestion des villes', icon: Building },
+          { id: 'countries', label: 'Gestion des pays', icon: Globe },
+          { id: 'homepage', label: 'Visibilité homepage', icon: Eye }
+        ] : []),
+        ...(typeof canManageContent === 'function' && canManageContent() ? [{
           id: 'content',
           label: 'Parcours & Étapes',
           icon: FileText,
         }] : []),
-        ...(canManageContent() ? [{
+        ...(typeof canManageContent === 'function' && canManageContent() ? [{
           id: 'articles',
           label: 'Articles de blog',
           icon: FileText,
         }] : []),
-        ...(isPartner() ? [{
+        ...(typeof isPartner === 'function' && isPartner() ? [{
           id: 'reward-offers',
           label: 'Gestion des offres Récompenses',
           icon: Trophy,
@@ -124,12 +107,12 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({
           label: 'Gestion des offres Récompenses',
           icon: Trophy,
         }]),
-        ...(isPartner() ? [] : [{
+        ...(typeof isPartner === 'function' && isPartner() ? [] : [{
           id: 'partners',
           label: 'Gestion des Partenaires',
           icon: Building,
         }]),
-        ...(isSuperAdmin() ? [{
+        ...(typeof isSuperAdmin === 'function' && isSuperAdmin() ? [{
           id: 'partner-links',
           label: 'Liens Partenaires',
           icon: Link,
@@ -137,7 +120,7 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({
         }] : []),
       ].filter(Boolean)
     },
-    ...(canViewAnalytics() ? [{
+    ...(typeof canViewAnalytics === 'function' && canViewAnalytics() ? [{
       id: 'analytics',
       label: 'Analytics & Rapports',
       items: [
@@ -154,7 +137,7 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({
         }
       ]
     }] : []),
-    ...(isSuperAdmin() ? [{
+    ...(typeof isSuperAdmin === 'function' && isSuperAdmin() ? [{
       id: 'system',
       label: 'Système & Sécurité',
       items: [
@@ -276,12 +259,12 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({
           <div className="flex-1 min-w-0">
             <h2 className="font-semibold text-sm">Administration</h2>
             <p className="text-xs text-muted-foreground truncate">
-              {isSuperAdmin() ? 'Super Admin' : isTenantAdmin() ? 'Admin Ville' : 'Gestionnaire'}
+              {typeof isSuperAdmin === 'function' && isSuperAdmin() ? 'Super Admin' : typeof isTenantAdmin === 'function' && isTenantAdmin() ? 'Admin Ville' : 'Gestionnaire'}
             </p>
           </div>
         </div>
         
-        {isTenantAdmin() && cityName && (
+        {typeof isTenantAdmin === 'function' && isTenantAdmin() && cityName && (
           <div className="mt-3 p-2 rounded-lg bg-accent/50">
             <div className="flex items-center gap-2">
               <MapPin className="h-3 w-3 text-primary" />

@@ -99,7 +99,6 @@ const handler = async (req: Request): Promise<Response> => {
       }
     );
   } catch (error: any) {
-    console.error("Error in geocode-address function:", error);
     return new Response(
       JSON.stringify({ 
         error: "Failed to geocode address",

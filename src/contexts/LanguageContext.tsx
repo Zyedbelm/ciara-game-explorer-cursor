@@ -37,7 +37,6 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
       const savedLanguage = localStorage.getItem('preferredLanguage');
       return (savedLanguage as Language) || 'fr';
     } catch (error) {
-      console.warn('Failed to read language from localStorage:', error);
       return 'fr';
     }
   });
@@ -54,7 +53,6 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
         .select('key, language, value');
       
       if (error) {
-        console.error('[LanguageContext] Database error:', error);
         return;
       }
       
@@ -69,7 +67,6 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
         setDbTranslations(translations);
       }
     } catch (error) {
-      console.error('[LanguageContext] Translation fetch error:', error);
     }
   }, []);
 
@@ -84,7 +81,6 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
     try {
       localStorage.setItem('preferredLanguage', lang);
     } catch (error) {
-      console.warn('Failed to save language:', error);
     }
   }, [language]);
 

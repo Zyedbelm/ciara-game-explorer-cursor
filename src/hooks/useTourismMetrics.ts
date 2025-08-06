@@ -382,7 +382,6 @@ export const useTourismMetrics = (cityId?: string, timeRange: string = '30d') =>
       setAlerts(newAlerts);
 
     } catch (err) {
-      console.error('Error fetching tourism metrics:', err);
       setError(err instanceof Error ? err.message : 'Erreur lors du chargement des métriques touristiques');
     } finally {
       setLoading(false);

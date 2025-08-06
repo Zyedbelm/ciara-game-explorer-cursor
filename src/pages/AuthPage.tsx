@@ -109,7 +109,6 @@ const AuthPage = () => {
       
       setResetEmail('');
     } catch (error: any) {
-      console.error('Error sending password reset:', error);
       toast({
         title: "Erreur",
         description: error.message || "Impossible d'envoyer l'email de réinitialisation",

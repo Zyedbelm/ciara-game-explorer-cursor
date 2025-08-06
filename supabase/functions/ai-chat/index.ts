@@ -73,11 +73,6 @@ serve(async (req) => {
     // Parse documents content if available
     let documentsContent = '';
     if (context?.stepDocuments && context.stepDocuments.length > 0) {
-      console.log('📋 Processing step documents for AI:', {
-        documentsCount: context.stepDocuments.length,
-        documentTitles: context.stepDocuments.map(d => d.title),
-        language
-      });
 
       const documentsText = language === 'en' ? 'AVAILABLE DOCUMENTS FOR THIS STEP:' :
                            language === 'de' ? 'VERFÜGBARE DOKUMENTE FÜR DIESEN SCHRITT:' :
@@ -98,9 +93,7 @@ ${language === 'en' ? '🎯 CRITICAL: Use ONLY these documents as your PRIMARY i
   language === 'de' ? '🎯 KRITISCH: Verwenden Sie NUR diese Dokumente als Ihre PRIMÄRE Informationsquelle. Sie enthalten verifizierte, genaue Details über diesen spezifischen Ort.' :
   '🎯 CRITIQUE: Utilise UNIQUEMENT ces documents comme source d\'information PRINCIPALE. Ils contiennent des détails vérifiés et précis sur ce lieu spécifique.'}`;
       
-      console.log('✅ Documents content prepared for AI (length):', documentsContent.length);
     } else {
-      console.log('⚠️ No step documents available for this request');
     }
 
     // Parse quiz questions if available
@@ -127,7 +120,6 @@ ${language === 'en' ? 'Use these quiz questions to help users understand the con
     const { data: systemPromptData, error: promptError } = await supabase.rpc('get_ai_system_prompt', { lang: language });
     
     if (promptError) {
-      console.error('Error fetching system prompt:', promptError);
       throw new Error('Failed to fetch system prompt');
     }
 
@@ -327,12 +319,6 @@ ${documentsContent}${quizContent}`;
       { role: 'user', content: message }
     ];
 
-    console.log('🤖 Sending to OpenAI:', {
-      messagesCount: messages.length,
-      systemPromptLength: systemPrompt.length,
-      hasDocuments: context?.stepDocuments?.length > 0,
-      language
-    });
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -352,17 +338,12 @@ ${documentsContent}${quizContent}`;
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('❌ OpenAI API error:', errorText);
       throw new Error(`OpenAI API error: ${response.status}`);
     }
 
     const data = await response.json();
     const aiResponse = data.choices[0].message.content;
 
-    console.log('✅ AI response generated:', {
-      responseLength: aiResponse?.length || 0,
-      language
-    });
 
     // Generate enhanced suggestions based on context
     const suggestions = generateEnhancedSuggestions(context, language, message);
@@ -375,7 +356,6 @@ ${documentsContent}${quizContent}`;
     });
 
   } catch (error) {
-    console.error('Error in AI chat function:', error);
     return new Response(JSON.stringify({ 
       error: error.message,
       response: language === 'en' ? "Sorry, I'm experiencing technical difficulties. Can you try again?" :

@@ -26,7 +26,6 @@ class ErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, errorInfo: any) {
-    console.error('ErrorBoundary caught an error:', error, errorInfo);
     
     this.setState({
       error,
@@ -36,7 +35,6 @@ class ErrorBoundary extends Component<Props, State> {
     // En production, on pourrait envoyer l'erreur à un service de monitoring
     if (process.env.NODE_ENV === 'production') {
       // Ici on pourrait intégrer Sentry, LogRocket, etc.
-      console.warn('Error caught by ErrorBoundary:', error);
     }
   }
 

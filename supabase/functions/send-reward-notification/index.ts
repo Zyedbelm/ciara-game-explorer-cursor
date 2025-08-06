@@ -343,7 +343,6 @@ const handler = async (req: Request): Promise<Response> => {
       html: emailHtml,
     });
 
-    console.log("Reward notification email sent successfully:", emailResponse);
 
     return new Response(
       JSON.stringify({ 
@@ -360,7 +359,6 @@ const handler = async (req: Request): Promise<Response> => {
       }
     );
   } catch (error: any) {
-    console.error("Error in send-reward-notification function:", error);
     return new Response(
       JSON.stringify({ 
         error: "Failed to send reward notification email",

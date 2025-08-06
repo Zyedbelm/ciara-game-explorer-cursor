@@ -27,13 +27,11 @@ export function useUserStats() {
       setLoading(true);
       setError(null);
 
-      console.log('📊 [Optimized] Fetching stats for user:', userId);
       const userStats = await userJourneysService.getUserStats(userId);
       setStats(userStats);
 
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Erreur lors du chargement des statistiques';
-      console.error('❌ [Optimized] Error fetching stats:', errorMessage);
       setError(errorMessage);
       
       // Affichage de l'erreur avec toast
@@ -63,7 +61,6 @@ export function useUserStats() {
             filter: `user_id=eq.${userId}`
           }, 
           () => {
-            console.log('🔄 Profile updated, refreshing stats');
             setTimeout(fetchStats, 100); // Small delay to ensure data consistency
           }
         )
@@ -75,7 +72,6 @@ export function useUserStats() {
             filter: `user_id=eq.${userId}`
           }, 
           (payload) => {
-            console.log('🔄 User journey progress changed, refreshing stats:', payload.eventType);
             setTimeout(fetchStats, 100); // Small delay to ensure data consistency
           }
         )
@@ -87,7 +83,6 @@ export function useUserStats() {
             filter: `user_id=eq.${userId}`
           }, 
           (payload) => {
-            console.log('🔄 Step completion changed, refreshing stats:', payload.eventType);
             setTimeout(fetchStats, 100);
           }
         )

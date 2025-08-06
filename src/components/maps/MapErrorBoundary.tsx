@@ -42,7 +42,6 @@ class MapErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, errorInfo: any) {
-    console.error('🚨 Map Error Boundary caught an error:', error);
     console.error('Error info:', errorInfo);
     
     this.setState({
@@ -52,8 +51,6 @@ class MapErrorBoundary extends Component<Props, State> {
 
     // Auto-retry for recoverable errors
     if (this.isRecoverableError(error) && this.state.retryCount < this.maxRetries) {
-      console.log(`🔄 Auto-retrying in ${this.retryDelay}ms... (${this.state.retryCount + 1}/${this.maxRetries})`);
-      
       this.retryTimeoutId = setTimeout(() => {
         this.handleRetry();
       }, this.retryDelay * (this.state.retryCount + 1)); // Exponential backoff
@@ -87,11 +84,7 @@ class MapErrorBoundary extends Component<Props, State> {
     // In production, send error to monitoring service
     if (process.env.NODE_ENV === 'production') {
       // Example: Send to error tracking service
-      console.log('📊 Reporting error to monitoring service:', {
-        error: error.message,
-        stack: error.stack,
-        componentStack: errorInfo.componentStack,
-        timestamp: new Date().toISOString(),
+      .toISOString(),
         userAgent: navigator.userAgent,
         url: window.location.href
       });
@@ -99,7 +92,6 @@ class MapErrorBoundary extends Component<Props, State> {
   };
 
   private handleRetry = () => {
-    console.log('🔄 Retrying map component...');
     this.setState(prevState => ({
       hasError: false,
       error: null,
@@ -243,5 +235,4 @@ class MapErrorBoundary extends Component<Props, State> {
     return this.props.children;
   }
 }
-
 export default MapErrorBoundary;

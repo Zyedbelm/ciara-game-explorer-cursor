@@ -146,7 +146,6 @@ const DocumentsManagement: React.FC<DocumentsManagementProps> = ({ stepId, cityI
       if (error) throw error;
       setSteps(data || []);
     } catch (error) {
-      console.error('Error fetching steps:', error);
     }
   };
 
@@ -170,7 +169,6 @@ const DocumentsManagement: React.FC<DocumentsManagementProps> = ({ stepId, cityI
       if (error) throw error;
       setDocuments(data || []);
     } catch (error) {
-      console.error('Error fetching documents:', error);
       toast({
         title: "Erreur",
         description: "Impossible de charger les documents",
@@ -281,7 +279,6 @@ const DocumentsManagement: React.FC<DocumentsManagementProps> = ({ stepId, cityI
       form.reset();
       fetchDocuments();
     } catch (error) {
-      console.error('Error saving document:', error);
       toast({
         title: "Erreur",
         description: "Impossible de sauvegarder le document",
@@ -323,7 +320,6 @@ const DocumentsManagement: React.FC<DocumentsManagementProps> = ({ stepId, cityI
 
       fetchDocuments();
     } catch (error) {
-      console.error('Error deleting document:', error);
       toast({
         title: "Erreur",
         description: "Impossible de supprimer le document",

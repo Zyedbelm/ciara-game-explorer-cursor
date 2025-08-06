@@ -21,8 +21,6 @@ export function useJourneyDataSync() {
     setSyncing(true);
     
     try {
-      console.log(`🔧 [MANUAL-SYNC] Starting manual repair for user ${userId}, journey ${journeyId}`);
-      
       const result = await journeyDataSynchronizer.manualRepair(userId, journeyId);
       
       if (result.success) {
@@ -30,14 +28,12 @@ export function useJourneyDataSync() {
           title: "✅ Données synchronisées",
           description: `${result.stepsProcessed} étapes traitées, ${result.inconsistenciesFixed} inconsistances corrigées`,
         });
-        console.log(`✅ [MANUAL-SYNC] Repair completed successfully:`, result);
-      } else {
+        } else {
         toast({
           title: "❌ Erreur de synchronisation",
           description: result.errors.join(', '),
           variant: "destructive",
         });
-        console.error(`❌ [MANUAL-SYNC] Repair failed:`, result.errors);
       }
       
       return result;
@@ -48,7 +44,6 @@ export function useJourneyDataSync() {
         description: errorMsg,
         variant: "destructive",
       });
-      console.error(`❌ [MANUAL-SYNC] Repair exception:`, error);
       
       return {
         success: false,
@@ -63,11 +58,7 @@ export function useJourneyDataSync() {
 
   const diagnoseJourneyData = async (userId: string, journeyId: string) => {
     try {
-      console.log(`🔍 [DIAGNOSE] Starting diagnosis for user ${userId}, journey ${journeyId}`);
-      
       const diagnostics = await journeyDataSynchronizer.diagnoseInconsistencies(userId, journeyId);
-      
-      console.log(`📊 [DIAGNOSE] Diagnosis completed:`, diagnostics);
       
       if (diagnostics.totalInconsistencies > 0) {
         toast({
@@ -85,7 +76,6 @@ export function useJourneyDataSync() {
       return diagnostics;
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : 'Erreur inconnue';
-      console.error(`❌ [DIAGNOSE] Diagnosis failed:`, error);
       toast({
         title: "❌ Erreur de diagnostic",
         description: errorMsg,

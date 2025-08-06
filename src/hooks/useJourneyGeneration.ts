@@ -83,7 +83,6 @@ export const useJourneyGeneration = () => {
 
       return city.id;
     } catch (error) {
-      console.error('Error fetching city:', error);
       return null;
     }
   };
@@ -101,10 +100,6 @@ export const useJourneyGeneration = () => {
         return null;
       }
 
-      console.log('🚀 Generating journey with preferences:', preferences);
-      console.log('🏙️ City ID:', cityId);
-      console.log('👤 User authenticated:', user?.email);
-
       const { data, error } = await supabase.functions.invoke('generate-journey', {
         body: {
           preferences,
@@ -113,17 +108,14 @@ export const useJourneyGeneration = () => {
       });
 
       if (error) {
-        console.error('❌ Edge function error:', error);
         throw new Error(`Edge function error: ${error.message}`);
       }
 
       if (data?.error) {
-        console.error('❌ Generation error:', data.error);
         throw new Error(data.error);
       }
 
       if (!data?.journey) {
-        console.error('❌ No journey data returned');
         throw new Error('Aucun parcours généré');
       }
 
@@ -132,8 +124,6 @@ export const useJourneyGeneration = () => {
         generatedAt: new Date().toISOString()
       };
       
-      console.log('✅ Journey generated successfully:', journeyData);
-
       setGeneratedJourney(journeyData);
       
       toast({
@@ -144,7 +134,6 @@ export const useJourneyGeneration = () => {
       return journeyData;
 
     } catch (error) {
-      console.error('💥 Generation error:', error);
       toast({
         title: "Erreur de génération",
         description: error instanceof Error ? error.message : "Impossible de générer le parcours. Réessayez plus tard.",
@@ -162,9 +151,6 @@ export const useJourneyGeneration = () => {
     }
 
     try {
-      console.log('💾 Saving journey to database:', journey.name);
-      console.log('👤 User ID:', user?.id);
-
       // Create the journey in the database with created_by set to current user
       const { data: newJourney, error: createError } = await supabase
         .from('journeys')
@@ -184,7 +170,6 @@ export const useJourneyGeneration = () => {
         .single();
 
       if (createError) {
-        console.error('❌ Error creating journey:', createError);
         throw createError;
       }
 
@@ -202,7 +187,6 @@ export const useJourneyGeneration = () => {
           .insert(journeySteps);
 
         if (stepsError) {
-          console.error('❌ Error creating journey steps:', stepsError);
           throw stepsError;
         }
       }
@@ -223,12 +207,9 @@ export const useJourneyGeneration = () => {
         });
 
       if (progressError) {
-        console.error('❌ Error creating user progress entry:', progressError);
         throw progressError;
       }
 
-      console.log('✅ Journey saved successfully with ID:', newJourney.id);
-      
       toast({
         title: "Parcours enregistré !",
         description: `Le parcours "${journey.name}" a été sauvegardé. Retrouvez-le dans "Mes parcours".`,
@@ -238,7 +219,6 @@ export const useJourneyGeneration = () => {
       return true;
 
     } catch (error) {
-      console.error('💥 Save error:', error);
       toast({
         title: "Erreur de sauvegarde",
         description: "Impossible d'enregistrer le parcours. Réessayez plus tard.",

@@ -89,7 +89,6 @@ class JourneyDataSynchronizer {
               pointsEarned: r.pointsEarned
             }));
         } catch (error) {
-          console.warn('Error parsing quiz_responses:', error);
         }
       }
 
@@ -121,7 +120,6 @@ class JourneyDataSynchronizer {
         totalInconsistencies: missingFromQuizResponses.length + extraInQuizResponses.length
       };
     } catch (error) {
-      console.error('Error diagnosing inconsistencies:', error);
       throw error;
     }
   }
@@ -140,18 +138,11 @@ class JourneyDataSynchronizer {
     };
 
     try {
-      console.log(`🔧 [SYNC] Starting synchronization for user ${userId}, journey ${journeyId}`);
-
       // First, diagnose the current state
       const diagnostics = await this.diagnoseInconsistencies(userId, journeyId);
       result.inconsistenciesFound = diagnostics.totalInconsistencies;
 
-      console.log(`📊 [SYNC] Found ${diagnostics.totalInconsistencies} inconsistencies`);
-      console.log(`📋 [SYNC] Step completions:`, diagnostics.stepCompletions);
-      console.log(`📝 [SYNC] Current quiz responses:`, diagnostics.quizResponses);
-
       if (diagnostics.totalInconsistencies === 0) {
-        console.log(`✅ [SYNC] No inconsistencies found, data already synchronized`);
         result.success = true;
         return result;
       }
@@ -164,7 +155,6 @@ class JourneyDataSynchronizer {
         });
 
       if (repairError) {
-        console.error(`❌ [SYNC] Database repair function failed:`, repairError);
         result.errors.push(`Database repair failed: ${repairError.message}`);
         return result;
       }
@@ -174,12 +164,9 @@ class JourneyDataSynchronizer {
       
       if (!repair?.success) {
         const errorMsg = repair?.error || 'Unknown repair error';
-        console.error(`❌ [SYNC] Repair function returned failure:`, errorMsg);
         result.errors.push(`Repair function failed: ${errorMsg}`);
         return result;
       }
-
-      console.log(`🔧 [SYNC] Database repair completed:`, repair);
 
       // Update user's total points in profiles based on ALL their step completions
       const { data: allUserPoints, error: pointsError } = await supabase
@@ -201,24 +188,20 @@ class JourneyDataSynchronizer {
           .eq('user_id', userId);
 
         if (profileError) {
-          console.warn(`⚠️ [SYNC] Failed to update profile points:`, profileError);
           result.errors.push(`Failed to update profile points: ${profileError.message}`);
         } else {
-          console.log(`🎯 [SYNC] Updated user total points to ${totalUserPoints}`);
-        }
+          }
       }
 
       result.success = true;
       result.stepsProcessed = repair.steps_processed || 0;
       result.inconsistenciesFixed = diagnostics.totalInconsistencies;
 
-      console.log(`✅ [SYNC] Synchronization complete: ${result.inconsistenciesFixed} inconsistencies fixed`);
       return result;
 
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       result.errors.push(errorMessage);
-      console.error('❌ [SYNC] Synchronization failed:', error);
       return result;
     }
   }
@@ -231,7 +214,6 @@ class JourneyDataSynchronizer {
       const diagnostics = await this.diagnoseInconsistencies(userId, journeyId);
       return diagnostics.totalInconsistencies > 0;
     } catch (error) {
-      console.error('Error checking for inconsistencies:', error);
       return false;
     }
   }
@@ -282,8 +264,6 @@ class JourneyDataSynchronizer {
       result.inconsistenciesFound = ghostCompletions.length;
 
       if (ghostCompletions.length > 0) {
-        console.log(`🧹 Cleaning up ${ghostCompletions.length} ghost completions`);
-
         // Delete ghost completions
         const { error: deleteError } = await supabase
           .from('step_completions')
@@ -299,13 +279,11 @@ class JourneyDataSynchronizer {
       }
 
       result.success = true;
-      console.log(`✅ Ghost data cleanup complete: ${result.inconsistenciesFixed} ghost completions removed`);
       return result;
 
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       result.errors.push(errorMessage);
-      console.error('❌ Ghost cleanup failed:', error);
       return result;
     }
   }
@@ -315,8 +293,6 @@ class JourneyDataSynchronizer {
    */
   async manualRepair(userId: string, journeyId: string): Promise<SyncResult> {
     try {
-      console.log(`🔧 [MANUAL] Starting manual repair for user ${userId}, journey ${journeyId}`);
-
       const { data: repairResult, error: repairError } = await supabase
         .rpc('repair_journey_data', {
           p_user_id: userId,
@@ -324,7 +300,6 @@ class JourneyDataSynchronizer {
         });
 
       if (repairError) {
-        console.error(`❌ [MANUAL] Manual repair failed:`, repairError);
         return {
           success: false,
           stepsProcessed: 0,
@@ -336,8 +311,6 @@ class JourneyDataSynchronizer {
 
       // Cast the result to proper type
       const repair = repairResult as any;
-      console.log(`✅ [MANUAL] Manual repair completed:`, repair);
-
       return {
         success: repair?.success || false,
         stepsProcessed: repair?.steps_processed || 0,
@@ -347,7 +320,6 @@ class JourneyDataSynchronizer {
       };
 
     } catch (error) {
-      console.error('❌ [MANUAL] Manual repair failed:', error);
       return {
         success: false,
         stepsProcessed: 0,
@@ -363,19 +335,15 @@ class JourneyDataSynchronizer {
    */
   async fullSynchronization(userId: string, journeyId: string): Promise<SyncResult> {
     try {
-      console.log(`🔄 [FULL] Starting full synchronization for user ${userId}, journey ${journeyId}`);
-
       // Step 1: Clean up ghost data
       const cleanupResult = await this.cleanupGhostData(userId, journeyId);
       if (!cleanupResult.success) {
-        console.error('❌ [FULL] Ghost cleanup failed, aborting synchronization');
         return cleanupResult;
       }
 
       // Step 2: Synchronize remaining data using improved method
       const syncResult = await this.synchronizeJourneyData(userId, journeyId);
       if (!syncResult.success) {
-        console.error('❌ [FULL] Data synchronization failed');
         return syncResult;
       }
 
@@ -388,11 +356,9 @@ class JourneyDataSynchronizer {
         errors: [...cleanupResult.errors, ...syncResult.errors]
       };
 
-      console.log(`✅ [FULL] Full synchronization complete: ${combinedResult.inconsistenciesFixed} total inconsistencies fixed`);
       return combinedResult;
 
     } catch (error) {
-      console.error('❌ [FULL] Full synchronization failed:', error);
       return {
         success: false,
         stepsProcessed: 0,

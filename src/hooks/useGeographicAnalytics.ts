@@ -198,7 +198,6 @@ export const useGeographicAnalytics = (cityId?: string, timeRange: string = '30d
       setAnalytics(result);
 
     } catch (err) {
-      console.error('Error fetching geographic analytics:', err);
       if (!isMountedRef.current) return;
       setError(err instanceof Error ? err.message : 'Erreur lors du chargement des analytics géographiques');
     } finally {

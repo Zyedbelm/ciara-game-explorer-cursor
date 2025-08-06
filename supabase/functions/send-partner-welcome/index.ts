@@ -104,14 +104,11 @@ const handler = async (req: Request): Promise<Response> => {
 
         if (userProfile && !profileError && userProfile.email) {
           destinationEmail = userProfile.email;
-          console.log('📧 Sending to linked partner email:', destinationEmail);
         }
       }
     } catch (error) {
-      console.log('⚠️ Could not find linked partner, using partner email:', partnerEmail);
     }
 
-    console.log('📧 Sending partner welcome email to:', destinationEmail);
 
     // Render React Email template
     const htmlContent = await renderAsync(
@@ -130,7 +127,6 @@ const handler = async (req: Request): Promise<Response> => {
       html: htmlContent,
     });
 
-    console.log("✅ Partner welcome email sent successfully:", emailResponse);
 
     return new Response(JSON.stringify({ 
       success: true,
@@ -143,7 +139,6 @@ const handler = async (req: Request): Promise<Response> => {
       },
     });
   } catch (error: any) {
-    console.error("❌ Error in send-partner-welcome function:", error);
     return new Response(
       JSON.stringify({ error: error.message }),
       {

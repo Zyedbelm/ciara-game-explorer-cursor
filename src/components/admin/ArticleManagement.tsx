@@ -93,7 +93,6 @@ export default function ArticleManagement() {
       if (error) throw error;
       setCountries(data || []);
     } catch (err) {
-      console.warn('Error fetching countries:', err);
     }
   };
 
@@ -119,7 +118,6 @@ export default function ArticleManagement() {
       const { data, error } = await query;
       
       if (error) {
-        console.error('Error fetching articles:', error);
         toast({
           title: 'Erreur',
           description: 'Impossible de charger les articles',
@@ -130,7 +128,6 @@ export default function ArticleManagement() {
 
       setArticles(data || []);
     } catch (error) {
-      console.error('Error:', error);
       toast({
         title: 'Erreur',
         description: 'Une erreur est survenue',
@@ -157,7 +154,6 @@ export default function ArticleManagement() {
         .order('name');
 
       if (error) {
-        console.error('Error fetching cities:', error);
         return;
       }
 
@@ -171,7 +167,6 @@ export default function ArticleManagement() {
 
       setCities(filteredCities);
     } catch (error) {
-      console.error('Error:', error);
     }
   };
 
@@ -289,7 +284,6 @@ export default function ArticleManagement() {
       }
 
       if (result.error) {
-        console.error('Error saving article:', result.error);
         toast({
           title: 'Erreur',
           description: result.error.message,
@@ -307,7 +301,6 @@ export default function ArticleManagement() {
       resetForm();
       fetchArticles();
     } catch (error) {
-      console.error('Error:', error);
       toast({
         title: 'Erreur',
         description: 'Une erreur est survenue',
@@ -328,7 +321,6 @@ export default function ArticleManagement() {
         .eq('id', articleId);
 
       if (error) {
-        console.error('Error deleting article:', error);
         toast({
           title: 'Erreur',
           description: 'Impossible de supprimer l\'article',
@@ -344,7 +336,6 @@ export default function ArticleManagement() {
 
       fetchArticles();
     } catch (error) {
-      console.error('Error:', error);
       toast({
         title: 'Erreur',
         description: 'Une erreur est survenue',
@@ -361,7 +352,6 @@ export default function ArticleManagement() {
         .eq('id', article.id);
 
       if (error) {
-        console.error('Error updating article visibility:', error);
         toast({
           title: 'Erreur',
           description: 'Impossible de modifier la visibilité',
@@ -383,7 +373,6 @@ export default function ArticleManagement() {
 
       fetchArticles();
     } catch (error) {
-      console.error('Error:', error);
       toast({
         title: 'Erreur',
         description: 'Une erreur est survenue',

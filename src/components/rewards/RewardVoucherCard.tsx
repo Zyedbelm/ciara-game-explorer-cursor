@@ -110,7 +110,6 @@ const RewardVoucherCard: React.FC<RewardVoucherCardProps> = ({
           });
         }
       } catch (error) {
-        console.error('Error fetching usage stats:', error);
       }
     };
 
@@ -213,7 +212,6 @@ const RewardVoucherCard: React.FC<RewardVoucherCardProps> = ({
       onStatusChange(voucher.id, 'used');
 
     } catch (error) {
-      console.error('Error redeeming voucher:', error);
       toast({
         title: t('rewards.error.title'),
         description: "Une erreur est survenue lors de l'utilisation de la récompense",

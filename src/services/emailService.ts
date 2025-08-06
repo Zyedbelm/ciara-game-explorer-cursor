@@ -147,13 +147,10 @@ export class CiaraEmailService {
     
     switch (level) {
       case 'info':
-        console.log(logMessage, logData);
         break;
       case 'warn':
-        console.warn(logMessage, logData);
         break;
       case 'error':
-        console.error(logMessage, logData);
         break;
     }
   }

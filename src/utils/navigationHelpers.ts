@@ -32,10 +32,8 @@ export function navigateToJourney(
 ): void {
   try {
     const url = buildJourneyUrl(options);
-    console.log('🔗 Navigating to:', url);
     navigate(url);
   } catch (error) {
-    console.error('❌ Navigation failed:', error);
     throw error;
   }
 }

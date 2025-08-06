@@ -315,7 +315,7 @@ export const UnifiedEmailTemplate: React.FC<UnifiedEmailProps> = ({
 }) => {
   const trackingPixel = trackingId ? 
     React.createElement('img', {
-      src: `https://pohqkspsdvvbqrgzfayl.supabase.co/functions/v1/track-email-open?id=${trackingId}`,
+              src: `${Deno.env.get('SUPABASE_URL')}/functions/v1/track-email-open?id=${trackingId}`,
       width: '1',
       height: '1',
       style: { display: 'none' }

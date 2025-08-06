@@ -79,7 +79,6 @@ const CityAssignment = () => {
       setTenantAdmins(processedAdmins);
       setCities(citiesData || []);
     } catch (error) {
-      console.error('Error fetching data:', error);
       toast({
         title: "Erreur",
         description: "Impossible de charger les données",
@@ -116,7 +115,6 @@ const CityAssignment = () => {
         description: "Assignation de ville mise à jour",
       });
     } catch (error) {
-      console.error('Error updating city assignment:', error);
       toast({
         title: "Erreur",
         description: "Impossible de mettre à jour l'assignation",

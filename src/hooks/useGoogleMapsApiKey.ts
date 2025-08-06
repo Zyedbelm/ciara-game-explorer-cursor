@@ -55,7 +55,6 @@ export const useGoogleMapsApiKey = () => {
 
     // Check cache first
     if (isCacheValid()) {
-      console.log('✅ Using cached Google Maps API key');
       if (isMountedRef.current) {
         setApiKey(globalCache.key);
         setLoading(false);
@@ -69,12 +68,9 @@ export const useGoogleMapsApiKey = () => {
       
       setLoading(true);
       setError(null);
-      console.log('🔑 Fetching Google Maps API key...');
-
       // Try environment variable first
       const envKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
       if (envKey && envKey !== 'your_google_maps_api_key_here') {
-        console.log('✅ API key found in environment variables');
         updateCache(envKey, true);
         if (isMountedRef.current) {
           setApiKey(envKey);
@@ -83,32 +79,26 @@ export const useGoogleMapsApiKey = () => {
         return;
       }
 
-      console.log('⚠️ No environment variable, trying Supabase function...');
-
       // Fallback to Supabase function
       const { data, error: supabaseError } = await supabase.functions.invoke('get-google-maps-key');
 
       if (!isMountedRef.current) return;
 
       if (supabaseError) {
-        console.error('❌ Supabase error:', supabaseError);
         throw new Error(`Supabase error: ${supabaseError.message}`);
       }
 
       if (data?.apiKey) {
-        console.log('✅ API key retrieved from Supabase');
         updateCache(data.apiKey, true);
         if (isMountedRef.current) {
           setApiKey(data.apiKey);
           setRetryCount(0);
         }
       } else {
-        console.error('❌ No API key received from Supabase');
         throw new Error('Google Maps API key not configured in Supabase secrets');
       }
 
     } catch (err) {
-      console.error('❌ Error fetching API key:', err);
       if (!isMountedRef.current) return;
 
       const errorMessage = err instanceof Error ? err.message : 'Unknown error';
@@ -118,8 +108,6 @@ export const useGoogleMapsApiKey = () => {
       // Retry logic with exponential backoff
       if (retryCount < MAX_RETRIES && isMountedRef.current) {
         const delay = RETRY_DELAY * Math.pow(2, retryCount);
-        console.log(`🔄 Retry ${retryCount + 1}/${MAX_RETRIES} in ${delay}ms...`);
-        
         setTimeout(() => {
           if (isMountedRef.current) {
             setRetryCount(prev => prev + 1);
@@ -134,7 +122,6 @@ export const useGoogleMapsApiKey = () => {
   }, [isCacheValid, updateCache, retryCount]);
 
   const refresh = useCallback(() => {
-    console.log('🔄 Refreshing Google Maps API key...');
     updateCache(null, false);
     setApiKey(null);
     setError(null);

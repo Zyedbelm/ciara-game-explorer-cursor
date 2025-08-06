@@ -82,7 +82,6 @@ serve(async (req) => {
     });
 
   } catch (error) {
-    console.error('Error in translation function:', error);
     return new Response(JSON.stringify({ 
       error: error.message,
       translatedText: null

@@ -123,7 +123,7 @@ export class EmailValidationService {
       try {
         const startTime = Date.now();
         const response = await fetch(
-          `https://pohqkspsdvvbqrgzfayl.supabase.co/functions/v1/${funcName}`,
+          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/${funcName}`,
           {
             method: 'OPTIONS',
             headers: {

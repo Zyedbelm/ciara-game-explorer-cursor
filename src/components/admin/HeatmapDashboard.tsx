@@ -65,12 +65,9 @@ const HeatmapDashboardComponent: React.FC<HeatmapDashboardProps> = ({ cityId, ti
       .map(([day, count]) => ({ day, count }));
   }, [analytics?.visitDistribution.daily]);
 
-  console.log('🗺️ HeatmapDashboard - cityId:', stableCityId, 'timeRange:', stableTimeRange, 'hasAnalytics:', !!analytics, 'isReady:', isReady);
-
   // Fetch Google Maps API key - stable callback
   const fetchApiKey = useCallback(async () => {
     try {
-      console.log('🗺️ Fetching Google Maps API key...');
       setMapLoading(true);
       const { data, error } = await supabase.functions.invoke('get-google-maps-key');
       
@@ -78,12 +75,10 @@ const HeatmapDashboardComponent: React.FC<HeatmapDashboardProps> = ({ cityId, ti
       
       if (data?.apiKey) {
         setMapApiKey(data.apiKey);
-        console.log('✅ Google Maps API key loaded successfully');
-      } else {
+        } else {
         throw new Error('Clé API Google Maps non disponible');
       }
     } catch (err) {
-      console.error('❌ Error fetching Google Maps API key:', err);
       captureError(err as Error);
       toast({
         title: "Erreur",

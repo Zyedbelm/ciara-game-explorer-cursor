@@ -34,17 +34,8 @@ const MyJourneysPage = () => {
     }
   }, [searchParams]);
 
-  console.log('🎯 [Optimized] MyJourneysPage: Rendering with loading states:', {
-    authLoading,
-    journeysLoading,
-    statsLoading,
-    isAuthenticated,
-    activeTab
-  });
-
   // Callback optimisé pour les changements de statut
   const handleStatusChange = useCallback(() => {
-    console.log('🔄 [Optimized] Status change detected, refetching journeys...');
     refetch();
   }, [refetch]);
 
@@ -58,7 +49,6 @@ const MyJourneysPage = () => {
 
   // États de chargement
   if (authLoading || journeysLoading || statsLoading) {
-    console.log('⏳ [Optimized] MyJourneysPage: Still loading...');
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <LoadingSpinner />
@@ -68,13 +58,11 @@ const MyJourneysPage = () => {
 
   // Redirection si non authentifié
   if (!isAuthenticated) {
-    console.log('🔒 [Optimized] MyJourneysPage: User not authenticated, redirecting...');
     return <Navigate to="/auth" replace />;
   }
 
   // Gestion des erreurs
   if (error) {
-    console.error('❌ [Optimized] MyJourneysPage: Error state:', error);
     return (
       <StandardPageLayout 
         showBackButton 
@@ -89,8 +77,6 @@ const MyJourneysPage = () => {
       </StandardPageLayout>
     );
   }
-
-  console.log('✅ [Optimized] MyJourneysPage: Rendering successfully');
 
   return (
     <StandardPageLayout 

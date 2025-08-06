@@ -62,7 +62,6 @@ const ActivityHistorySimple: React.FC = () => {
 
       setActivities(activities);
     } catch (error) {
-      console.error('Error fetching activity history:', error);
     } finally {
       setLoading(false);
     }

@@ -133,14 +133,11 @@ const RewardsPage = () => {
   // Dedicated function to count pending rewards - simple and reliable
   const getPendingRewardsCount = async () => {
     if (!profile) {
-      console.log('⚠️ No profile, setting pending count to 0');
       setPendingRewardsCount(0);
       return;
     }
 
     try {
-      console.log('🔍 Fetching pending rewards count for user:', profile.user_id);
-      
       const { count, error } = await supabase
         .from('reward_redemptions')
         .select('*', { count: 'exact', head: true })
@@ -148,16 +145,13 @@ const RewardsPage = () => {
         .eq('status', 'pending');
 
       if (error) {
-        console.error('🚨 Error counting pending rewards:', error);
         throw error;
       }
 
       const pendingCount = count || 0;
-      console.log('✅ Pending rewards count:', pendingCount);
       setPendingRewardsCount(pendingCount);
       
     } catch (error) {
-      console.error('🚨 Critical error in getPendingRewardsCount:', error);
       setPendingRewardsCount(0);
     }
   };
@@ -185,14 +179,12 @@ const RewardsPage = () => {
   useEffect(() => {
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible' && profile) {
-        console.log('🔄 Page visible again, refreshing pending count for badge');
         getPendingRewardsCount();
       }
     };
 
     const handleFocus = () => {
       if (profile) {
-        console.log('🔄 Window focused, refreshing pending count for badge');
         getPendingRewardsCount();
       }
     };
@@ -230,7 +222,6 @@ const RewardsPage = () => {
 
       setRewardStats(newStats);
     } catch (error) {
-      console.error('Error fetching reward stats:', error);
     }
   };
 
@@ -245,7 +236,6 @@ const RewardsPage = () => {
       if (error) throw error;
       setCountries(data || []);
     } catch (err) {
-      console.warn('Error fetching countries:', err);
     }
   };
 
@@ -266,7 +256,6 @@ const RewardsPage = () => {
       if (error) throw error;
       setCities(data || []);
     } catch (err) {
-      console.warn('Error fetching cities:', err);
     }
   };
 
@@ -309,7 +298,6 @@ const RewardsPage = () => {
         await fetchRewardStats(rewardIds);
       }
     } catch (error) {
-      console.error('Error fetching rewards:', error);
       toast({
         title: t('toast.error.title'),
         description: t('rewards.error.loading'),
@@ -321,13 +309,10 @@ const RewardsPage = () => {
 
   const fetchRedemptions = async () => {
     if (!profile) {
-      console.log('⚠️ No profile available, skipping redemptions fetch');
       return;
     }
 
     try {
-      console.log('🔍 Debug - Starting fetchRedemptions for user:', profile.user_id);
-      
       // Step 1: Get redemptions first with simpler query
       const { data: redemptionsData, error: redemptionsError } = await supabase
         .from('reward_redemptions')
@@ -336,22 +321,16 @@ const RewardsPage = () => {
         .order('created_at', { ascending: false });
 
       if (redemptionsError) {
-        console.error('🚨 Error fetching redemptions:', redemptionsError);
         throw redemptionsError;
       }
 
-      console.log('🔍 Debug - Raw redemptions data:', redemptionsData);
-
       if (!redemptionsData || redemptionsData.length === 0) {
-        console.log('📭 No redemptions found for user');
         setRedemptions([]);
         return;
       }
 
       // Step 2: Get related rewards and partners data separately
       const rewardIds = [...new Set(redemptionsData.map(r => r.reward_id))];
-      console.log('🔍 Debug - Unique reward IDs:', rewardIds);
-
       const { data: rewardsData, error: rewardsError } = await supabase
         .from('rewards')
         .select(`
@@ -371,11 +350,8 @@ const RewardsPage = () => {
         .in('id', rewardIds);
 
       if (rewardsError) {
-        console.error('🚨 Error fetching rewards data:', rewardsError);
         throw rewardsError;
       }
-
-      console.log('🔍 Debug - Raw rewards data:', rewardsData);
 
       // Step 3: Create a map for efficient lookup
       const rewardsMap = new Map();
@@ -391,7 +367,6 @@ const RewardsPage = () => {
         const rewardData = rewardsMap.get(redemption.reward_id);
         
         if (!rewardData) {
-          console.warn('⚠️ Reward not found for redemption:', redemption.id);
         }
         
         return {
@@ -401,13 +376,11 @@ const RewardsPage = () => {
         };
       }).filter(redemption => redemption.reward !== null); // Filter out redemptions without reward data
 
-      console.log('🔍 Debug - Final transformed redemptions:', transformedRedemptions);
-      console.log('🔍 Debug - Pending redemptions count:', transformedRedemptions.filter(r => r.status === 'pending').length);
+      // Filter out redemptions without reward data
       
       setRedemptions(transformedRedemptions);
       
     } catch (error) {
-      console.error('🚨 Critical error in fetchRedemptions:', error);
       console.error('🚨 Error details:', {
         message: error.message,
         code: error.code,
@@ -428,8 +401,6 @@ const RewardsPage = () => {
 
   const refreshDataAfterRedemption = async () => {
     try {
-      console.log('🔄 Refreshing data after redemption...');
-      
       // Refresh pending count first (for the badge)
       await getPendingRewardsCount();
       
@@ -440,9 +411,7 @@ const RewardsPage = () => {
       const rewardIds = rewards.map(r => r.id);
       await fetchRewardStats(rewardIds);
       
-      console.log('✅ Data refreshed successfully');
-    } catch (error) {
-      console.error('❌ Error refreshing data:', error);
+      } catch (error) {
     }
   };
 
@@ -518,8 +487,6 @@ const RewardsPage = () => {
 
       // Update profile locally immediately (before real-time update kicks in)
       const updatedProfile = { ...profile, total_points: newTotalPoints };
-      console.log('🔄 Updating profile locally after redemption:', updatedProfile);
-      
       // Use a timeout to ensure the local update happens immediately
       setTimeout(() => {
         // This will trigger a re-render with the updated points
@@ -537,7 +504,6 @@ const RewardsPage = () => {
       await refreshDataAfterRedemption();
 
     } catch (error) {
-      console.error('Error redeeming reward:', error);
       toast({
         title: t('toast.error.title'),
         description: t('rewards.exchange_error'),
@@ -633,8 +599,6 @@ const RewardsPage = () => {
       </StandardPageLayout>
     );
   }
-
-  console.log('🔍 Debug - Final pending rewards count for UI:', pendingRewardsCount);
 
   return (
     <StandardPageLayout
@@ -800,8 +764,6 @@ const RewardsPage = () => {
                  {/* Personal Redemption Limit Only - UPDATED SECTION */}
                  {(() => {
                    const stats = rewardStats.get(reward.id);
-                   console.log(`🎯 Rendering reward ${reward.id} - Stats:`, stats, 'Max per user:', reward.max_redemptions_per_user);
-                   
                    // Always show personal limit info if it exists
                    if (reward.max_redemptions_per_user) {
                      const used = stats?.user_redemptions || 0;

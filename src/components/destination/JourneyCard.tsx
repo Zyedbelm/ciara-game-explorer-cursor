@@ -86,8 +86,6 @@ const JourneyCard: React.FC<JourneyCardProps> = ({
 
     try {
       setIsDeleting(true);
-      console.log('🗑️ Deleting journey progress:', { userId: user.id, journeyId: journey.id });
-
       const result = await journeyDeletionService.deleteJourneyCompletely(user.id, journey.id);
       
       if (result.success) {
@@ -105,7 +103,6 @@ const JourneyCard: React.FC<JourneyCardProps> = ({
       }
       
     } catch (error) {
-      console.error('❌ Error deleting journey:', error);
       toast({
         title: 'Erreur',
         description: 'Impossible de supprimer la progression',

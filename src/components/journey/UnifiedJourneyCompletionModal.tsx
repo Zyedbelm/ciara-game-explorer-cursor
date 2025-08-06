@@ -83,14 +83,6 @@ export const UnifiedJourneyCompletionModal: React.FC<UnifiedJourneyCompletionMod
       // Send celebration email in background with enhanced error handling
       if (user && profile) {
         try {
-          console.log('📧 Sending journey completion email...', {
-            email: profile.email,
-            userName: profile.full_name,
-            journeyName,
-            rating,
-            totalPoints
-          });
-
           const emailResult = await supabase.functions.invoke('send-journey-completion', {
             body: {
               email: profile.email,
@@ -104,17 +96,10 @@ export const UnifiedJourneyCompletionModal: React.FC<UnifiedJourneyCompletionMod
           });
 
           if (emailResult.error) {
-            console.error('❌ Email sending failed:', emailResult.error);
             // Don't show error to user as email is not critical for completion
-            console.error('Email error details:', {
-              error: emailResult.error,
-              data: emailResult.data
-            });
           } else {
-            console.log('✅ Journey completion email sent successfully:', emailResult.data);
-          }
+            }
         } catch (emailError) {
-          console.error('❌ Email service error:', emailError);
           // Non-blocking - continue with completion flow
         }
       }
@@ -129,7 +114,6 @@ export const UnifiedJourneyCompletionModal: React.FC<UnifiedJourneyCompletionMod
       // Note: Redirection is now handled by useJourneyCompletion hook to avoid duplicates
 
     } catch (error) {
-      console.error('Error submitting rating:', error);
       toast({
         title: 'Erreur',
         description: t('journey_completion_failed'),
@@ -153,15 +137,6 @@ export const UnifiedJourneyCompletionModal: React.FC<UnifiedJourneyCompletionMod
     setIsGeneratingJournal(true);
     
     try {
-      console.log('📖 Generating travel journal...', {
-        journeyName,
-        rating,
-        comment: comment ? 'provided' : 'none',
-        language: currentLanguage,
-        journeyId,
-        userJourneyProgressId
-      });
-
       const { data, error } = await supabase.functions.invoke('generate-travel-journal', {
         body: {
           journeyName,
@@ -174,17 +149,9 @@ export const UnifiedJourneyCompletionModal: React.FC<UnifiedJourneyCompletionMod
       });
 
       if (error) {
-        console.error('Travel journal generation error:', error);
         throw error;
       }
 
-      console.log('✅ Travel journal generated successfully:', {
-        format: data?.format,
-        hasContent: !!data?.content,
-        wordCount: data?.metadata?.wordCount,
-        fileName: data?.fileName
-      });
-      
       // Handle HTML format with PDF conversion instructions
       if (data?.content && data?.format === 'html') {
         // Display text content in modal for preview
@@ -223,7 +190,6 @@ export const UnifiedJourneyCompletionModal: React.FC<UnifiedJourneyCompletionMod
       }
 
     } catch (error) {
-      console.error('Error generating travel journal:', error);
       toast({
         title: 'Erreur',
         description: t('travel_journal_generation_error'),

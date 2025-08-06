@@ -147,7 +147,6 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    console.log(`📧 Sending bilingual email confirmation to: ${email}`);
 
     // Render the React Email template
     const emailHtml = await renderAsync(
@@ -166,7 +165,6 @@ const handler = async (req: Request): Promise<Response> => {
       html: emailHtml,
     });
 
-    console.log("✅ Bilingual email confirmation sent successfully:", emailResponse);
 
     return new Response(JSON.stringify({ 
       success: true, 
@@ -179,7 +177,6 @@ const handler = async (req: Request): Promise<Response> => {
       },
     });
   } catch (error: any) {
-    console.error("❌ Error sending bilingual email confirmation:", error);
     return new Response(
       JSON.stringify({ error: error.message }),
       {

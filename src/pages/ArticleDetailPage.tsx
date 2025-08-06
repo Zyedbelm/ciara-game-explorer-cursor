@@ -56,8 +56,6 @@ const ArticleDetailPage = () => {
   const fetchArticle = async () => {
     try {
       setLoading(true);
-      console.log('[ArticleDetailPage] Fetching article with slug:', slug);
-      
       const selectQuery = `
         *,
         title,
@@ -82,10 +80,7 @@ const ArticleDetailPage = () => {
         .eq('status', 'published')
         .maybeSingle();
 
-      console.log('[ArticleDetailPage] Article response:', { data, error });
-
       if (error) {
-        console.error('Error fetching article:', error);
         if (error.code === 'PGRST116') {
           // Article not found
           setArticle(null);
@@ -110,7 +105,6 @@ const ArticleDetailPage = () => {
       }
 
     } catch (error) {
-      console.error('Error:', error);
       setArticle(null);
     } finally {
       setLoading(false);
@@ -119,8 +113,6 @@ const ArticleDetailPage = () => {
 
   const fetchRelatedArticles = async () => {
     try {
-      console.log('[ArticleDetailPage] Fetching related articles...');
-      
       const { data, error } = await supabase
         .from('articles')
         .select(`
@@ -136,13 +128,10 @@ const ArticleDetailPage = () => {
         .neq('slug', slug)
         .limit(3);
 
-      console.log('[ArticleDetailPage] Related articles response:', { data, error, count: data?.length });
-
       if (!error && data) {
         setRelatedArticles(data as Article[]);
       }
     } catch (error) {
-      console.error('[ArticleDetailPage] Error fetching related articles:', error);
     }
   };
 
@@ -162,8 +151,7 @@ const ArticleDetailPage = () => {
           url: window.location.href,
         });
       } catch (error) {
-        console.log('Share cancelled');
-      }
+        }
     } else {
       navigator.clipboard.writeText(window.location.href);
       toast({

@@ -21,7 +21,6 @@ export const useJourneyPerformanceMonitor = () => {
         if (summary && summary.actions.length > 0) {
           const slowActions = summary.actions.filter(action => action.avgDuration > 1000);
           if (slowActions.length > 0) {
-            console.warn('⚠️ Slow journey operations detected:', slowActions);
           }
         }
       }, 30000);

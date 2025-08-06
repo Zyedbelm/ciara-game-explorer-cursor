@@ -59,7 +59,6 @@ export const CountryProvider: React.FC<CountryProviderProps> = ({ children }) =>
           setSelectedCountry(defaultCountry);
         }
       } catch (error) {
-        console.error('Error fetching countries:', error);
       } finally {
         setLoading(false);
       }

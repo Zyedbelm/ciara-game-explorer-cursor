@@ -149,7 +149,6 @@ export const useQuickStatsMetrics = (filters: GeographicalFilters) => {
       });
 
     } catch (err) {
-      console.error('Erreur lors du chargement des métriques rapides:', err);
       setError(err instanceof Error ? err.message : 'Erreur inconnue');
     } finally {
       setLoading(false);

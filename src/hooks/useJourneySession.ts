@@ -41,7 +41,6 @@ export function useJourneySession(journeyId: string) {
   const initializeSession = useCallback(async () => {
     if (!user || !journeyId) return;
 
-    console.log('🔄 Initializing journey session...', { userId: user.id, journeyId });
     setLoading(true);
 
     try {
@@ -58,7 +57,6 @@ export function useJourneySession(journeyId: string) {
       }
 
       if (existingSession) {
-        console.log('✅ Loaded existing session:', existingSession);
         const sessionData: JourneySessionData = {
           journey_id: existingSession.journey_id,
           user_id: existingSession.user_id,
@@ -78,7 +76,6 @@ export function useJourneySession(journeyId: string) {
         setSessionData(sessionData);
       } else {
         // Create new session
-        console.log('📝 Creating new journey session...');
         const newSessionData: JourneySessionData = {
           journey_id: journeyId,
           user_id: user.id,
@@ -114,10 +111,8 @@ export function useJourneySession(journeyId: string) {
         }
 
         setSessionData(newSessionData);
-        console.log('✅ New session created');
-      }
+        }
     } catch (error) {
-      console.error('❌ Error initializing session:', error);
       toast({
         title: 'Erreur de session',
         description: 'Impossible de charger votre progression',
@@ -162,12 +157,6 @@ export function useJourneySession(journeyId: string) {
         updated_at: new Date().toISOString()
       };
 
-      console.log('💾 Saving session data...', {
-        currentStep: updatedSession.current_step_index,
-        completedSteps: updatedSession.completed_steps.length,
-        points: updatedSession.total_points_earned
-      });
-
       const { error } = await supabase
         .from('user_journey_progress')
         .update({
@@ -189,10 +178,7 @@ export function useJourneySession(journeyId: string) {
       if (error) throw error;
 
       setSessionData(updatedSession);
-      console.log('✅ Session saved successfully');
-
-    } catch (error) {
-      console.error('❌ Error saving session:', error);
+      } catch (error) {
       toast({
         title: 'Erreur de sauvegarde',
         description: 'Impossible de sauvegarder votre progression',
@@ -207,7 +193,6 @@ export function useJourneySession(journeyId: string) {
   const updateCurrentStep = useCallback((stepIndex: number) => {
     if (!sessionData) return;
     
-    console.log('📍 Updating current step to:', stepIndex);
     saveSession({ current_step_index: stepIndex });
   }, [sessionData, saveSession]);
 
@@ -217,12 +202,9 @@ export function useJourneySession(journeyId: string) {
 
     const isAlreadyCompleted = sessionData.completed_steps.includes(stepIndex);
     if (isAlreadyCompleted) {
-      console.log('ℹ️ Step already completed:', stepIndex);
       return;
     }
 
-    console.log('✅ Marking step completed:', stepIndex, step.name);
-    
     const newCompletedSteps = [...sessionData.completed_steps, stepIndex];
     const newTotalPoints = sessionData.total_points_earned + (step.points_awarded || 0);
     const validationEntry = {
@@ -252,8 +234,6 @@ export function useJourneySession(journeyId: string) {
   const completeJourney = useCallback(async () => {
     if (!sessionData) return;
 
-    console.log('🎉 Completing journey...');
-    
     await saveSession({
       is_active: false,
       session_data: {
@@ -272,7 +252,6 @@ export function useJourneySession(journeyId: string) {
   const linkChatSession = useCallback((chatSessionId: string) => {
     if (!sessionData) return;
     
-    console.log('🔗 Linking chat session:', chatSessionId);
     saveSession({
       session_data: {
         ...sessionData.session_data,
@@ -300,7 +279,6 @@ export function useJourneySession(journeyId: string) {
     if (!sessionData?.is_active) return;
 
     const interval = setInterval(() => {
-      console.log('🔄 Auto-saving activity...');
       saveSession({
         session_data: {
           ...sessionData.session_data,

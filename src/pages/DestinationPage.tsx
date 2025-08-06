@@ -80,13 +80,8 @@ const DestinationPage = () => {
     staleTime: 10 * 60 * 1000, // 10 minutes
   });
   
-  console.log('🏙️ DestinationPage - City slug from params:', citySlug);
-  console.log('🏙️ DestinationPage - City from context:', cityData);
-  console.log('🏙️ DestinationPage - City error:', cityError);
-  
   // Handle invalid slug early
   if (citySlug === 'undefined') {
-    console.error('🚨 DestinationPage - Invalid slug "undefined", redirecting to cities');
     return <Navigate to="/cities" replace />;
   }
   
@@ -96,19 +91,15 @@ const DestinationPage = () => {
     queryFn: async () => {
       if (!cityData?.id) return [];
       
-      console.log('🔍 Fetching categories for city:', cityData.id);
-      
       const { data, error } = await supabase
         .from('journey_categories')
         .select('*')
         .eq('city_id', cityData.id);
         
       if (error) {
-        console.error('❌ Error fetching categories:', error);
         throw error;
       }
       
-      console.log('✅ Categories fetched:', data);
       return data as JourneyCategory[];
     },
     enabled: !!cityData?.id,
@@ -122,8 +113,6 @@ const DestinationPage = () => {
     queryFn: async () => {
       if (!cityData?.id) return [];
       
-      console.log('🔍 Fetching journeys for city:', cityData.id, 'category:', selectedCategory);
-      
       let query = supabase
         .from('journeys')
         .select('*')
@@ -136,11 +125,9 @@ const DestinationPage = () => {
       
       const { data, error } = await query;
       if (error) {
-        console.error('❌ Error fetching journeys:', error);
         throw error;
       }
       
-      console.log('✅ Journeys fetched:', data);
       return data as Journey[];
     },
     enabled: !!cityData?.id,
@@ -161,7 +148,6 @@ const DestinationPage = () => {
         });
 
       if (error) {
-        console.error('❌ Error fetching city top explorers:', error);
         throw error;
       }
       
@@ -223,7 +209,6 @@ const DestinationPage = () => {
 
   // Handle any API errors gracefully
   if (categoriesError || journeysError || rankingError) {
-    console.error('API Error detected:', { categoriesError, journeysError, rankingError });
   }
 
   return (

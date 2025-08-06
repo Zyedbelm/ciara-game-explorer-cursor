@@ -105,7 +105,6 @@ export const generateTravelJournalPDF = async (
     pdf.save(fileName);
 
   } catch (error) {
-    console.error('Erreur lors de la génération du PDF:', error);
     throw new Error('Impossible de générer le PDF du journal de voyage');
   }
 };
@@ -145,7 +144,6 @@ const generateRichPDF = (
       pdf.text('Image du parcours', pageWidth / 2, yPosition + 20, { align: 'center' });
       yPosition += 50;
     } catch (error) {
-      console.warn('Impossible de charger l\'image du parcours:', error);
       yPosition += 10;
     }
   }

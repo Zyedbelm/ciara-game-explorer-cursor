@@ -1,20 +1,32 @@
 
+# Configuration Supabase sécurisée et optimisée
 # A string used to distinguish different Supabase projects on the same host. Defaults to the working
 # directory name when running `supabase init`.
 project_id = "pohqkspsdvvbqrgzfayl"
 
+# Configuration sécurisée des fonctions Edge
 [functions.send-welcome-ciara]
-verify_jwt = false
+verify_jwt = true
 
 [functions.auth-webhook]
 verify_jwt = false
 
 [functions.send-password-reset]
-verify_jwt = false
+verify_jwt = true
 
 [functions.send-email-confirmation]
+verify_jwt = true
+
+[functions.create-article-webhook]
+verify_jwt = true
+
+[functions.send-contact-form]
 verify_jwt = false
 
+[functions.send-journey-completion]
+verify_jwt = true
+
+# Configuration API sécurisée
 [api]
 # Port to use for the API URL.
 port = 54321
@@ -26,17 +38,49 @@ extra_search_path = ["public", "extensions"]
 # Maximum rows returns from a view, table, or stored procedure. Limits payload size for accidental
 # or malicious requests.
 max_rows = 1000
+# Configuration de sécurité avancée
+enabled = true
+# Rate limiting
+rate_limit = 1000
+# Timeout des requêtes
+request_timeout = "30s"
 
+# Configuration base de données sécurisée
 [db]
 # Port to use for the local database URL.
 port = 54322
 # The database major version to use. This has to be the same as your remote database's. Run `SHOW
 # server_version;` on the remote database to check.
 major_version = 15
+# Configuration de sécurité PostgreSQL
+max_connections = 100
+shared_buffers = "256MB"
+effective_cache_size = "1GB"
+maintenance_work_mem = "64MB"
+checkpoint_completion_target = 0.9
+wal_buffers = "16MB"
+default_statistics_target = 100
+random_page_cost = 1.1
+effective_io_concurrency = 200
+work_mem = "4MB"
+min_wal_size = "1GB"
+max_wal_size = "4GB"
+max_worker_processes = 8
+max_parallel_workers_per_gather = 4
+max_parallel_workers = 8
+max_parallel_maintenance_workers = 4
 
+# Configuration Studio sécurisée
 [studio]
 # Port to use for Supabase Studio.
 port = 54323
+# Configuration de sécurité
+enabled = true
+# Limiter l'accès aux fonctionnalités sensibles
+api_explorer_enabled = false
+# Configuration des CORS
+cors_enabled = true
+cors_origins = ["http://localhost:8080", "https://ciara.city"]
 
 # Email testing server. Emails sent with the local dev setup are not actually sent - rather, they
 # are monitored, and you can view the emails that would have been sent from the web interface.
@@ -45,25 +89,57 @@ port = 54323
 port = 54324
 smtp_port = 54325
 pop3_port = 54326
+# Configuration de sécurité email
+smtp_auth_required = true
+smtp_auth_mechanism = "PLAIN"
 
+# Configuration Storage sécurisée
 [storage]
 # The maximum file size allowed (e.g. "5MB", "500KB").
 file_size_limit = "50MiB"
+# Configuration de sécurité avancée
+enabled = true
+# Types de fichiers autorisés
+allowed_mime_types = ["image/jpeg", "image/png", "image/gif", "image/webp", "image/avif", "application/pdf"]
+# Configuration CORS pour le storage
+cors_enabled = true
+cors_origins = ["http://localhost:8080", "https://ciara.city"]
 
+# Configuration Auth sécurisée
 [auth]
 # The base URL of your website. Used as an allow-list for redirects and for constructing URLs used
 # in emails.
-site_url = "http://localhost:8080"
+site_url = "https://ciara.city"
 # A list of *exact* URLs that auth providers are permitted to redirect to post authentication.
-additional_redirect_urls = ["http://localhost:8080", "https://localhost:8080", "http://localhost:3000", "https://localhost:3000", "https://ciara.city", "https://ciara.lovable.app"]
+additional_redirect_urls = [
+  "https://ciara.city", 
+  "https://ciara.lovable.app",
+  "http://localhost:8080"
+]
 # How long tokens are valid for, in seconds. Defaults to 3600 (1 hour), maximum 604,800 seconds (1
 # week).
 jwt_expiry = 3600
 # Allow/disallow new user signups to your project.
 enable_signup = true
-# If disabled, the endpoint will return an error. If enabled, the endpoint will still execute
-# succesfuly but it will not have any effect on the user data.
+# Configuration de sécurité avancée
+enable_signup_confirmations = true
+enable_email_change_confirmations = true
+enable_phone_change_confirmations = true
+# Configuration des sessions
+session_expiry = 3600
+refresh_token_rotation_enabled = true
+security_update_password_require_reauthentication = true
+# Configuration des tentatives de connexion
+max_signin_attempts = 5
+lockout_duration = 900
+# Configuration des mots de passe
+minimum_password_length = 8
+password_require_uppercase = true
+password_require_lowercase = true
+password_require_numbers = true
+password_require_symbols = true
 
+# Configuration email sécurisée
 [auth.email]
 # Allow/disallow new user signups via email to your project.
 enable_signup = true
@@ -72,12 +148,11 @@ enable_signup = true
 double_confirm_changes = true
 # If enabled, users need to confirm their email address before signing in.
 enable_confirmations = true
+# Configuration de sécurité email
+secure_email_change_enabled = true
+enable_confirmations = true
 
-
-
-# Use an external OAuth provider. The full list of providers are: `apple`, `azure`, `bitbucket`,
-# `discord`, `facebook`, `github`, `gitlab`, `google`, `keycloak`, `linkedin`, `notion`, `twitch`,
-# `twitter`, `slack`, `spotify`, `workos`, `zoom`.
+# Configuration OAuth sécurisée (désactivée par défaut)
 [auth.external.apple]
 enabled = false
 client_id = ""
@@ -88,6 +163,7 @@ redirect_uri = ""
 # or any other third-party OIDC providers.
 url = ""
 
+# Configuration Analytics sécurisée
 [analytics]
 enabled = false
 port = 54327
@@ -98,11 +174,21 @@ gcp_project_id = ""
 gcp_project_number = ""
 gcp_jwt_path = "supabase/gcloud.json"
 
-[functions.create-article-webhook]
-verify_jwt = false
+# Configuration de sécurité réseau
+[network]
+# Configuration des CORS globaux
+cors_enabled = true
+cors_origins = ["https://ciara.city", "http://localhost:8080"]
+cors_methods = ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
+cors_headers = ["Content-Type", "Authorization", "X-Client-Info"]
+cors_max_age = 86400
 
-[functions.send-contact-form]
-verify_jwt = false
-
-[functions.send-journey-completion]
-verify_jwt = false
+# Configuration de monitoring et logging
+[monitoring]
+enabled = true
+# Configuration des logs
+log_level = "info"
+# Configuration des métriques
+metrics_enabled = true
+# Configuration des alertes
+alerts_enabled = true

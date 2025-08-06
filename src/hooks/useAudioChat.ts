@@ -101,13 +101,10 @@ export function useAudioChat(context: ChatContext = {}) {
   // Initialize session and load message history
   const initializeSession = useCallback(async () => {
     if (sessionId) {
-      console.log('Session already initialized, skipping...');
       return;
     }
 
     try {
-      console.log('Initializing chat session...');
-      
       const sessionKey = getSessionKey();
       const enhancedContext = await buildEnhancedContext();
 
@@ -118,14 +115,11 @@ export function useAudioChat(context: ChatContext = {}) {
       });
 
       if (sessionError) {
-        console.error('Session error:', sessionError);
         return;
       }
 
       const newSessionId = sessionData;
       setSessionId(newSessionId);
-      console.log('Session ID:', newSessionId);
-
       // Load message history
       const { data: messageHistory, error: historyError } = await supabase
         .from('chat_messages')
@@ -135,7 +129,6 @@ export function useAudioChat(context: ChatContext = {}) {
         .limit(50);
 
       if (historyError) {
-        console.error('History error:', historyError);
         return;
       }
 
@@ -171,7 +164,6 @@ export function useAudioChat(context: ChatContext = {}) {
       setSuggestions(getLanguageSpecificSuggestions(currentLanguage));
 
     } catch (error) {
-      console.error('Error initializing session:', error);
     }
   }, [sessionId, getSessionKey, currentLanguage, context, buildEnhancedContext]);
 
@@ -245,7 +237,6 @@ export function useAudioChat(context: ChatContext = {}) {
       }
 
     } catch (error) {
-      console.error('Error sending text message:', error);
       handleMessageError();
     } finally {
       setIsLoading(false);
@@ -255,8 +246,6 @@ export function useAudioChat(context: ChatContext = {}) {
   // Send audio message
   const sendAudioMessage = useCallback(async (audioBlob: Blob, duration: number) => {
     if (isLoading || !sessionId) return;
-
-    console.log('Processing audio message with language:', currentLanguage);
 
     // Convert blob to base64
     const base64Audio = await blobToBase64(audioBlob);
@@ -279,7 +268,6 @@ export function useAudioChat(context: ChatContext = {}) {
 
     try {
       // Transcribe audio with proper language parameter
-      console.log('Transcribing audio with language:', currentLanguage);
       const { data: transcriptionData, error: transcriptionError } = await supabase.functions.invoke('voice-to-text', {
         body: {
           audio: base64Audio,
@@ -291,8 +279,6 @@ export function useAudioChat(context: ChatContext = {}) {
 
       const transcribedText = transcriptionData.text || 'Audio transcription failed';
       const detectedLanguage = detectLanguage(transcribedText);
-
-      console.log('Transcription result:', transcribedText);
 
       // Update the temporary message with transcription
       const userMessage: AudioChatMessage = {
@@ -346,7 +332,6 @@ export function useAudioChat(context: ChatContext = {}) {
       }
 
     } catch (error) {
-      console.error('Error sending audio message:', error);
       
       // Update temp message with error
       setMessages(prev => prev.map(msg => 
@@ -364,8 +349,6 @@ export function useAudioChat(context: ChatContext = {}) {
   // Generate audio response for text
   const generateAudioResponse = useCallback(async (text: string, language: string, messageId: string) => {
     try {
-      console.log('Generating audio response for language:', language);
-      
       // Select appropriate voice based on language
       const voiceMap: { [key: string]: string } = {
         'fr': 'shimmer', // French female voice
@@ -399,10 +382,7 @@ export function useAudioChat(context: ChatContext = {}) {
           : msg
       ));
 
-      console.log('Audio response generated successfully with voice:', selectedVoice);
-
-    } catch (error) {
-      console.error('Error generating audio response:', error);
+      } catch (error) {
     }
   }, []);
 

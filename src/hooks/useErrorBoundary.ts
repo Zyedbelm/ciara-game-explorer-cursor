@@ -16,12 +16,10 @@ export function useErrorBoundary() {
   }, []);
 
   const captureError = useCallback((error: Error, errorInfo?: ErrorInfo) => {
-    console.error('🚨 Error captured by boundary:', error, errorInfo);
     setError(error);
     
     // Log to external service in production
     if (process.env.NODE_ENV === 'production') {
-      console.error('🚨 Production error:', error);
     }
 
     // Prevent duplicate toasts for the same error
@@ -51,7 +49,6 @@ export function useErrorBoundary() {
         const result = await fn(...args);
         return result;
       } catch (error) {
-        console.error('🚨 Error in wrapped function:', error);
         captureError(error as Error);
         return undefined; // Return undefined instead of void for better type safety
       }

@@ -24,7 +24,6 @@ export const useStepQuizPoints = (stepId: string) => {
 
         setQuizPoints(totalPoints);
       } catch (error) {
-        console.error('Error fetching quiz points:', error);
         setQuizPoints(0);
       } finally {
         setLoading(false);

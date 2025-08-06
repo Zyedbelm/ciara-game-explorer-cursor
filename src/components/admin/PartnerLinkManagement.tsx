@@ -151,7 +151,6 @@ const PartnerLinkManagement: React.FC = () => {
       setPartnerLinks(enrichedLinks);
 
     } catch (error) {
-      console.error('Erreur lors du chargement des données:', error);
       toast({
         title: "Erreur",
         description: "Impossible de charger les données",
@@ -216,7 +215,6 @@ const PartnerLinkManagement: React.FC = () => {
       fetchData();
 
     } catch (error) {
-      console.error('Erreur lors de la création du lien:', error);
       toast({
         title: "Erreur",
         description: "Impossible de créer le lien",
@@ -255,7 +253,6 @@ const PartnerLinkManagement: React.FC = () => {
       fetchData();
 
     } catch (error) {
-      console.error('Erreur lors de la suppression du lien:', error);
       toast({
         title: "Erreur",
         description: "Impossible de supprimer le lien",

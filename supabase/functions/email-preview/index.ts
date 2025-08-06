@@ -202,7 +202,6 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    console.log(`📧 Generating preview for template: ${template} (${lang})`);
 
     // Use custom data if provided, otherwise use mock data
     const templateData = customData || getMockData(template);
@@ -220,7 +219,6 @@ const handler = async (req: Request): Promise<Response> => {
     });
 
   } catch (error: any) {
-    console.error("❌ Error generating email preview:", error);
     
     // Return error as HTML for better preview experience
     const errorHtml = `

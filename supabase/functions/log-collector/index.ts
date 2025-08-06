@@ -64,7 +64,6 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    console.log(`📊 Processing ${logs.length} log entries`);
 
     // Process logs in batches
     const batchSize = 100;
@@ -99,10 +98,8 @@ const handler = async (req: Request): Promise<Response> => {
           );
 
         if (error) {
-          console.error('❌ Error inserting log batch:', error);
           results.push({ success: false, error: error.message });
         } else {
-          console.log(`✅ Successfully inserted batch of ${batch.length} logs`);
           results.push({ success: true, count: batch.length });
         }
 
@@ -119,7 +116,6 @@ const handler = async (req: Request): Promise<Response> => {
         }
 
       } catch (batchError) {
-        console.error('❌ Error processing log batch:', batchError);
         results.push({ success: false, error: 'Batch processing failed' });
       }
     }
@@ -135,10 +131,8 @@ const handler = async (req: Request): Promise<Response> => {
         .lt('created_at', thirtyDaysAgo.toISOString());
 
       if (cleanupError) {
-        console.warn('⚠️ Cleanup warning:', cleanupError);
       }
     } catch (cleanupErr) {
-      console.warn('⚠️ Log cleanup failed:', cleanupErr);
     }
 
     return new Response(
@@ -154,7 +148,6 @@ const handler = async (req: Request): Promise<Response> => {
     );
 
   } catch (error) {
-    console.error('💥 Log collector error:', error);
     
     return new Response(
       JSON.stringify({ 
@@ -174,7 +167,6 @@ async function sendCriticalAlerts(criticalLogs: LogEntry[]) {
   try {
     for (const log of criticalLogs) {
       // Send to monitoring service or email alert
-      console.log('🚨 CRITICAL ALERT:', log.message, log.context);
       
       // Here you could integrate with services like:
       // - Slack webhooks
@@ -196,7 +188,6 @@ async function sendCriticalAlerts(criticalLogs: LogEntry[]) {
       }
     }
   } catch (error) {
-    console.error('❌ Failed to send critical alerts:', error);
   }
 }
 
@@ -231,11 +222,9 @@ async function updateEmailMetrics(emailLogs: LogEntry[]) {
       });
 
     if (error) {
-      console.error('❌ Failed to update email metrics:', error);
     }
     
   } catch (error) {
-    console.error('❌ Error updating email metrics:', error);
   }
 }
 

@@ -117,7 +117,6 @@ const AvatarUpload: React.FC<AvatarUploadProps> = ({
       });
 
     } catch (error) {
-      console.error('Error uploading avatar:', error);
       toast({
         title: "Erreur",
         description: "Impossible de mettre à jour votre photo de profil.",

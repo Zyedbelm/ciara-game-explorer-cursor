@@ -70,7 +70,6 @@ const CountryManagement: React.FC = () => {
       if (error) throw error;
       setCountries(data || []);
     } catch (error) {
-      console.error('Error fetching countries:', error);
       toast({
         title: "Erreur",
         description: "Impossible de charger les pays",
@@ -131,7 +130,6 @@ const CountryManagement: React.FC = () => {
       form.reset();
       fetchCountries();
     } catch (error) {
-      console.error('Error saving country:', error);
       toast({
         title: "Erreur",
         description: "Impossible de sauvegarder le pays",
@@ -172,7 +170,6 @@ const CountryManagement: React.FC = () => {
       });
       fetchCountries();
     } catch (error) {
-      console.error('Error deleting country:', error);
       toast({
         title: "Erreur",
         description: "Impossible de supprimer le pays (peut-être qu'il est utilisé par des villes)",
@@ -195,7 +192,6 @@ const CountryManagement: React.FC = () => {
       
       fetchCountries();
     } catch (error) {
-      console.error('Error updating display order:', error);
       toast({
         title: "Erreur",
         description: "Impossible de modifier l'ordre d'affichage",

@@ -53,7 +53,6 @@ export const EnhancedAudioRecorder: React.FC<EnhancedAudioRecorderProps> = ({
   } = useAudioRecording({
     maxDuration,
     onRecordingComplete: (blob, duration) => {
-      console.log('🎤 Recording completed:', { duration, size: blob.size });
       setRecordedBlob(blob);
       setShowPreview(true);
       
@@ -176,7 +175,7 @@ export const EnhancedAudioRecorder: React.FC<EnhancedAudioRecorderProps> = ({
           <audio
             ref={audioRef}
             onEnded={() => setIsPlaying(false)}
-            onLoadedData={() => console.log('Audio loaded for playback')}
+            onLoadedData={() => }
           />
 
           <div className="flex items-center gap-2">

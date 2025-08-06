@@ -108,7 +108,6 @@ const OptimizedJourneyPlayer: React.FC<JourneyPlayerProps> = ({
   
   // Journey completion handler - stable reference
   const stableJourneyCompletion = useCallback((completedJourney: any, points: number) => {
-    console.log('🎉 Journey completion detected!', { journey: completedJourney, points });
     stableCallbacks.current.onComplete?.(points);
     
     // Trigger the journey completion modal
@@ -164,7 +163,6 @@ const OptimizedJourneyPlayer: React.FC<JourneyPlayerProps> = ({
     const validateAndInitialize = async () => {
       const exists = await journeyDeletionService.validateJourneyExists(journeyId);
       if (!exists) {
-        console.warn('⚠️ Journey not found or not active:', journeyId);
         navigate('/');
         return;
       }
@@ -227,7 +225,6 @@ const OptimizedJourneyPlayer: React.FC<JourneyPlayerProps> = ({
 
   // Performance logging in development only
   if (process.env.NODE_ENV === 'development' && renderCount > 3) {
-    console.warn(`🔄 OptimizedJourneyPlayer rendered ${renderCount} times`);
   }
 
   // Loading state with skeleton

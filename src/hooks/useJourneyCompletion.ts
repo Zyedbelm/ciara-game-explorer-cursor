@@ -26,14 +26,12 @@ export function useJourneyCompletion() {
   }, []);
 
   const handleJourneyCompletion = useCallback((journey: ActiveJourney, totalPoints: number) => {
-    console.log('🎉 Journey completed, preparing rating modal');
     setCompletedJourney(journey);
     setShowRatingModal(true);
   }, []);
 
   const submitJourneyRating = useCallback(async (rating: number, comment: string) => {
     if (!completedJourney || !user || !profile) {
-      console.error('Missing required data for journey completion');
       return;
     }
 
@@ -71,7 +69,6 @@ export function useJourneyCompletion() {
 
       // Send congratulatory email
       try {
-        console.log('📧 Sending congratulatory email...');
         const { error: emailError } = await supabase.functions.invoke('send-journey-completion', {
           body: {
             userName: profile.full_name || 'Explorer',
@@ -88,13 +85,10 @@ export function useJourneyCompletion() {
         });
         
         if (emailError) {
-          console.error('Email sending failed (non-blocking):', emailError);
           // Don't block the completion process for email failures
         } else {
-          console.log('✅ Congratulatory email sent successfully');
-        }
+          }
       } catch (emailError) {
-        console.error('Email sending error (non-blocking):', emailError);
         // Don't block the completion process for email failures
       }
 
@@ -111,7 +105,6 @@ export function useJourneyCompletion() {
       }, 1500);
 
     } catch (error) {
-      console.error('Error completing journey:', error);
       toast({
         title: currentLanguage === 'fr' ? 'Erreur' : 'Error',
         description: currentLanguage === 'fr' 

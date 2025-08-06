@@ -160,7 +160,6 @@ const OptimizedLandingPage = () => {
 
         setDestinations(cityDestinations);
       } catch (error) {
-        console.error('Error fetching cities:', error);
         setHasError(true);
         setDestinations([]);
       } finally {

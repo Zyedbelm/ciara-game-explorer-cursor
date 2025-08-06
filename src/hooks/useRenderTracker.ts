@@ -23,11 +23,6 @@ export function useRenderTracker(componentName: string, threshold = 10) {
     // Si plus de 'threshold' rendus en moins de 1 seconde
     if (renderCount.current > threshold && timeSinceLastRender < 1000) {
       if (!warningShown.current) {
-        console.warn(`🔄 ${componentName} - Excessive re-renders detected:`, {
-          count: renderCount.current,
-          timeSpan: timeSinceLastRender,
-          avgPerSecond: (renderCount.current / timeSinceLastRender) * 1000
-        });
         warningShown.current = true;
       }
     }

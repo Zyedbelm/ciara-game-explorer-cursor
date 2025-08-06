@@ -158,7 +158,6 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    console.log('🎁 Starting new rewards notification process...');
 
     // Get rewards created in the last 24 hours
     const { data: newRewards, error: rewardsError } = await supabase
@@ -181,7 +180,6 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     if (!newRewards || newRewards.length === 0) {
-      console.log('📊 No new rewards found in the last 24 hours');
       return new Response(JSON.stringify({ 
         success: true, 
         message: 'No new rewards found',
@@ -192,7 +190,6 @@ const handler = async (req: Request): Promise<Response> => {
       });
     }
 
-    console.log(`📊 Found ${newRewards.length} new rewards`);
 
     let sentEmails = 0;
     const errors: string[] = [];
@@ -215,12 +212,10 @@ const handler = async (req: Request): Promise<Response> => {
           .not('email', 'is', null);
 
         if (usersError) {
-          console.error(`Error fetching users for city ${reward.cities.name}:`, usersError.message);
           continue;
         }
 
         if (!cityUsers || cityUsers.length === 0) {
-          console.log(`No users found for city ${reward.cities.name}`);
           continue;
         }
 
@@ -280,7 +275,6 @@ const handler = async (req: Request): Promise<Response> => {
       }
     }
 
-    console.log(`🎁 New rewards notification process completed: ${sentEmails} emails sent, ${errors.length} errors`);
 
     return new Response(JSON.stringify({ 
       success: true, 
@@ -294,7 +288,6 @@ const handler = async (req: Request): Promise<Response> => {
     });
 
   } catch (error: any) {
-    console.error("❌ Error in new rewards notification process:", error);
     return new Response(
       JSON.stringify({ 
         success: false, 

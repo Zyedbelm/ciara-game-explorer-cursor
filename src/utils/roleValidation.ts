@@ -113,6 +113,5 @@ export function migrateRole(oldRole: string): ValidUserRole {
   }
   
   // Par défaut, assigner visitor pour les rôles inconnus
-  console.warn(`Rôle inconnu rencontré: ${oldRole}, assigné comme visitor`);
   return 'visitor';
 }

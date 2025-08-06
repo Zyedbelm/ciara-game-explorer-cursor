@@ -67,7 +67,6 @@ class DashboardErrorBoundary extends React.Component<
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    console.error('Dashboard Error:', error, errorInfo);
   }
 
   render() {

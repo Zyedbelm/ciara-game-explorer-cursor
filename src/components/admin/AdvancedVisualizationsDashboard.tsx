@@ -112,7 +112,6 @@ export const AdvancedVisualizationsDashboard: React.FC<CalendarDashboardProps> =
           });
         }
       } catch (error) {
-        console.error('Error fetching real data:', error);
       }
     };
 

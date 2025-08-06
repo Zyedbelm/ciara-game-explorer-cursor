@@ -119,7 +119,6 @@ export function useUnifiedAudioChat(context: ChatContext = {}) {
   // Fetch step documents for enhanced context with priority
   const fetchStepDocuments = useCallback(async (stepId: string) => {
     try {
-      console.log('🔍 Fetching documents for step ID:', stepId);
       const { data, error } = await supabase
         .from('content_documents')
         .select('*')
@@ -128,19 +127,11 @@ export function useUnifiedAudioChat(context: ChatContext = {}) {
         .order('created_at', { ascending: false });
 
       if (error) {
-        console.error('❌ Error fetching step documents:', error);
         throw error;
       }
       
-      console.log('📚 Document fetch result:', {
-        stepId,
-        documentsFound: data?.length || 0,
-        documents: data?.map(d => ({ title: d.title, type: d.document_type, language: d.language }))
-      });
-      
       return data || [];
     } catch (error) {
-      console.error('❌ Error fetching step documents:', error);
       return [];
     }
   }, []);
@@ -156,7 +147,6 @@ export function useUnifiedAudioChat(context: ChatContext = {}) {
       if (error) throw error;
       return data || [];
     } catch (error) {
-      console.error('Error fetching quiz questions:', error);
       return [];
     }
   }, []);
@@ -194,10 +184,8 @@ export function useUnifiedAudioChat(context: ChatContext = {}) {
       };
 
       // 🎯 PRIORITY: Fetch step documents FIRST - this is critical
-      console.log('🔍 Fetching documents for step:', context.currentStep.id);
       const documents = await fetchStepDocuments(context.currentStep.id);
       if (documents.length > 0) {
-        console.log('📚 Found documents:', documents.length, 'documents');
         enhancedContext.stepDocuments = documents.map(doc => ({
           title: doc.title,
           content: doc.content || '',
@@ -205,9 +193,7 @@ export function useUnifiedAudioChat(context: ChatContext = {}) {
           type: doc.document_type || 'info',
           language: doc.language || currentLanguage
         }));
-        console.log('📋 Mapped documents for AI:', enhancedContext.stepDocuments);
-      } else {
-        console.log('📝 No documents found for this step');
+        } else {
         enhancedContext.stepDocuments = [];
       }
 
@@ -259,15 +245,7 @@ export function useUnifiedAudioChat(context: ChatContext = {}) {
     try {
       const enhancedContext = await buildEnhancedContext();
       const conversationHistory = messages.slice(-8);
-
-      console.log('🚀 Sending message to AI with enhanced context:', {
-        hasDocuments: enhancedContext.stepDocuments?.length > 0,
-        documentsCount: enhancedContext.stepDocuments?.length || 0,
-        currentStep: enhancedContext.currentStep?.name,
-        documentTitles: enhancedContext.stepDocuments?.map(d => d.title),
-        detectedLanguage,
-        currentLanguage
-      });
+      const detectedLanguage = detectLanguage(messageContent);
 
       const { data, error } = await supabase.functions.invoke('ai-chat', {
         body: {
@@ -280,13 +258,6 @@ export function useUnifiedAudioChat(context: ChatContext = {}) {
             language: m.originalLanguage
           }))
         }
-      });
-
-      console.log('🤖 AI Response received:', {
-        hasResponse: !!data?.response,
-        responseLength: data?.response?.length || 0,
-        hasSuggestions: !!data?.suggestions,
-        suggestionsCount: data?.suggestions?.length || 0
       });
 
       if (error) throw error;
@@ -309,7 +280,6 @@ export function useUnifiedAudioChat(context: ChatContext = {}) {
       }
 
     } catch (error) {
-      console.error('Error sending message:', error);
       
       const errorMessage: UnifiedChatMessage = {
         id: (Date.now() + 1).toString(),
@@ -353,8 +323,6 @@ export function useUnifiedAudioChat(context: ChatContext = {}) {
 
       const audioBase64 = await audioBase64Promise;
 
-      console.log('🎤 Transcribing audio...', { language: currentLanguage });
-
       // Transcribe audio to text
       const { data: transcriptionData, error: transcriptionError } = await supabase.functions.invoke('voice-to-text', {
         body: {
@@ -372,13 +340,10 @@ export function useUnifiedAudioChat(context: ChatContext = {}) {
         throw new Error('No text was transcribed from audio');
       }
 
-      console.log('✅ Audio transcribed:', transcribedText);
-
       // Send the transcribed text as a regular message
       await sendTextMessage(transcribedText);
 
     } catch (error) {
-      console.error('❌ Error processing audio message:', error);
       
       const errorMessage: UnifiedChatMessage = {
         id: Date.now().toString(),

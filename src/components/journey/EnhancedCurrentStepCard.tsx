@@ -75,8 +75,7 @@ const EnhancedCurrentStepCard: React.FC<EnhancedCurrentStepCardProps> = ({
   const distanceStatus = getDistanceStatus();
 
   const handleQuizComplete = (points: number) => {
-    console.log(`Quiz completed! Earned ${points} points`);
-  };
+    };
 
   const openDirections = () => {
     const url = `https://www.google.com/maps/dir/?api=1&destination=${currentStep.latitude},${currentStep.longitude}`;

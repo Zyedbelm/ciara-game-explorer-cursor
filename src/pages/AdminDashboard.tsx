@@ -105,13 +105,11 @@ const AdminDashboard = () => {
         .single();
 
       if (error) {
-        console.error('Error fetching city name:', error);
         return;
       }
 
       setCityName(data?.name || null);
     } catch (error) {
-      console.error('Error fetching city name:', error);
     }
   };
 
@@ -135,7 +133,6 @@ const AdminDashboard = () => {
         activeUsers: Math.floor((usersResult.count || 0) * 0.3)
       });
     } catch (error) {
-      console.error('Error fetching stats:', error);
       toast({
         title: "Erreur",
         description: t('admin.error.load_failed'),

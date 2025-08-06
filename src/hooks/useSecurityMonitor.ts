@@ -28,7 +28,6 @@ export function useSecurityMonitor() {
         p_origin: origin || window.location.origin
       });
     } catch (error) {
-      console.warn('Failed to log security event:', error);
     }
   }, [isAuthenticated]);
 
@@ -67,7 +66,6 @@ export function useSecurityMonitor() {
         });
       }
     } catch (error) {
-      console.warn('Security monitoring failed:', error);
     }
   }, [user, logSecurityEvent]);
 

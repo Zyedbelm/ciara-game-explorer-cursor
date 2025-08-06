@@ -41,13 +41,11 @@ export function useSimpleAuth() {
         .single();
 
       if (error && error.code !== 'PGRST116') {
-        console.warn('Profile fetch error:', error.message);
         return null;
       }
 
       return data;
     } catch (error) {
-      console.error('Profile fetch failed:', error);
       return null;
     }
   };

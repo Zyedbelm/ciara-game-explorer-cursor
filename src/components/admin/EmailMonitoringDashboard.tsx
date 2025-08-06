@@ -78,7 +78,6 @@ export const EmailMonitoringDashboard: React.FC<EmailMonitoringDashboardProps> =
       }
 
     } catch (error) {
-      console.error('Error fetching monitoring data:', error);
       logger.error('system', 'Failed to fetch monitoring data', { error });
     } finally {
       setLoading(false);

@@ -325,7 +325,6 @@ const SimpleAudioChatWidget: React.FC<SimpleAudioChatWidgetProps> = ({
                 <AudioErrorBoundary>
                   <AudioRecorder
                     onRecordingComplete={sendAudioMessage}
-                    onError={(error) => console.error('Audio recording error:', error)}
                     disabled={isLoading}
                     maxDuration={30}
                     className="shrink-0"

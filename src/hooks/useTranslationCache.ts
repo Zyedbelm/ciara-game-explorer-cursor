@@ -34,7 +34,6 @@ export function useTranslationCache() {
     );
 
     if (!force && hasRecentCache) {
-      console.log('✅ Using cached translations for:', language);
       return;
     }
 
@@ -42,8 +41,6 @@ export function useTranslationCache() {
     lastFetchTime.current = now;
 
     try {
-      console.log('🔄 Loading translations for language:', language);
-      
       const { data, error } = await supabase
         .from('ui_translations')
         .select('key, value')
@@ -65,10 +62,7 @@ export function useTranslationCache() {
       });
 
       setCache(newCache);
-      console.log('✅ Loaded translations:', data?.length || 0);
-
-    } catch (error) {
-      console.error('❌ Error loading translations:', error);
+      } catch (error) {
     } finally {
       setIsLoading(false);
     }
@@ -135,10 +129,7 @@ export function useTranslationCache() {
       });
 
       setCache(newCache);
-      console.log('✅ Preloaded common translations:', data?.length || 0);
-
-    } catch (error) {
-      console.error('❌ Error preloading translations:', error);
+      } catch (error) {
     }
   };
 
@@ -154,8 +145,7 @@ export function useTranslationCache() {
     });
 
     setCache(newCache);
-    console.log('🧹 Cleared expired translation cache');
-  };
+    };
 
   // Auto-cleanup every 5 minutes
   useEffect(() => {

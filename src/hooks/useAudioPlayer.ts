@@ -54,7 +54,6 @@ export const useAudioPlayer = ({
         setIsLoading(false);
         setIsPlaying(false);
         onError?.(errorMsg);
-        console.error('Audio error:', e);
       });
 
       audioRef.current.addEventListener('play', () => {
@@ -92,10 +91,8 @@ export const useAudioPlayer = ({
       const audio = getAudioElement();
       audio.src = audioUrl;
       
-      console.log('Loading audio from base64...');
       await audio.load();
       
-      console.log('Playing audio...');
       await audio.play();
       
     } catch (error) {
@@ -104,7 +101,6 @@ export const useAudioPlayer = ({
       setIsLoading(false);
       setIsPlaying(false);
       onError?.(errorMsg);
-      console.error('Error playing audio:', error);
     }
   }, [getAudioElement, onError]);
 
@@ -115,10 +111,8 @@ export const useAudioPlayer = ({
       const audio = getAudioElement();
       audio.src = url;
       
-      console.log('Loading audio from URL...');
       await audio.load();
       
-      console.log('Playing audio...');
       await audio.play();
       
     } catch (error) {
@@ -127,7 +121,6 @@ export const useAudioPlayer = ({
       setIsLoading(false);
       setIsPlaying(false);
       onError?.(errorMsg);
-      console.error('Error playing audio from URL:', error);
     }
   }, [getAudioElement, onError]);
 
@@ -145,7 +138,6 @@ export const useAudioPlayer = ({
         const errorMsg = 'Failed to resume audio';
         setError(errorMsg);
         onError?.(errorMsg);
-        console.error('Error resuming audio:', error);
       }
     }
   }, [onError]);

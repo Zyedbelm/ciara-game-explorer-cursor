@@ -81,7 +81,6 @@ class GeolocationService {
       const now = Date.now();
       const locationAge = now - (this.lastLocation.timestamp || 0);
       if (locationAge < options.maximumAge) {
-        console.log('🗺️ GeolocationService: Using cached location');
         return this.lastLocation;
       }
     }
@@ -116,7 +115,6 @@ class GeolocationService {
   private startWatching(options?: GeolocationOptions): void {
     if (!this.isSupported() || this.isWatching) return;
 
-    console.log('🗺️ GeolocationService: Starting location watch');
     this.isWatching = true;
 
     const watchOptions = { ...this.defaultOptions, ...options };
@@ -147,14 +145,11 @@ class GeolocationService {
           }
         }
         
-        console.log('🗺️ GeolocationService: Location updated:', coords);
         this.lastLocation = coords;
         this.notifyCallbacks(coords);
       },
       (error) => {
         const errorMessage = this.getErrorMessage(error);
-        console.log('🗺️ GeolocationService: Watch error:', errorMessage);
-        
         // Don't notify errors for timeout in watch mode
         if (error.code !== error.TIMEOUT) {
           this.notifyErrorCallbacks(errorMessage);
@@ -166,7 +161,6 @@ class GeolocationService {
 
   private stopWatching(): void {
     if (this.watchId !== null) {
-      console.log('🗺️ GeolocationService: Stopping location watch');
       navigator.geolocation.clearWatch(this.watchId);
       this.watchId = null;
       this.isWatching = false;
@@ -178,7 +172,6 @@ class GeolocationService {
       try {
         callback(location);
       } catch (error) {
-        console.error('Error in geolocation callback:', error);
       }
     });
   }
@@ -188,7 +181,6 @@ class GeolocationService {
       try {
         callback(error);
       } catch (err) {
-        console.error('Error in geolocation error callback:', err);
       }
     });
   }
@@ -262,8 +254,7 @@ class GeolocationService {
   // Clear cached location
   clearCache(): void {
     this.lastLocation = null;
-    console.log('🗺️ GeolocationService: Cache cleared');
-  }
+    }
 
   // Cleanup method
   cleanup(): void {

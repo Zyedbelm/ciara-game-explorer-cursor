@@ -56,7 +56,6 @@ const HomepageVisibilityManager = () => {
       if (error) throw error;
       setCountries(data || []);
     } catch (error) {
-      console.error('Error fetching countries:', error);
       toast.error('Erreur lors du chargement des pays');
     }
   };
@@ -75,7 +74,6 @@ const HomepageVisibilityManager = () => {
       if (error) throw error;
       setCities(data || []);
     } catch (error) {
-      console.error('Error fetching cities:', error);
       toast.error('Erreur lors du chargement des villes');
     } finally {
       setLoading(false);
@@ -106,7 +104,6 @@ const HomepageVisibilityManager = () => {
           : 'Ville masquée de la homepage'
       );
     } catch (error) {
-      console.error('Error updating city visibility:', error);
       toast.error('Erreur lors de la mise à jour');
     } finally {
       setUpdating(null);

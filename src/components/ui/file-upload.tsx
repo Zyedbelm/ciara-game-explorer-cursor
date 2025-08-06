@@ -78,7 +78,6 @@ export function FileUpload({
         description: "Votre fichier a été téléchargé avec succès"
       });
     } catch (error) {
-      console.error('Upload error:', error);
       toast({
         title: "Erreur d'upload",
         description: "Une erreur est survenue lors du téléchargement",

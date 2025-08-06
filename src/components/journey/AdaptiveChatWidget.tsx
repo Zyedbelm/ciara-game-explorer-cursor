@@ -221,7 +221,6 @@ const AdaptiveChatWidget: React.FC<AdaptiveChatWidgetProps> = ({
                               <EnhancedAudioPlayer 
                                 audioData={message.audioData}
                                 autoPlay={message.role === 'assistant'}
-                                onError={(error) => console.error('Audio playbook error:', error)}
                               />
                            </div>
                          )}
@@ -342,7 +341,6 @@ const AdaptiveChatWidget: React.FC<AdaptiveChatWidgetProps> = ({
                 <AudioErrorBoundary>
                   <AudioRecorder
                     onRecordingComplete={sendAudioMessage}
-                    onError={(error) => console.error('Audio recording error:', error)}
                     disabled={isLoading}
                     maxDuration={15}
                   />

@@ -57,20 +57,14 @@ const JourneyCard: React.FC<JourneyCardProps> = ({ journey, variant, onStatusCha
   // Utiliser le contexte pour gérer l'expansion des étapes
   const isStepsExpanded = expandedCards.has(journey.id);
 
-  console.log('🎴 JourneyCard variant:', variant, 'journey status:', journey.status);
-
   // Fonction pour récupérer les étapes du parcours - VERSION SIMPLE ET EFFICACE
   const fetchSteps = async () => {
-    console.log('📄 [PDF] fetchSteps appelée - isStepsExpanded:', isStepsExpanded);
     if (!isStepsExpanded) {
-      console.log('📄 [PDF] fetchSteps annulée - pas expanded');
       return;
     }
     
     setStepsLoading(true);
     try {
-      console.log('📄 [PDF] Début récupération étapes pour journey:', journey.journeyId);
-      
       // ÉTAPE 1: Récupérer les étapes du parcours
       const { data: journeySteps, error: journeyError } = await supabase
         .from('journey_steps')
@@ -78,15 +72,11 @@ const JourneyCard: React.FC<JourneyCardProps> = ({ journey, variant, onStatusCha
         .eq('journey_id', journey.journeyId)
         .order('step_order');
 
-      console.log('📄 [PDF] Journey steps récupérées:', journeySteps?.length, 'erreur:', journeyError);
-
       if (journeyError) {
-        console.error('❌ Erreur journey_steps:', journeyError);
         return;
       }
 
       if (!journeySteps || journeySteps.length === 0) {
-        console.log('📄 [PDF] Aucune étape trouvée pour ce parcours');
         setSteps([]);
         return;
       }
@@ -98,10 +88,7 @@ const JourneyCard: React.FC<JourneyCardProps> = ({ journey, variant, onStatusCha
         .select('*')
         .in('id', stepIds);
 
-      console.log('📄 [PDF] Détails étapes récupérés:', stepsDetails?.length, 'erreur:', stepsError);
-
       if (stepsError) {
-        console.error('❌ Erreur steps:', stepsError);
         return;
       }
 
@@ -114,11 +101,9 @@ const JourneyCard: React.FC<JourneyCardProps> = ({ journey, variant, onStatusCha
         };
       });
 
-      console.log('📄 [PDF] Étapes combinées:', combinedSteps);
       setSteps(combinedSteps);
 
     } catch (error) {
-      console.error('❌ Erreur inattendue:', error);
     } finally {
       setStepsLoading(false);
     }
@@ -126,7 +111,6 @@ const JourneyCard: React.FC<JourneyCardProps> = ({ journey, variant, onStatusCha
 
   // Récupérer les étapes quand on expand la liste
   useEffect(() => {
-    console.log('📄 [PDF] useEffect triggered - isStepsExpanded:', isStepsExpanded, 'journeyId:', journey.journeyId);
     fetchSteps();
   }, [isStepsExpanded, journey.journeyId]);
 
@@ -142,8 +126,6 @@ const JourneyCard: React.FC<JourneyCardProps> = ({ journey, variant, onStatusCha
     setIsDeleting(true);
     
     try {
-      console.log('🗑️ Complete journey deletion:', { userId: user.id, journeyId: journey.journeyId });
-      
       const result = await journeyDeletionService.deleteJourneyCompletely(user.id, journey.journeyId);
       
       if (result.success) {
@@ -158,7 +140,6 @@ const JourneyCard: React.FC<JourneyCardProps> = ({ journey, variant, onStatusCha
         throw new Error(result.error || 'Failed to delete journey');
       }
     } catch (error) {
-      console.error('❌ Error deleting journey:', error);
       toast({
         title: 'Erreur',
         description: 'Impossible de supprimer le parcours',
@@ -175,8 +156,6 @@ const JourneyCard: React.FC<JourneyCardProps> = ({ journey, variant, onStatusCha
     setIsAcquiring(true);
     
     try {
-      console.log('🏆 Acquiring journey:', { userId: user.id, journeyId: journey.journeyId });
-      
       const success = await journeyDeletionService.acquireCompletedJourney(user.id, journey.journeyId);
       
       if (success) {
@@ -191,7 +170,6 @@ const JourneyCard: React.FC<JourneyCardProps> = ({ journey, variant, onStatusCha
         throw new Error('Failed to acquire journey');
       }
     } catch (error) {
-      console.error('❌ Error acquiring journey:', error);
       toast({
         title: 'Erreur',
         description: 'Impossible d\'acquérir le parcours',
@@ -208,14 +186,6 @@ const JourneyCard: React.FC<JourneyCardProps> = ({ journey, variant, onStatusCha
     setIsGeneratingJournal(true);
     
     try {
-      console.log('🎯 Generating travel journal with data:', {
-        journeyName: journey.title,
-        journeyId: journey.journeyId,
-        userJourneyProgressId: journey.id, // Use the user_journey_progress.id
-        rating: journey.rating,
-        comment: journey.userComment
-      });
-
       const { data, error } = await supabase.functions.invoke('generate-travel-journal', {
         body: {
           journeyName: journey.title,
@@ -228,12 +198,9 @@ const JourneyCard: React.FC<JourneyCardProps> = ({ journey, variant, onStatusCha
       });
 
       if (error) {
-        console.error('❌ Travel journal generation error:', error);
         throw error;
       }
 
-      console.log('🎉 Travel journal generated successfully:', data);
-      
       // Handle PDF download if available
       if (data?.pdfData && data?.fileName) {
         const blob = new Blob([Uint8Array.from(atob(data.pdfData), c => c.charCodeAt(0))], 
@@ -253,11 +220,7 @@ const JourneyCard: React.FC<JourneyCardProps> = ({ journey, variant, onStatusCha
         });
       } else if (data?.format === 'html' || data?.content) {
         // Fallback: Generate PDF locally using the HTML content
-        console.log('📄 Using local PDF generation as fallback');
-        
         // Create journal data from the response with rich information
-        console.log('📄 [PDF] Steps data for journal:', steps);
-        
         const journalData = {
           city: data.metadata?.cityName || 'Ville inconnue',
           journey: journey.title,
@@ -266,7 +229,6 @@ const JourneyCard: React.FC<JourneyCardProps> = ({ journey, variant, onStatusCha
           totalSteps: journey.totalSteps,
           totalPoints: data.metadata?.totalPoints || journey.pointsEarned,
           steps: steps.map((stepData, index) => {
-            console.log('📄 [PDF] Processing step:', stepData);
             const stepDetail = stepData.step_detail;
             
             return {
@@ -308,7 +270,6 @@ const JourneyCard: React.FC<JourneyCardProps> = ({ journey, variant, onStatusCha
         throw new Error('Format de réponse non reconnu');
       }
     } catch (error) {
-      console.error('Error generating travel journal:', error);
       toast({
         title: 'Erreur',
         description: 'Impossible de générer le carnet de voyage.',

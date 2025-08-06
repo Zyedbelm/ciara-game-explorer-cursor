@@ -29,7 +29,6 @@ export function getCityImage(cityData: {
     }
     // Si c'est un chemin local incorrect (comme /src/assets/...), l'ignorer
     if (cityData.hero_image_url.startsWith('/src/') || cityData.hero_image_url.startsWith('src/')) {
-      console.warn(`URL d'image incorrecte pour ${cityData.name}: ${cityData.hero_image_url}`);
     }
   }
   

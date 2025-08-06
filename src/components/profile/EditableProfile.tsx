@@ -87,7 +87,6 @@ const EditableProfile: React.FC<EditableProfileProps> = ({ onSave, onCancel }) =
           setCities(data);
         }
       } catch (error) {
-        console.error('Erreur lors du chargement des villes:', error);
       }
     };
     fetchCities();
@@ -120,14 +119,12 @@ const EditableProfile: React.FC<EditableProfileProps> = ({ onSave, onCancel }) =
   }, [profile, cities]);
 
   const handleInputChange = (field: string, value: any) => {
-    console.log('Changing field:', field, 'to value:', value);
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
   const handleSubmit = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     
-    console.log('🔄 Starting profile update...');
     setIsProfileLoading(true);
     
     try {
@@ -137,7 +134,6 @@ const EditableProfile: React.FC<EditableProfileProps> = ({ onSave, onCancel }) =
       );
       
       // Only update profile - password is handled separately now
-      console.log('📝 Updating profile data...');
       const result = await updateProfile({
         full_name: formData.full_name,
         city_id: selectedCity?.id || null,
@@ -150,8 +146,6 @@ const EditableProfile: React.FC<EditableProfileProps> = ({ onSave, onCancel }) =
         throw result.error;
       }
 
-      console.log('✅ Profile updated successfully');
-
       // Show success toast
       toast({
         title: t('profile.profile_updated'),
@@ -162,7 +156,6 @@ const EditableProfile: React.FC<EditableProfileProps> = ({ onSave, onCancel }) =
       onSave?.();
       
     } catch (error) {
-      console.error('❌ Error updating profile:', error);
       toast({
         title: t('profile.update_error'),
         description: `${t('profile.update_error')}: ${error instanceof Error ? error.message : 'Unknown error'}`,
@@ -177,19 +170,15 @@ const EditableProfile: React.FC<EditableProfileProps> = ({ onSave, onCancel }) =
     if (!newEmail) return;
     
     setIsEmailLoading(true);
-    console.log('📧 Starting email update...');
-    
     try {
       const { error } = await updateEmail(newEmail);
       if (!error) {
         setShowEmailChange(false);
         setNewEmail('');
-        console.log('✅ Email update initiated successfully');
-      }
+        }
     } finally {
       setIsEmailLoading(false);
-      console.log('🏁 Email update process completed');
-    }
+      }
   };
 
   const handleCitySelect = (cityName: string) => {

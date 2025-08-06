@@ -187,7 +187,6 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    console.log(`📧 Sending bilingual CIARA welcome email to: ${email}`);
 
     const finalLoginUrl = loginUrl || 'https://ciara.city/auth';
 
@@ -208,7 +207,6 @@ const handler = async (req: Request): Promise<Response> => {
       html: emailHtml,
     });
 
-    console.log("✅ Bilingual CIARA welcome email sent successfully:", emailResponse);
 
     return new Response(JSON.stringify({ 
       success: true, 
@@ -221,7 +219,6 @@ const handler = async (req: Request): Promise<Response> => {
       },
     });
   } catch (error: any) {
-    console.error("❌ Error sending bilingual CIARA welcome email:", error);
     return new Response(
       JSON.stringify({ error: error.message }),
       {

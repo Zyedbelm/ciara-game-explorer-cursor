@@ -38,18 +38,15 @@ export function useStepValidation(
 
   const validateStepLocation = useCallback(async (step: JourneyStep, location: LocationCoords) => {
     if (!location || !user || !journey) {
-      console.log('🚫 Validation cancelled - missing requirements');
       return;
     }
 
     // Prevent duplicate validations within 5 seconds
     const now = Date.now();
     if (now - lastValidationTime.current < 5000 || validatingStepId.current === step.id) {
-      console.log('🚫 Validation cancelled - too recent or already validating');
       return;
     }
 
-    console.log('🎯 Starting step validation for:', step.name);
     setValidatingStep(true);
     validatingStepId.current = step.id;
     lastValidationTime.current = now;
@@ -61,8 +58,6 @@ export function useStepValidation(
         step.latitude,
         step.longitude
       );
-
-      console.log('📏 Distance to step:', distance, 'Required:', step.validation_radius);
 
       // Log validation attempt for security monitoring
       try {
@@ -79,12 +74,9 @@ export function useStepValidation(
           p_success: distance <= step.validation_radius
         });
       } catch (logError) {
-        console.warn('Failed to log validation attempt:', logError);
       }
 
       if (distance <= step.validation_radius) {
-        console.log('✅ User is within range, completing step...');
-        
         // Check if step is already completed to prevent duplicates
         // Only check for GPS-based validation (not quiz completion)
         const { data: existingCompletion } = await supabase
@@ -96,8 +88,6 @@ export function useStepValidation(
           .maybeSingle();
 
         if (existingCompletion) {
-          console.log('ℹ️ Step already completed via geolocation, skipping...');
-          
           // Check if journey is already completed
           const isJourneyCompleted = journey.completedSteps.length >= journey.steps.length;
           
@@ -122,7 +112,6 @@ export function useStepValidation(
           });
 
         if (completionError) {
-          console.error('❌ Error recording completion:', completionError);
           
           // Handle specific error types
           if (completionError.code === '23505') { // Unique violation
@@ -142,14 +131,6 @@ export function useStepValidation(
         const newCurrentIndex = Math.min(journey.currentStepIndex + 1, journey.steps.length - 1);
         const newTotalPoints = journey.totalPointsEarned + step.points_awarded;
 
-        console.log('🔄 Updating progress:', {
-          stepId: step.id,
-          currentStepIndex,
-          newCompletedSteps,
-          newCurrentIndex,
-          newTotalPoints
-        });
-
         const { error: progressError } = await supabase
           .from('user_journey_progress')
           .upsert({
@@ -162,7 +143,6 @@ export function useStepValidation(
           });
 
         if (progressError) {
-          console.error('❌ Progress update error:', progressError);
           throw progressError;
         }
 
@@ -182,8 +162,6 @@ export function useStepValidation(
         // Check if journey is complete (when all steps are completed)
         const isJourneyComplete = newCompletedSteps.length >= journey.steps.length;
         if (isJourneyComplete) {
-          console.log('🎉 Journey completed! All steps validated.');
-          
           // Mark journey as completed in database
           const { error: completionError } = await supabase
             .from('user_journey_progress')
@@ -196,7 +174,6 @@ export function useStepValidation(
             .eq('journey_id', journey.id);
 
           if (completionError) {
-            console.error('❌ Error marking journey complete:', completionError);
           }
 
           const updatedJourney = {
@@ -209,7 +186,6 @@ export function useStepValidation(
         }
 
       } else {
-        console.log('📍 User too far from step');
         toast({
           title: 'Erreur',
           description: `Vous devez être à moins de ${step.validation_radius}m du point d'intérêt (${Math.round(distance)}m)`,
@@ -218,7 +194,6 @@ export function useStepValidation(
       }
 
     } catch (error) {
-      console.error('❌ Error validating step:', error);
       
       // Enhanced error handling based on error type
       if (error && typeof error === 'object' && 'code' in error) {

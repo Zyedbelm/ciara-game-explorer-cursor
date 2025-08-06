@@ -118,17 +118,13 @@ class CiaraLogger {
     
     switch (entry.level) {
       case 'debug':
-        console.debug(message, entry.context);
         break;
       case 'info':
-        console.info(message, entry.context);
         break;
       case 'warn':
-        console.warn(message, entry.context);
         break;
       case 'error':
       case 'critical':
-        console.error(message, entry.context);
         break;
     }
   }
@@ -145,12 +141,10 @@ class CiaraLogger {
       });
 
       if (error) {
-        console.error('Failed to flush logs:', error);
         // Re-add logs to batch if flush failed (but limit to prevent infinite growth)
         this.batchLogs = [...logsToFlush.slice(-5), ...this.batchLogs];
       }
     } catch (error) {
-      console.error('Error flushing logs:', error);
     }
   }
 

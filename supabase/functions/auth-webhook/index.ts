@@ -2,50 +2,73 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { Webhook } from "https://esm.sh/standardwebhooks@1.0.0";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.50.5';
 
-// Initialize Supabase client for calling edge functions
-const supabaseUrl = 'https://pohqkspsdvvbqrgzfayl.supabase.co';
-const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || '';
+// Configuration sécurisée
+const supabaseUrl = Deno.env.get("SUPABASE_URL");
+const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+
+// Validation des variables d'environnement critiques
+if (!supabaseServiceKey) {
+  throw new Error("SUPABASE_SERVICE_ROLE_KEY manquante");
+}
+
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-// Extract webhook secret with proper error handling
+// Extraction sécurisée du secret webhook
 const rawHookSecret = Deno.env.get("AUTH_WEBHOOK_SECRET");
 let hookSecret: string | null = null;
 
 if (rawHookSecret) {
-  // Handle the format "v1,whsec_<base64>" or just the secret part
   if (rawHookSecret.startsWith("whsec_")) {
     hookSecret = rawHookSecret;
   } else if (rawHookSecret.includes("whsec_")) {
-    // Extract just the whsec_ part
     const parts = rawHookSecret.split(",");
     const secretPart = parts.find(part => part.trim().startsWith("whsec_"));
     hookSecret = secretPart ? secretPart.trim() : null;
   } else {
-    // If it doesn't contain whsec_, it might be the raw secret
     hookSecret = rawHookSecret;
   }
 }
 
+// Headers CORS sécurisés
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Origin': 'https://ciara.city',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  'X-Content-Type-Options': 'nosniff',
+  'X-Frame-Options': 'DENY',
+  'X-XSS-Protection': '1; mode=block',
+  'Referrer-Policy': 'strict-origin-when-cross-origin',
+};
+
+// Validation des entrées
+const validateEmail = (email: string): boolean => {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email);
+};
+
+const validateToken = (token: string): boolean => {
+  return token && token.length > 0 && token.length < 1000;
+};
+
+// Fonction de logging sécurisée
+const secureLog = (message: string, data?: any) => {
+  if (Deno.env.get("NODE_ENV") === "development") {
+  }
 };
 
 serve(async (req) => {
-  console.log("🚀 Auth webhook triggered:", req.method, "URL:", req.url);
-  console.log("🔑 Raw hook secret available:", !!rawHookSecret);
-  console.log("🔑 Processed hook secret available:", !!hookSecret);
-  if (hookSecret) {
-    console.log("🔑 Hook secret format:", hookSecret.substring(0, 10) + "...");
-  }
+  const startTime = Date.now();
   
-  // Handle CORS preflight requests
+  // Gestion des requêtes OPTIONS (CORS preflight)
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
+    return new Response(null, { 
+      status: 200,
+      headers: corsHeaders 
+    });
   }
   
+  // Validation de la méthode HTTP
   if (req.method !== "POST") {
-    console.error("❌ Method not allowed:", req.method);
     return new Response("Method not allowed", { 
       status: 405,
       headers: corsHeaders 
@@ -53,42 +76,41 @@ serve(async (req) => {
   }
 
   try {
-    const payload = await req.text();
-    const headers = Object.fromEntries(req.headers);
-    
-    console.log("📧 Webhook payload received, length:", payload.length);
-    console.log("📋 Headers:", Object.keys(headers));
-    
+    // Validation du secret webhook
     if (!hookSecret) {
-      console.error("🔑 AUTH_WEBHOOK_SECRET not configured");
+      secureLog("AUTH_WEBHOOK_SECRET non configuré");
       return new Response("Webhook secret not configured", { 
         status: 500,
         headers: corsHeaders 
       });
     }
 
-    if (!supabaseServiceKey) {
-      console.error("🔑 SUPABASE_SERVICE_ROLE_KEY not configured");
-      return new Response("Supabase service key not configured", { 
-        status: 500,
+    // Lecture et validation du payload
+    const payload = await req.text();
+    if (!payload || payload.length > 10000) {
+      return new Response("Invalid payload", { 
+        status: 400,
         headers: corsHeaders 
       });
     }
 
-    console.log("🔐 Verifying webhook signature...");
+    const headers = Object.fromEntries(req.headers);
+    
+    // Vérification de la signature webhook
     const wh = new Webhook(hookSecret);
     
     let webhookData;
     try {
       webhookData = wh.verify(payload, headers);
     } catch (verifyError) {
-      console.error("❌ Webhook verification failed:", verifyError);
+      secureLog("Échec de vérification webhook:", { error: verifyError.message });
       return new Response("Invalid webhook signature", { 
         status: 401,
         headers: corsHeaders 
       });
     }
 
+    // Validation des données webhook
     const {
       user,
       email_data: { 
@@ -109,163 +131,127 @@ serve(async (req) => {
       };
     };
 
-    console.log("✅ Webhook verified successfully");
-    console.log("📩 Email action type:", email_action_type);
-    console.log("👤 User email:", user.email);
-    console.log("🔗 Original redirect_to:", redirect_to);
-    console.log("🌐 Site URL:", site_url);
-
-    // Always redirect to ciara.city regardless of original redirect_to
-    const CIARA_DOMAIN = "https://ciara.city";
-    console.log("🎯 Forced redirect domain:", CIARA_DOMAIN);
-    
-    // Extract user name from email for personalization
-    const userName = user.email.split('@')[0];
-
-    if (email_action_type === "signup") {
-      console.log("📝 Processing signup confirmation email (bilingual)");
-      
-      // Generate confirmation URL
-      const baseUrl = site_url.replace('/auth/v1', '');
-      const supabaseAnonKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBvaHFrc3BzZHZ2YnFyZ3pmYXlsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTIyMzY0NDQsImV4cCI6MjA2NzgxMjQ0NH0.r1AXZ_w5ifbjj7AOyEtSWpGFSuyYji8saicIcoLNShk";
-      const confirmationUrl = `${baseUrl}/auth/v1/verify?token=${token_hash}&type=${email_action_type}&redirect_to=${encodeURIComponent(CIARA_DOMAIN + "/")}&apikey=${supabaseAnonKey}`;
-      
-      console.log("🔗 Confirmation URL generated:", confirmationUrl);
-      
-      // Call the dedicated bilingual email confirmation function
-      try {
-        const { data, error } = await supabase.functions.invoke('send-email-confirmation', {
-          body: {
-            email: user.email,
-            confirmationUrl: confirmationUrl,
-            name: userName
-          }
-        });
-        
-        if (error) {
-          throw error;
-        }
-        
-        console.log("✅ Bilingual email confirmation sent via dedicated function");
-        
-        return new Response(JSON.stringify({ 
-          success: true, 
-          email_id: data?.id,
-          action_type: email_action_type,
-          recipient: user.email,
-          template: 'bilingual'
-        }), {
-          status: 200,
-          headers: { "Content-Type": "application/json", ...corsHeaders },
-        });
-        
-      } catch (error) {
-        console.error("❌ Error calling email confirmation function:", error);
-        throw new Error(`Failed to send signup email: ${error.message}`);
-      }
-      
-    } else if (email_action_type === "recovery") {
-      console.log("🔐 Processing password recovery email (bilingual)");
-      
-      // Generate reset URL
-      const baseUrl = site_url.replace('/auth/v1', '');
-      const supabaseAnonKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBvaHFrc3BzZHZ2YnFyZ3pmYXlsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTIyMzY0NDQsImV4cCI6MjA2NzgxMjQ0NH0.r1AXZ_w5ifbjj7AOyEtSWpGFSuyYji8saicIcoLNShk";
-      const resetUrl = `${baseUrl}/auth/v1/verify?token=${token_hash}&type=${email_action_type}&redirect_to=${encodeURIComponent(CIARA_DOMAIN + "/reset-password")}&apikey=${supabaseAnonKey}`;
-      
-      console.log("🔗 Reset URL generated:", resetUrl);
-      
-      // Call the dedicated bilingual password reset function
-      try {
-        const { data, error } = await supabase.functions.invoke('send-password-reset', {
-          body: {
-            email: user.email,
-            resetUrl: resetUrl,
-            name: userName
-          }
-        });
-        
-        if (error) {
-          throw error;
-        }
-        
-        console.log("✅ Bilingual password reset email sent via dedicated function");
-        
-        return new Response(JSON.stringify({ 
-          success: true, 
-          email_id: data?.id,
-          action_type: email_action_type,
-          recipient: user.email,
-          template: 'bilingual'
-        }), {
-          status: 200,
-          headers: { "Content-Type": "application/json", ...corsHeaders },
-        });
-        
-      } catch (error) {
-        console.error("❌ Error calling password reset function:", error);
-        throw new Error(`Failed to send password reset email: ${error.message}`);
-      }
-      
-    } else if (email_action_type === "magiclink") {
-      console.log("🪄 Processing Magic Link email - sending custom email");
-      
-      // Generate magic link URL
-      const baseUrl = site_url.replace('/auth/v1', '');
-      const supabaseAnonKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBvaHFrc3BzZHZ2YnFyZ3pmYXlsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTIyMzY0NDQsImV4cCI6MjA2NzgxMjQ0NH0.r1AXZ_w5ifbjj7AOyEtSWpGFSuyYji8saicIcoLNShk";
-      const magicLinkUrl = `${baseUrl}/auth/v1/verify?token=${token_hash}&type=${email_action_type}&redirect_to=${encodeURIComponent(CIARA_DOMAIN + "/profile")}&apikey=${supabaseAnonKey}`;
-      
-      console.log("🔗 Magic Link URL generated:", magicLinkUrl);
-      
-      // Call the dedicated magic link function
-      try {
-        const { data, error } = await supabase.functions.invoke('send-magic-link', {
-          body: {
-            email: user.email,
-            magicLinkUrl: magicLinkUrl,
-            name: userName
-          }
-        });
-        
-        if (error) {
-          throw error;
-        }
-        
-        console.log("✅ Magic Link email sent via dedicated magic link function");
-        
-        return new Response(JSON.stringify({ 
-          success: true, 
-          email_id: data?.id,
-          action_type: email_action_type,
-          recipient: user.email,
-          template: 'magic_link_bilingual'
-        }), {
-          status: 200,
-          headers: { "Content-Type": "application/json", ...corsHeaders },
-        });
-        
-      } catch (error) {
-        console.error("❌ Error calling magic link function:", error);
-        throw new Error(`Failed to send magic link email: ${error.message}`);
-      }
-      
-    } else {
-      console.error("❌ Unknown email action type:", email_action_type);
-      return new Response(
-        JSON.stringify({ error: "Unknown email action type: " + email_action_type }), 
-        { 
-          status: 400,
-          headers: { "Content-Type": "application/json", ...corsHeaders }
-        }
-      );
+    // Validation des données critiques
+    if (!user?.email || !validateEmail(user.email)) {
+      return new Response("Invalid user email", { 
+        status: 400,
+        headers: corsHeaders 
+      });
     }
 
+    if (!validateToken(token_hash)) {
+      return new Response("Invalid token", { 
+        status: 400,
+        headers: corsHeaders 
+      });
+    }
+
+    if (!email_action_type || !['signup', 'recovery', 'magiclink'].includes(email_action_type)) {
+      return new Response("Invalid email action type", { 
+        status: 400,
+        headers: corsHeaders 
+      });
+    }
+
+    // Configuration sécurisée
+    const CIARA_DOMAIN = "https://ciara.city";
+    const userName = user.email.split('@')[0];
+    const baseUrl = site_url.replace('/auth/v1', '');
+    const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY");
+
+    if (!supabaseAnonKey) {
+      throw new Error("SUPABASE_ANON_KEY manquante");
+    }
+
+    // Traitement selon le type d'action
+    let functionName: string;
+    let functionData: any;
+    let confirmationUrl: string;
+
+    switch (email_action_type) {
+      case "signup":
+        secureLog("Traitement email d'inscription");
+        functionName = 'send-email-confirmation';
+        confirmationUrl = `${baseUrl}/auth/v1/verify?token=${token_hash}&type=${email_action_type}&redirect_to=${encodeURIComponent(CIARA_DOMAIN + "/")}&apikey=${supabaseAnonKey}`;
+        functionData = {
+          email: user.email,
+          confirmationUrl: confirmationUrl,
+          name: userName
+        };
+        break;
+
+      case "recovery":
+        secureLog("Traitement email de récupération");
+        functionName = 'send-password-reset';
+        confirmationUrl = `${baseUrl}/auth/v1/verify?token=${token_hash}&type=${email_action_type}&redirect_to=${encodeURIComponent(CIARA_DOMAIN + "/reset-password")}&apikey=${supabaseAnonKey}`;
+        functionData = {
+          email: user.email,
+          resetUrl: confirmationUrl,
+          name: userName
+        };
+        break;
+
+      case "magiclink":
+        secureLog("Traitement Magic Link");
+        functionName = 'send-magic-link';
+        confirmationUrl = `${baseUrl}/auth/v1/verify?token=${token_hash}&type=${email_action_type}&redirect_to=${encodeURIComponent(CIARA_DOMAIN + "/profile")}&apikey=${supabaseAnonKey}`;
+        functionData = {
+          email: user.email,
+          magicLinkUrl: confirmationUrl,
+          name: userName
+        };
+        break;
+
+      default:
+        return new Response(
+          JSON.stringify({ error: "Type d'action email non supporté" }), 
+          { 
+            status: 400,
+            headers: { "Content-Type": "application/json", ...corsHeaders }
+          }
+        );
+    }
+
+    // Appel de la fonction Edge correspondante
+    const { data, error } = await supabase.functions.invoke(functionName, {
+      body: functionData
+    });
+    
+    if (error) {
+      throw error;
+    }
+
+    const responseTime = Date.now() - startTime;
+    secureLog(`Email ${email_action_type} envoyé avec succès`, { 
+      recipient: user.email, 
+      responseTime 
+    });
+    
+    return new Response(JSON.stringify({ 
+      success: true, 
+      email_id: data?.id,
+      action_type: email_action_type,
+      recipient: user.email,
+      template: email_action_type === 'magiclink' ? 'magic_link_bilingual' : 'bilingual',
+      response_time: responseTime
+    }), {
+      status: 200,
+      headers: { "Content-Type": "application/json", ...corsHeaders },
+    });
+
   } catch (error) {
-    console.error("💥 General webhook error:", error);
+    const responseTime = Date.now() - startTime;
+    secureLog("Erreur webhook:", { 
+      error: error.message, 
+      responseTime 
+    });
+
     return new Response(
       JSON.stringify({
         error: {
-          message: error.message || "Unknown error occurred",
+          message: "Erreur interne du serveur",
           timestamp: new Date().toISOString(),
+          response_time: responseTime
         },
       }),
       {

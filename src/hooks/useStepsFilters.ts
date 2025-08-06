@@ -54,7 +54,6 @@ export const useStepsFilters = (cities: City[], steps: Step[]) => {
         if (error) throw error;
         setCountries(data || []);
       } catch (err) {
-        console.error('Error fetching countries:', err);
       }
     };
 

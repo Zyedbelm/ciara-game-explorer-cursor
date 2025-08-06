@@ -63,7 +63,6 @@ export const useStepsManagement = (cityId?: string) => {
       if (error) throw error;
       setCities(data || []);
     } catch (error) {
-      console.error('Error fetching cities:', error);
       toast({
         title: "Erreur",
         description: "Impossible de charger les villes",
@@ -83,7 +82,6 @@ export const useStepsManagement = (cityId?: string) => {
       if (error) throw error;
       setJourneys(data || []);
     } catch (error) {
-      console.error('Error fetching journeys:', error);
       toast({
         title: "Erreur",
         description: "Impossible de charger les parcours",
@@ -119,9 +117,7 @@ export const useStepsManagement = (cityId?: string) => {
 
       if (updateError) throw updateError;
 
-      console.log(`✅ Journey metadata updated: ${totalSteps} steps, ${totalPoints} points`);
-    } catch (error) {
-      console.error('Error updating journey metadata:', error);
+      } catch (error) {
     }
   };
 
@@ -156,7 +152,6 @@ export const useStepsManagement = (cityId?: string) => {
 
       setSteps(formattedSteps);
     } catch (error) {
-      console.error('Error fetching steps:', error);
       toast({
         title: "Erreur",
         description: "Impossible de charger les étapes",
@@ -195,7 +190,6 @@ export const useStepsManagement = (cityId?: string) => {
       await fetchSteps();
       return { error: null };
     } catch (error) {
-      console.error('Error creating step:', error);
       toast({
         title: "Erreur",
         description: "Impossible de créer l'étape",
@@ -236,7 +230,6 @@ export const useStepsManagement = (cityId?: string) => {
       await fetchSteps();
       return { error: null };
     } catch (error) {
-      console.error('Error updating step:', error);
       toast({
         title: "Erreur",
         description: "Impossible de modifier l'étape",
@@ -280,7 +273,6 @@ export const useStepsManagement = (cityId?: string) => {
       await fetchSteps();
       return { error: null };
     } catch (error) {
-      console.error('Error deleting step:', error);
       toast({
         title: "Erreur",
         description: "Impossible de supprimer l'étape",

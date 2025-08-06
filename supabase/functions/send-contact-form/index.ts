@@ -43,7 +43,6 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    console.log("Processing contact form submission:", { name, email, subject, priority });
 
     // Generate the email HTML using React Email
     const html = await renderAsync(
@@ -65,7 +64,6 @@ const handler = async (req: Request): Promise<Response> => {
       reply_to: email
     });
 
-    console.log("Main email sent:", emailResponse);
 
     // Send confirmation to the sender
     const confirmationHtml = `
@@ -146,7 +144,6 @@ const handler = async (req: Request): Promise<Response> => {
       html: confirmationHtml,
     });
 
-    console.log("Confirmation email sent successfully");
 
     return new Response(
       JSON.stringify({ success: true }),
@@ -156,7 +153,6 @@ const handler = async (req: Request): Promise<Response> => {
       }
     );
   } catch (error) {
-    console.error("Error sending email:", error);
     return new Response(
       JSON.stringify({ error: error.message }),
       {

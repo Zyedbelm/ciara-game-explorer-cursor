@@ -196,7 +196,6 @@ export const JourneyFlowChart: React.FC<JourneyFlowChartProps> = ({ cityId, time
         setNodes(flowNodes);
         setLinks(flowLinks);
       } catch (error) {
-        console.error('Error fetching flow data:', error);
       } finally {
         setLoading(false);
       }

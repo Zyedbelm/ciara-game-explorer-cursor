@@ -155,7 +155,6 @@ export const InteractiveTimeline: React.FC<InteractiveTimelineProps> = ({ cityId
         setData(timelineData);
         setEvents(mockEvents);
       } catch (error) {
-        console.error('Error fetching timeline data:', error);
       } finally {
         setLoading(false);
       }

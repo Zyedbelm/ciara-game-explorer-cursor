@@ -18,14 +18,12 @@ export function detectLanguage(text: string): 'fr' | 'en' | 'de' {
   // Check for keywords first (more reliable for short texts)
   for (const [lang, keywords] of Object.entries(keywordDetection)) {
     if (keywords.some(keyword => cleanText.includes(keyword))) {
-      console.log(`🔍 Language detected via keywords: ${lang} for text: "${text.substring(0, 50)}..."`);
       return lang as 'fr' | 'en' | 'de';
     }
   }
 
   try {
     const detected = franc(cleanText, { minLength: 3 });
-    console.log(`🔍 Franc detected language: ${detected} for text: "${text.substring(0, 50)}..."`);
     
     // Map franc codes to our supported languages
     const languageMap: Record<string, 'fr' | 'en' | 'de'> = {
@@ -37,14 +35,11 @@ export function detectLanguage(text: string): 'fr' | 'en' | 'de' {
 
     const mappedLanguage = languageMap[detected];
     if (mappedLanguage) {
-      console.log(`✅ Language mapped to: ${mappedLanguage}`);
       return mappedLanguage;
     } else {
-      console.log(`⚠️ Unknown language detected: ${detected}, defaulting to French`);
       return 'fr';
     }
   } catch (error) {
-    console.warn('Language detection failed:', error);
     return 'fr';
   }
 }

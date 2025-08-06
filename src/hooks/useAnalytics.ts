@@ -47,8 +47,6 @@ export const useAnalytics = () => {
       const isSuperAdmin = profile?.role === 'super_admin';
       const cityId = isSuperAdmin ? undefined : profile?.city_id;
       
-      console.log('Fetching analytics with filters:', { isSuperAdmin, cityId, userRole: profile?.role });
-
       // Récupérer les données agrégées via le service avec une période d'activité de 30 jours
       const aggregatedData = await userJourneysService.getAggregatedUserStats(cityId, 30);
 
@@ -69,7 +67,6 @@ export const useAnalytics = () => {
         avgSessionTime: 135 // Minutes, simulé pour demo
       };
 
-      console.log('Analytics calculated:', analyticsData);
       setAnalytics(analyticsData);
 
       // Transformer les parcours populaires
@@ -115,7 +112,6 @@ export const useAnalytics = () => {
       }
 
     } catch (err) {
-      console.error('Error fetching analytics:', err);
       const errorMessage = err instanceof Error ? err.message : 'Erreur lors du chargement des analytics';
       setError(errorMessage);
       

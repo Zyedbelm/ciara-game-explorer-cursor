@@ -442,13 +442,6 @@ const handler = async (req: Request): Promise<Response> => {
       language = 'fr'
     }: RewardRedemptionRequest = await req.json();
 
-    console.log('Received reward redemption request:', {
-      voucherId,
-      redemptionCode,
-      partnerEmail,
-      partnerName,
-      rewardTitle
-    });
 
     if (!voucherId || !redemptionCode || !partnerEmail || !partnerName || !rewardTitle) {
       return new Response(
@@ -480,11 +473,9 @@ const handler = async (req: Request): Promise<Response> => {
       .eq('redemption_code', redemptionCode);
 
     if (updateError) {
-      console.error('Error updating voucher status:', updateError);
       throw new Error('Failed to update voucher status');
     }
 
-    console.log('Voucher status updated to "used" for code:', redemptionCode);
 
     // Get additional data from database including user email and partner address
     let finalUserEmail = userEmail;
@@ -502,7 +493,6 @@ const handler = async (req: Request): Promise<Response> => {
         .single();
 
       if (fetchError) {
-        console.error('Error fetching redemption data:', fetchError);
       } else if (redemptionData) {
         // Get user email if not provided
         if (!finalUserEmail) {
@@ -514,7 +504,6 @@ const handler = async (req: Request): Promise<Response> => {
           
           if (userData?.email) {
             finalUserEmail = userData.email;
-            console.log('Retrieved user email from database:', finalUserEmail);
           }
         }
         
@@ -533,12 +522,10 @@ const handler = async (req: Request): Promise<Response> => {
           
           if (rewardData?.partners?.address) {
             finalPartnerAddress = rewardData.partners.address;
-            console.log('Retrieved partner address from database:', finalPartnerAddress);
           }
         }
       }
     } catch (dataError) {
-      console.error('Error retrieving additional data:', dataError);
       // Continue with provided data
     }
 
@@ -565,7 +552,6 @@ const handler = async (req: Request): Promise<Response> => {
       html: partnerEmailHtml,
     });
 
-    console.log("Partner email sent successfully:", partnerEmailResponse);
 
     // Send confirmation email to user if email is provided
     if (finalUserEmail) {
@@ -589,9 +575,7 @@ const handler = async (req: Request): Promise<Response> => {
           html: userEmailHtml,
         });
 
-        console.log("User confirmation email sent successfully:", userEmailResponse);
       } catch (userEmailError) {
-        console.error('Error sending user confirmation email:', userEmailError);
         // Don't fail the whole process if user email fails
       }
     }
@@ -611,7 +595,6 @@ const handler = async (req: Request): Promise<Response> => {
       }
     );
   } catch (error: any) {
-    console.error("Error in send-reward-redemption function:", error);
     return new Response(
       JSON.stringify({ 
         error: "Failed to process reward redemption",

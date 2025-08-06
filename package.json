@@ -7,10 +7,18 @@
     "dev": "vite",
     "build": "vite build",
     "build:dev": "vite build --mode development",
+    "build:prod": "vite build --mode production",
     "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
     "preview": "vite preview",
     "test:performance": "node scripts/performance-test.js",
-    "analyze": "npm run build && npx vite-bundle-analyzer dist"
+    "analyze": "npm run build && npx vite-bundle-analyzer dist",
+    "security:audit": "node scripts/security-audit.js",
+    "cleanup:logs": "node scripts/cleanup-logs.js",
+    "audit:full": "npm run security:audit && npm run cleanup:logs",
+    "test:security": "npm run security:audit",
+    "optimize": "npm run cleanup:logs && npm run build:prod",
+    "deploy:check": "npm run security:audit && npm run build:prod && npm run test:performance"
   },
   "dependencies": {
     "@googlemaps/js-api-loader": "^1.16.10",

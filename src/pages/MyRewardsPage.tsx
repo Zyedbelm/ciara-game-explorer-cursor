@@ -216,7 +216,6 @@ const MyRewardsPage = () => {
       if (error) throw error;
       setCountries(data || []);
     } catch (err) {
-      console.warn('Error fetching countries:', err);
     }
   }, []);
 
@@ -230,7 +229,6 @@ const MyRewardsPage = () => {
       if (error) throw error;
       setCities(data || []);
     } catch (err) {
-      console.warn('Error fetching cities:', err);
     }
   }, []);
 

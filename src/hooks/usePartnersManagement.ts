@@ -98,7 +98,6 @@ export const usePartnersManagement = (cityId?: string) => {
       if (error) throw error;
       setPartners(data || []);
     } catch (err) {
-      console.error('Error fetching partners:', err);
       setError('Erreur lors du chargement des partenaires');
     } finally {
       setLoading(false);
@@ -172,7 +171,6 @@ export const usePartnersManagement = (cityId?: string) => {
 
       setPartnerStats(stats);
     } catch (err) {
-      console.error('Error fetching partner stats:', err);
       toast({
         title: 'Erreur',
         description: 'Impossible de charger les statistiques des partenaires',
@@ -224,7 +222,6 @@ export const usePartnersManagement = (cityId?: string) => {
 
       setCityStats(stats);
     } catch (err) {
-      console.error('Error fetching city stats:', err);
     }
   }, []);
 
@@ -237,7 +234,6 @@ export const usePartnersManagement = (cityId?: string) => {
         fetchCityStats()
       ]);
     } catch (err) {
-      console.error('Error initializing dashboard:', err);
     } finally {
       setDashboardLoading(false);
     }

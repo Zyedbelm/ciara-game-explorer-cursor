@@ -221,7 +221,6 @@ const handler = async (req: Request): Promise<Response> => {
       html: emailHtml,
     });
 
-    console.log('✅ Magic link email sent successfully:', emailResponse);
 
     return new Response(
       JSON.stringify({
@@ -236,7 +235,6 @@ const handler = async (req: Request): Promise<Response> => {
     );
 
   } catch (error: any) {
-    console.error('❌ Error sending magic link email:', error);
     
     return new Response(
       JSON.stringify({

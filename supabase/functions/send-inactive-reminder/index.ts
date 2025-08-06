@@ -328,7 +328,6 @@ const handler = async (req: Request): Promise<Response> => {
       html: emailHtml,
     });
 
-    console.log("Inactive reminder email sent successfully:", emailResponse);
 
     return new Response(
       JSON.stringify({ 
@@ -345,7 +344,6 @@ const handler = async (req: Request): Promise<Response> => {
       }
     );
   } catch (error: any) {
-    console.error("Error in send-inactive-reminder function:", error);
     return new Response(
       JSON.stringify({ 
         error: "Failed to send inactive reminder email",

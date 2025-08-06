@@ -165,7 +165,6 @@ export function useRecentActivity() {
 
       setActivities(sortedActivities);
     } catch (error) {
-      console.error('Error fetching recent activity:', error);
     } finally {
       setLoading(false);
     }

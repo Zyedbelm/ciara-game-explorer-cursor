@@ -72,6 +72,7 @@ interface Country {
   name_en: string;
   name_de: string;
   code: string;
+  is_archived?: boolean;
 }
 
 interface City {
@@ -79,6 +80,7 @@ interface City {
   name: string;
   slug: string;
   country_id: string;
+  is_archived?: boolean;
 }
 
 interface PartnerFormData {
@@ -100,6 +102,7 @@ interface PartnerStats {
   name: string;
   city: string;
   country: string;
+  city_id: string;
   totalOffers: number;
   totalValue: number;
   usageCount: number;
@@ -267,6 +270,7 @@ const PartnersManagement: React.FC<PartnersManagementProps> = ({ cityId }) => {
           name: partner.name,
           city: partner.cities?.name || 'Ville inconnue',
           country: 'Suisse', // À adapter selon la structure
+          city_id: partner.city_id,
           totalOffers,
           totalValue,
           usageCount: totalRedemptions,
@@ -286,7 +290,6 @@ const PartnersManagement: React.FC<PartnersManagementProps> = ({ cityId }) => {
       setTopPartners(sortedPartners.slice(0, 3));
 
     } catch (err) {
-      console.error('Error fetching partner stats:', err);
       toast({
         title: 'Erreur',
         description: 'Impossible de charger les statistiques des partenaires',
@@ -365,7 +368,6 @@ const PartnersManagement: React.FC<PartnersManagementProps> = ({ cityId }) => {
       setCityStats(stats);
 
     } catch (err) {
-      console.error('Error fetching city stats:', err);
     }
   };
 
@@ -413,6 +415,7 @@ const PartnersManagement: React.FC<PartnersManagementProps> = ({ cityId }) => {
         name: partnerData.name,
         city: partnerData.cities?.name || 'Ville inconnue',
         country: 'Suisse',
+        city_id: partnerData.city_id,
         totalOffers,
         totalValue,
         usageCount: totalRedemptions,
@@ -435,7 +438,6 @@ const PartnersManagement: React.FC<PartnersManagementProps> = ({ cityId }) => {
       setShowPartnerDetail(true);
 
     } catch (err) {
-      console.error('Error fetching partner detail:', err);
       toast({
         title: 'Erreur',
         description: 'Impossible de charger les détails du partenaire',
@@ -506,7 +508,6 @@ const PartnersManagement: React.FC<PartnersManagementProps> = ({ cityId }) => {
       await fetchPartnerStats();
       await fetchCityStats();
     } catch (err) {
-      console.error('Error initializing dashboard:', err);
     } finally {
       setDashboardLoading(false);
     }
@@ -627,7 +628,6 @@ const PartnersManagement: React.FC<PartnersManagementProps> = ({ cityId }) => {
       if (error) throw error;
       setCountries(data || []);
     } catch (err) {
-      console.warn('Error fetching countries:', err);
     }
   };
 
@@ -641,7 +641,6 @@ const PartnersManagement: React.FC<PartnersManagementProps> = ({ cityId }) => {
       if (error) throw error;
       setCities(data || []);
     } catch (err) {
-      console.warn('Error fetching cities:', err);
     }
   };
 
@@ -743,7 +742,6 @@ const PartnersManagement: React.FC<PartnersManagementProps> = ({ cityId }) => {
               cityName: getCityName(formData.city_id)
             });
           } catch (emailError) {
-            console.warn('Failed to send welcome email:', emailError);
           }
         }
       }
@@ -965,16 +963,22 @@ const PartnersManagement: React.FC<PartnersManagementProps> = ({ cityId }) => {
                     <CardHeader>
                       <CardTitle className="flex items-center gap-2">
                         <MapPin className="h-5 w-5" />
-                        Filtres géographiques
+                        Filtres
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div>
                           <label className="text-sm font-medium mb-2 block">Pays</label>
-                          <Select value={selectedCountry} onValueChange={setSelectedCountry}>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Sélectionner un pays" />
+                          <Select 
+                            value={selectedCountry} 
+                            onValueChange={(value) => {
+                              setSelectedCountry(value);
+                              setSelectedCity('all'); // Reset city when country changes
+                            }}
+                          >
+                            <SelectTrigger className="w-full">
+                              <SelectValue placeholder="Tous les pays" />
                             </SelectTrigger>
                             <SelectContent>
                               <SelectItem value="all">Tous les pays</SelectItem>
@@ -989,13 +993,19 @@ const PartnersManagement: React.FC<PartnersManagementProps> = ({ cityId }) => {
                         
                         <div>
                           <label className="text-sm font-medium mb-2 block">Ville</label>
-                          <Select value={selectedCity} onValueChange={setSelectedCity}>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Sélectionner une ville" />
+                          <Select 
+                            value={selectedCity} 
+                            onValueChange={setSelectedCity}
+                            disabled={false}
+                          >
+                            <SelectTrigger className="w-full">
+                              <SelectValue placeholder="Toutes les villes" />
                             </SelectTrigger>
                             <SelectContent>
                               <SelectItem value="all">Toutes les villes</SelectItem>
-                              {cities.map(city => (
+                              {cities
+                                .filter(city => selectedCountry === 'all' || city.country_id === selectedCountry)
+                                .map(city => (
                                 <SelectItem key={city.id} value={city.id}>
                                   {city.name}
                                 </SelectItem>
@@ -1006,13 +1016,27 @@ const PartnersManagement: React.FC<PartnersManagementProps> = ({ cityId }) => {
                         
                         <div>
                           <label className="text-sm font-medium mb-2 block">Partenaire</label>
-                          <Select value={selectedPartnerFilter} onValueChange={setSelectedPartnerFilter}>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Sélectionner un partenaire" />
+                          <Select 
+                            value={selectedPartnerFilter} 
+                            onValueChange={setSelectedPartnerFilter}
+                          >
+                            <SelectTrigger className="w-full">
+                              <SelectValue placeholder="Tous les partenaires" />
                             </SelectTrigger>
                             <SelectContent>
                               <SelectItem value="all">Tous les partenaires</SelectItem>
-                              {filteredPartnerStats.map(partner => (
+                              {partnerStats
+                                .filter(partner => {
+                                  if (selectedCountry !== 'all') {
+                                    const partnerCity = cities.find(c => c.id === partner.city_id);
+                                    return partnerCity?.country_id === selectedCountry;
+                                  }
+                                  if (selectedCity !== 'all') {
+                                    return partner.city_id === selectedCity;
+                                  }
+                                  return true;
+                                })
+                                .map(partner => (
                                 <SelectItem key={partner.id} value={partner.id}>
                                   {partner.name}
                                 </SelectItem>
@@ -1020,6 +1044,19 @@ const PartnersManagement: React.FC<PartnersManagementProps> = ({ cityId }) => {
                             </SelectContent>
                           </Select>
                         </div>
+                      </div>
+                      
+                      {/* Bouton pour réinitialiser les filtres */}
+                      <div className="mt-4 flex justify-end">
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={handleClearFilters}
+                          className="flex items-center gap-2"
+                        >
+                          <RefreshCw className="h-4 w-4" />
+                          Réinitialiser les filtres
+                        </Button>
                       </div>
                     </CardContent>
                   </Card>
@@ -1152,72 +1189,48 @@ const PartnersManagement: React.FC<PartnersManagementProps> = ({ cityId }) => {
                     cityStats={filteredCityStats}
                   />
 
-                  {/* Top 3 Partenaires avec bouton de détails */}
+                  {/* Résumé des performances */}
                   <Card>
                     <CardHeader>
                       <CardTitle className="flex items-center gap-2">
-                        <Star className="h-5 w-5" />
-                        Top 3 Partenaires
+                        <Activity className="h-5 w-5" />
+                        Résumé des performances
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        {topPartners.map((partner, index) => (
-                          <Card key={partner.id} className="relative">
-                            <CardHeader>
-                              <div className="flex items-center justify-between">
-                                <CardTitle className="flex items-center gap-2">
-                                  <div className="w-8 h-8 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-sm font-bold">
-                                    {index + 1}
-                                  </div>
-                                  {partner.name}
-                                </CardTitle>
-                                <Badge variant="outline" className="text-xs">
-                                  {partner.city}
-                                </Badge>
-                              </div>
-                            </CardHeader>
-                            <CardContent className="space-y-4">
-                              <div className="grid grid-cols-2 gap-4 text-center">
-                                <div>
-                                  <div className="text-2xl font-bold text-primary">{partner.totalOffers}</div>
-                                  <div className="text-xs text-muted-foreground">Offres</div>
-                                </div>
-                                <div>
-                                  <div className="text-2xl font-bold text-primary">{partner.totalRedemptions}</div>
-                                  <div className="text-xs text-muted-foreground">Utilisations</div>
-                                </div>
-                              </div>
-                              
-                              <div className="space-y-2">
-                                <div className="flex justify-between text-sm">
-                                  <span>Valeur totale:</span>
-                                  <span className="font-medium">{partner.totalValue.toLocaleString()} CHF</span>
-                                </div>
-                                <div className="flex justify-between text-sm">
-                                  <span>Points dépensés:</span>
-                                  <span className="font-medium">{partner.totalPointsSpent}</span>
-                                </div>
-                                <div className="flex justify-between text-sm">
-                                  <span>Dernière activité:</span>
-                                  <span className="font-medium">
-                                    {new Date(partner.lastActivity).toLocaleDateString('fr-FR')}
-                                  </span>
-                                </div>
-                              </div>
-
-                              <Button 
-                                variant="outline" 
-                                size="sm" 
-                                className="w-full"
-                                onClick={() => fetchPartnerDetail(partner.id)}
-                              >
-                                <Eye className="h-4 w-4 mr-2" />
-                                Voir les détails
-                              </Button>
-                            </CardContent>
-                          </Card>
-                        ))}
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <div className="text-center p-4 border rounded-lg">
+                          <div className="text-2xl font-bold text-primary">
+                            {globalStats.totalPartners}
+                          </div>
+                          <div className="text-sm text-muted-foreground">
+                            Partenaires actifs
+                          </div>
+                        </div>
+                        <div className="text-center p-4 border rounded-lg">
+                          <div className="text-2xl font-bold text-green-600">
+                            {globalStats.totalOffers}
+                          </div>
+                          <div className="text-sm text-muted-foreground">
+                            Offres disponibles
+                          </div>
+                        </div>
+                        <div className="text-center p-4 border rounded-lg">
+                          <div className="text-2xl font-bold text-blue-600">
+                            {globalStats.totalUsage}
+                          </div>
+                          <div className="text-sm text-muted-foreground">
+                            Rédemptions totales
+                          </div>
+                        </div>
+                        <div className="text-center p-4 border rounded-lg">
+                          <div className="text-2xl font-bold text-orange-600">
+                            {globalStats.totalValue.toLocaleString()} CHF
+                          </div>
+                          <div className="text-sm text-muted-foreground">
+                            Valeur générée
+                          </div>
+                        </div>
                       </div>
                     </CardContent>
                   </Card>

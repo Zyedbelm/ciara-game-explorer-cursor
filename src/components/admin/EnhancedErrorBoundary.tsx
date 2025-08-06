@@ -32,7 +32,6 @@ export class EnhancedErrorBoundary extends Component<Props, State> {
   }
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error('🚨 Enhanced Error Boundary caught an error:', error, errorInfo);
     
     this.setState({
       error,
@@ -41,11 +40,6 @@ export class EnhancedErrorBoundary extends Component<Props, State> {
 
     // Log to external service in production
     if (process.env.NODE_ENV === 'production') {
-      console.error('🚨 Production error in admin component:', {
-        error: error.message,
-        stack: error.stack,
-        componentStack: errorInfo.componentStack,
-      });
     }
   }
 

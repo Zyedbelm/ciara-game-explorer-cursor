@@ -126,7 +126,6 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    console.log('🔍 Starting inactive users reminder process...');
 
     // Get users who haven't been active for 7+ days
     const { data: inactiveUsers, error: usersError } = await supabase
@@ -147,7 +146,6 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     if (!inactiveUsers || inactiveUsers.length === 0) {
-      console.log('📊 No inactive users found');
       return new Response(JSON.stringify({ 
         success: true, 
         message: 'No inactive users found',
@@ -158,7 +156,6 @@ const handler = async (req: Request): Promise<Response> => {
       });
     }
 
-    console.log(`📊 Found ${inactiveUsers.length} inactive users`);
 
     let sentEmails = 0;
     const errors: string[] = [];
@@ -217,17 +214,14 @@ const handler = async (req: Request): Promise<Response> => {
 
         if (emailResponse.data?.id) {
           sentEmails++;
-          console.log(`✅ Sent inactive reminder to: ${user.email}`);
         }
 
       } catch (error) {
         const errorMsg = `Failed to send to ${user.email}: ${error.message}`;
-        console.error(`❌ ${errorMsg}`);
         errors.push(errorMsg);
       }
     }
 
-    console.log(`📧 Inactive reminder process completed: ${sentEmails} emails sent, ${errors.length} errors`);
 
     return new Response(JSON.stringify({ 
       success: true, 
@@ -241,7 +235,6 @@ const handler = async (req: Request): Promise<Response> => {
     });
 
   } catch (error: any) {
-    console.error("❌ Error in inactive reminder process:", error);
     return new Response(
       JSON.stringify({ 
         success: false, 

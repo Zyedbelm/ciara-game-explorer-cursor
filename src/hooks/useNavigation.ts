@@ -37,7 +37,6 @@ export function useNavigation() {
   // Navigation sécurisée vers les parcours
   const navigateToJourney = useCallback((journeyId: string) => {
     if (!validCitySlug) {
-      console.error('❌ useNavigation - No valid city slug for journey navigation');
       throw new Error('Invalid city context for navigation');
     }
 
@@ -47,7 +46,6 @@ export function useNavigation() {
         journeyId
       });
     } catch (error) {
-      console.error('❌ useNavigation - Navigation failed:', error);
       throw error;
     }
   }, [validCitySlug, navigate]);
@@ -55,13 +53,11 @@ export function useNavigation() {
   // Navigation sécurisée vers les destinations
   const navigateToDestination = useCallback(() => {
     if (!validCitySlug) {
-      console.error('❌ useNavigation - No valid city slug for destination navigation');
       navigate('/cities');
       return;
     }
 
     const targetUrl = `/destinations/${validCitySlug}`;
-    console.log('🔗 useNavigation - Navigating to destination:', targetUrl);
     navigate(targetUrl);
   }, [validCitySlug, navigate]);
 

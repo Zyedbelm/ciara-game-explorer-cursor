@@ -23,170 +23,151 @@ interface Profile {
   updated_at: string | null;
 }
 
+// Cache pour éviter les requêtes redondantes
+const profileCache = new Map<string, { profile: Profile | null; timestamp: number }>();
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+
 export function useAuth() {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
+  const mountedRef = useRef(true);
+  const profileSubscriptionRef = useRef<any>(null);
 
-  // Use ref to store stable fetchProfile function to avoid useEffect dependency issues
-  const fetchProfileRef = useRef<(userId: string) => Promise<any>>();
-  
-  // Create fetchProfile function that doesn't change reference
-  fetchProfileRef.current = async (userId: string) => {
+  // Fonction de récupération de profil optimisée avec cache
+  const fetchProfile = useCallback(async (userId: string): Promise<Profile | null> => {
+    if (!userId) return null;
+
+    // Vérifier le cache
+    const cached = profileCache.get(userId);
+    if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
+      return cached.profile;
+    }
+
     try {
-      console.log('🔍 Fetching profile for user:', userId);
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
         .eq('user_id', userId)
-        .maybeSingle(); // Use maybeSingle to avoid errors when no data found
+        .maybeSingle();
 
       if (error) {
-        console.error('⚠️ Profile fetch error:', error.message);
-        return null;
+        throw error;
       }
 
-      if (data) {
-        console.log('✅ Profile fetched successfully:', data);
-      } else {
-        console.log('⚠️ No profile found for user:', userId);
-      }
+      // Mettre en cache
+      profileCache.set(userId, { profile: data, timestamp: Date.now() });
       return data;
     } catch (error) {
-      console.error('❌ Profile fetch failed:', error);
+      // En cas d'erreur, nettoyer le cache
+      profileCache.delete(userId);
       return null;
     }
-  };
-
-  // Stable fetchProfile wrapper
-  const fetchProfile = useCallback(async (userId: string) => {
-    return fetchProfileRef.current!(userId);
   }, []);
 
-  // Initialize auth state with proper cleanup and real-time updates
-  useEffect(() => {
-    let mounted = true;
-    let profileSubscription: any = null;
-    console.log('🔧 Initializing auth state');
+  // Gestionnaire d'état d'authentification optimisé
+  const handleAuthStateChange = useCallback(async (event: string, session: Session | null) => {
+    if (!mountedRef.current) return;
 
-    const handleAuthStateChange = async (event: string, session: Session | null) => {
-      if (!mounted) {
-        console.log('🚫 Component unmounted, ignoring auth change');
-        return;
+    setSession(session);
+    setUser(session?.user ?? null);
+
+    if (session?.user) {
+      // Nettoyer l'ancienne subscription
+      if (profileSubscriptionRef.current) {
+        supabase.removeChannel(profileSubscriptionRef.current);
+        profileSubscriptionRef.current = null;
       }
 
-      console.log('🔄 Auth state changed:', event, session?.user?.id);
-      
-      // Handle PASSWORD_RECOVERY events with automatic redirection to preserve URL parameters
-      if (event === 'PASSWORD_RECOVERY') {
-        console.log('🔑 PASSWORD_RECOVERY event detected, redirecting to reset-password with params');
-        const currentUrl = window.location.href;
-        const url = new URL(currentUrl);
-        
-        // Extract all current URL parameters and hash
-        const searchParams = url.search;
-        const hash = url.hash;
-        
-        // Construct the reset-password URL with all parameters preserved
-        const resetUrl = `/reset-password${searchParams}${hash}`;
-        console.log('🔗 Redirecting to:', resetUrl);
-        
-        // Use replace to avoid adding to browser history
-        window.location.replace(resetUrl);
-        return;
+      // Récupérer le profil
+      const profileData = await fetchProfile(session.user.id);
+      if (mountedRef.current) {
+        setProfile(profileData);
       }
-      
-      setSession(session);
-      setUser(session?.user ?? null);
-      
-      if (session?.user) {
-        // Fetch profile only if we don't already have it or if user changed
-        if (!profile || profile.user_id !== session.user.id) {
-          const profileData = await fetchProfileRef.current!(session.user.id);
-          if (mounted) {
-            setProfile(profileData);
+
+      // Configurer la subscription en temps réel
+      profileSubscriptionRef.current = supabase
+        .channel('profile_updates')
+        .on(
+          'postgres_changes',
+          {
+            event: 'UPDATE',
+            schema: 'public',
+            table: 'profiles',
+            filter: `user_id=eq.${session.user.id}`
+          },
+          (payload) => {
+            if (mountedRef.current && payload.new) {
+              const newProfile = payload.new as Profile;
+              setProfile(newProfile);
+              // Mettre à jour le cache
+              profileCache.set(session.user.id, { profile: newProfile, timestamp: Date.now() });
+            }
           }
-        }
-        
-        // Set up real-time profile updates only once
-        if (!profileSubscription) {
-          profileSubscription = supabase
-            .channel('profile_updates')
-            .on(
-              'postgres_changes',
-              {
-                event: 'UPDATE',
-                schema: 'public',
-                table: 'profiles',
-                filter: `user_id=eq.${session.user.id}`
-              },
-              (payload) => {
-                console.log('🔄 Profile updated in real-time:', payload);
-                if (mounted && payload.new) {
-                  setProfile(payload.new as Profile);
-                }
-              }
-            )
-            .subscribe();
-        }
-      } else {
-        setProfile(null);
-        // Clean up profile subscription
-        if (profileSubscription) {
-          supabase.removeChannel(profileSubscription);
-          profileSubscription = null;
-        }
+        )
+        .subscribe();
+    } else {
+      setProfile(null);
+      // Nettoyer la subscription
+      if (profileSubscriptionRef.current) {
+        supabase.removeChannel(profileSubscriptionRef.current);
+        profileSubscriptionRef.current = null;
       }
-      
-      if (mounted) {
+    }
+
+    if (mountedRef.current) {
+      setLoading(false);
+    }
+  }, [fetchProfile]);
+
+  // Initialisation optimisée
+  useEffect(() => {
+    mountedRef.current = true;
+
+    // Gestionnaire d'événements personnalisés
+    const handleProfileUpdate = (event: CustomEvent) => {
+      if (mountedRef.current && event.detail && user?.id === event.detail.user_id) {
+        setProfile(event.detail);
+        profileCache.set(user.id, { profile: event.detail, timestamp: Date.now() });
+      }
+    };
+
+    // Configuration de l'écouteur d'authentification
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(handleAuthStateChange);
+
+    // Écouteur d'événements personnalisés
+    window.addEventListener('profile-updated', handleProfileUpdate as EventListener);
+
+    // Vérification de la session initiale
+    const checkInitialSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (mountedRef.current && session) {
+        await handleAuthStateChange('INITIAL_SESSION', session);
+      } else if (mountedRef.current) {
         setLoading(false);
       }
     };
 
-    // Handle custom profile update events (for immediate local updates)
-    const handleProfileUpdate = (event: CustomEvent) => {
-      if (mounted && event.detail) {
-        console.log('🔄 Handling custom profile update:', event.detail);
-        setProfile(event.detail);
-      }
-    };
-
-    // Set up auth state listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(handleAuthStateChange);
-
-    // Set up custom event listener for immediate profile updates
-    window.addEventListener('profile-updated', handleProfileUpdate as EventListener);
-
-    // Check initial session only if no session is already set and no user
-    if (!session && !user) {
-      supabase.auth.getSession().then(({ data: { session } }) => {
-        if (mounted) {
-          handleAuthStateChange('INITIAL_SESSION', session);
-        }
-      });
-    }
+    checkInitialSession();
 
     return () => {
-      console.log('🧹 Cleaning up auth state');
-      mounted = false;
+      mountedRef.current = false;
       subscription.unsubscribe();
       window.removeEventListener('profile-updated', handleProfileUpdate as EventListener);
-      if (profileSubscription) {
-        supabase.removeChannel(profileSubscription);
+      if (profileSubscriptionRef.current) {
+        supabase.removeChannel(profileSubscriptionRef.current);
       }
     };
-  }, []); // Remove fetchProfile dependency to prevent infinite loops
+  }, [handleAuthStateChange, user?.id]);
 
-  // Stable auth functions with useCallback
+  // Fonctions d'authentification optimisées
   const signUp = useCallback(async (email: string, password: string, userData?: {
     firstName?: string;
     lastName?: string;
   }) => {
     try {
-      console.log('📝 Starting sign up for:', email);
-      // Use the same base URL as in auth-webhook
       const redirectUrl = 'https://ciara.city/';
       
       const { data, error } = await supabase.auth.signUp({
@@ -202,7 +183,6 @@ export function useAuth() {
       });
 
       if (error) {
-        console.error('❌ Sign up error:', error);
         toast({
           title: "Erreur d'inscription",
           description: error.message,
@@ -211,7 +191,6 @@ export function useAuth() {
         return { error };
       }
 
-      console.log('✅ Sign up successful');
       toast({
         title: "Inscription réussie",
         description: "Vérifiez votre email pour confirmer votre compte.",
@@ -220,7 +199,6 @@ export function useAuth() {
       return { data, error: null };
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Une erreur est survenue';
-      console.error('❌ Sign up failed:', errorMessage);
       toast({
         title: "Erreur d'inscription",
         description: errorMessage,
@@ -232,15 +210,12 @@ export function useAuth() {
 
   const signIn = useCallback(async (email: string, password: string) => {
     try {
-      console.log('🔐 Starting sign in for:', email);
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
       if (error) {
-        console.error('❌ Sign in error:', error);
-        // Check for email verification requirement
         if (error.message?.includes('Email not confirmed')) {
           toast({
             title: "Email non confirmé",
@@ -257,16 +232,14 @@ export function useAuth() {
         return { error };
       }
 
-      console.log('✅ Sign in successful');
       toast({
         title: "Connexion réussie",
-        description: "Bienvenue !",
+        description: "Bienvenue sur CIARA !",
       });
 
       return { data, error: null };
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Une erreur est survenue';
-      console.error('❌ Sign in failed:', errorMessage);
       toast({
         title: "Erreur de connexion",
         description: errorMessage,
@@ -278,29 +251,22 @@ export function useAuth() {
 
   const signOut = useCallback(async () => {
     try {
-      console.log('🚪 Starting sign out');
       const { error } = await supabase.auth.signOut();
-      
-      if (error) {
-        console.error('❌ Sign out error:', error);
-        toast({
-          title: "Erreur de déconnexion",
-          description: error.message,
-          variant: "destructive",
-        });
-        return { error };
+      if (error) throw error;
+
+      // Nettoyer le cache
+      if (user?.id) {
+        profileCache.delete(user.id);
       }
 
-      console.log('✅ Sign out successful');
       toast({
         title: "Déconnexion réussie",
-        description: "À bientôt !",
+        description: "À bientôt sur CIARA !",
       });
 
       return { error: null };
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Une erreur est survenue';
-      console.error('❌ Sign out failed:', errorMessage);
       toast({
         title: "Erreur de déconnexion",
         description: errorMessage,
@@ -308,13 +274,12 @@ export function useAuth() {
       });
       return { error: errorMessage };
     }
-  }, [toast]);
+  }, [toast, user?.id]);
 
   const updateProfile = useCallback(async (updates: Partial<Profile>) => {
-    if (!user) return { error: 'Non connecté' };
+    if (!user) return { error: 'Utilisateur non connecté' };
 
     try {
-      console.log('📝 Updating profile for user:', user.id);
       const { data, error } = await supabase
         .from('profiles')
         .update(updates)
@@ -322,23 +287,19 @@ export function useAuth() {
         .select()
         .single();
 
-      if (error) {
-        console.error('❌ Profile update error:', error);
-        toast({
-          title: "Erreur de mise à jour",
-          description: error.message,
-          variant: "destructive",
-        });
-        return { error };
-      }
+      if (error) throw error;
 
-      setProfile(data);
-      console.log('✅ Profile updated successfully');
-      
+      // Mettre à jour le cache
+      profileCache.set(user.id, { profile: data, timestamp: Date.now() });
+
+      toast({
+        title: "Profil mis à jour",
+        description: "Vos informations ont été sauvegardées.",
+      });
+
       return { data, error: null };
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Une erreur est survenue';
-      console.error('❌ Profile update failed:', errorMessage);
       toast({
         title: "Erreur de mise à jour",
         description: errorMessage,
@@ -349,34 +310,20 @@ export function useAuth() {
   }, [user, toast]);
 
   const updateEmail = useCallback(async (newEmail: string) => {
-    if (!user) return { error: 'Non connecté' };
+    if (!user) return { error: 'Utilisateur non connecté' };
 
     try {
-      console.log('📧 Updating email for user:', user.id);
-      const { error } = await supabase.auth.updateUser({
-        email: newEmail
-      });
+      const { error } = await supabase.auth.updateUser({ email: newEmail });
+      if (error) throw error;
 
-      if (error) {
-        console.error('❌ Email update error:', error);
-        toast({
-          title: "Erreur de mise à jour",
-          description: error.message,
-          variant: "destructive",
-        });
-        return { error };
-      }
-
-      console.log('✅ Email update successful');
       toast({
-        title: "Email de confirmation envoyé",
-        description: "Vérifiez votre nouvelle adresse email pour confirmer le changement.",
+        title: "Email mis à jour",
+        description: "Vérifiez votre nouvel email pour confirmer le changement.",
       });
 
       return { error: null };
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Une erreur est survenue';
-      console.error('❌ Email update failed:', errorMessage);
       toast({
         title: "Erreur de mise à jour",
         description: errorMessage,
@@ -387,35 +334,12 @@ export function useAuth() {
   }, [user, toast]);
 
   const updatePassword = useCallback(async (newPassword: string) => {
-    if (!user) return { error: 'Non connecté' };
+    if (!user) return { error: 'Utilisateur non connecté' };
 
     try {
-      console.log('🔐 Updating password for user:', user.id);
-      const { error } = await supabase.auth.updateUser({
-        password: newPassword
-      });
+      const { error } = await supabase.auth.updateUser({ password: newPassword });
+      if (error) throw error;
 
-      if (error) {
-        console.error('❌ Password update error:', error);
-        
-        // Handle specific Supabase error for same password
-        if (error.message?.includes('same_password') || error.message?.includes('New password should be different')) {
-          toast({
-            title: "Erreur de mise à jour",
-            description: "Le nouveau mot de passe doit être différent de l'ancien.",
-            variant: "destructive",
-          });
-        } else {
-          toast({
-            title: "Erreur de mise à jour",
-            description: error.message,
-            variant: "destructive",
-          });
-        }
-        return { error };
-      }
-
-      console.log('✅ Password updated successfully');
       toast({
         title: "Mot de passe mis à jour",
         description: "Votre mot de passe a été modifié avec succès.",
@@ -424,36 +348,37 @@ export function useAuth() {
       return { error: null };
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Une erreur est survenue';
-      console.error('❌ Password update failed:', errorMessage);
       toast({
         title: "Erreur de mise à jour",
         description: errorMessage,
         variant: "destructive",
       });
-      
       return { error: errorMessage };
     }
   }, [user, toast]);
 
   const refreshProfile = useCallback(async () => {
-    if (!user) return;
-    console.log('🔄 Refreshing profile for user:', user.id);
+    if (!user) return null;
+
+    // Nettoyer le cache pour forcer une nouvelle récupération
+    profileCache.delete(user.id);
     const profileData = await fetchProfile(user.id);
+    
     if (profileData) {
       setProfile(profileData);
-      console.log('✅ Profile refreshed successfully:', profileData);
     }
+    
     return profileData;
   }, [user, fetchProfile]);
 
-  // Stable computed values with useMemo
+  // Valeurs calculées optimisées
   const isAuthenticated = useMemo(() => !!user, [user]);
   const isAdmin = useMemo(() => 
     profile?.role === 'super_admin' || profile?.role === 'tenant_admin', 
     [profile?.role]
   );
 
-  // Stable permission functions
+  // Fonctions de permission optimisées
   const hasRole = useCallback((requiredRoles: UserRole[]): boolean => {
     return profile?.role ? requiredRoles.includes(profile.role) : false;
   }, [profile?.role]);
@@ -482,7 +407,7 @@ export function useAuth() {
     return profile?.role === 'partner';
   }, [profile?.role]);
 
-  // Return memoized object to prevent unnecessary re-renders
+  // Retour optimisé avec useMemo
   return useMemo(() => ({
     user,
     session,
@@ -497,8 +422,6 @@ export function useAuth() {
     refreshProfile,
     isAuthenticated,
     isAdmin,
-    
-    // Permission functions
     hasRole,
     canManageContent,
     canViewAnalytics,

@@ -22,7 +22,6 @@ export function useJourneyCategory(categoryId: string | null) {
         .maybeSingle();
 
       if (error) {
-        console.error('Erreur lors de la récupération de la catégorie:', error);
         throw error;
       }
 

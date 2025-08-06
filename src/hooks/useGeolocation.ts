@@ -31,7 +31,6 @@ export function useGeolocation(): UseGeolocationReturn {
   const isSupported = geolocationService.isSupported();
 
   const handleLocationUpdate = useCallback((newLocation: LocationCoords | null) => {
-    console.log('🗺️ useGeolocation: Location updated:', newLocation);
     setLocation(newLocation);
     setError(null);
     setIsLocationEnabled(!!newLocation);
@@ -39,7 +38,6 @@ export function useGeolocation(): UseGeolocationReturn {
   }, []);
 
   const handleLocationError = useCallback((errorMessage: string) => {
-    console.log('🗺️ useGeolocation: Error:', errorMessage);
     setError(errorMessage);
     setLocation(null);
     setIsLocationEnabled(false);
@@ -59,14 +57,11 @@ export function useGeolocation(): UseGeolocationReturn {
     }
 
     if (loading) {
-      console.log('🗺️ useGeolocation: Request already in progress');
       return;
     }
 
     setLoading(true);
     setError(null);
-    console.log('🗺️ useGeolocation: Requesting current position...');
-
     try {
       const coords = await geolocationService.getCurrentPosition();
       handleLocationUpdate(coords);
@@ -84,11 +79,9 @@ export function useGeolocation(): UseGeolocationReturn {
 
   const watchLocation = useCallback(() => {
     if (!isSupported || isWatching) {
-      console.log('🗺️ useGeolocation: Cannot start watching - not supported or already watching');
       return;
     }
 
-    console.log('🗺️ useGeolocation: Starting location watch...');
     setIsWatching(true);
     
     const unsubscribe = geolocationService.subscribe(
@@ -101,7 +94,6 @@ export function useGeolocation(): UseGeolocationReturn {
   }, [isSupported, isWatching, handleLocationUpdate, handleLocationError]);
 
   const stopWatching = useCallback(() => {
-    console.log('🗺️ useGeolocation: Stopping location watch...');
     setIsWatching(false);
     // Note: The actual unsubscribe happens in the effect cleanup
   }, []);

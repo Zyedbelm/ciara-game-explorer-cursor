@@ -51,8 +51,7 @@ class JourneyService {
     }
 
     if (process.env.NODE_ENV === 'development') {
-      console.log('🎯 Using cached journey:', cacheKey);
-    }
+      }
     return cached.data;
   }
 
@@ -70,7 +69,6 @@ class JourneyService {
     // Check circuit breaker
     if (this.isCircuitOpen()) {
       if (process.env.NODE_ENV === 'development') {
-        console.log('🔴 Circuit breaker open, rejecting request');
       }
       throw new Error('Service temporarily unavailable');
     }
@@ -86,8 +84,7 @@ class JourneyService {
     const existingRequest = this.activeRequests.get(requestKey);
     if (existingRequest) {
       if (process.env.NODE_ENV === 'development') {
-        console.log('🔄 Reusing existing request for journey:', requestKey);
-      }
+        }
       return existingRequest;
     }
 
@@ -121,8 +118,7 @@ class JourneyService {
 
     try {
       if (process.env.NODE_ENV === 'development') {
-        console.log('🚀 Fetching journey data for:', journeyId);
-      }
+        }
 
       // Fetch journey with steps including translations
       const { data: journeyData, error: journeyError } = await supabase
@@ -165,12 +161,10 @@ class JourneyService {
         .maybeSingle();
 
       if (journeyError) {
-        console.error('❌ Journey fetch error:', journeyError);
         throw journeyError;
       }
 
       if (!journeyData) {
-        console.error('❌ No journey found with ID:', journeyId);
         throw new Error('Journey not found');
       }
 
@@ -207,8 +201,7 @@ class JourneyService {
         : [];
 
       if (process.env.NODE_ENV === 'development') {
-        console.log('✅ Processed steps:', sortedSteps.length);
-      }
+        }
 
       // Fetch user progress and completed steps if userId is provided
       let progressData = null;
@@ -217,20 +210,17 @@ class JourneyService {
       
       if (userId && sortedSteps.length > 0) {
         if (process.env.NODE_ENV === 'development') {
-          console.log('🔄 Fetching user progress for user:', userId);
-        }
+          }
 
         // Check for data inconsistencies and auto-fix if needed
         try {
           const hasInconsistencies = await journeyDataSynchronizer.hasInconsistencies(userId, journeyId);
           if (hasInconsistencies) {
             if (process.env.NODE_ENV === 'development') {
-              console.log('🔧 Data inconsistencies detected, auto-synchronizing...');
-            }
+              }
             await journeyDataSynchronizer.fullSynchronization(userId, journeyId);
           }
         } catch (error) {
-          console.warn('⚠️ Error during auto-sync (non-critical):', error);
         }
         
         // Fetch user journey progress
@@ -243,17 +233,14 @@ class JourneyService {
           .maybeSingle();
 
         if (progressError && progressError.name !== 'AbortError') {
-          console.warn('⚠️ Progress fetch error (non-critical):', progressError);
         } else if (progress) {
           progressData = progress;
           if (process.env.NODE_ENV === 'development') {
-            console.log('✅ User progress found:', progressData);
-          }
+            }
         } else if (!progressError) {
           // Create progress record
           if (process.env.NODE_ENV === 'development') {
-            console.log('📝 Creating initial progress record...');
-          }
+            }
           const { data: newProgress, error: insertError } = await supabase
             .from('user_journey_progress')
             .insert({
@@ -267,12 +254,10 @@ class JourneyService {
             .single();
 
           if (insertError && insertError.code !== '23505') {
-            console.warn('⚠️ Error creating progress (non-critical):', insertError);
           } else if (newProgress) {
             progressData = newProgress;
             if (process.env.NODE_ENV === 'development') {
-              console.log('✅ Initial progress created:', progressData);
-            }
+              }
           }
         }
 
@@ -285,7 +270,6 @@ class JourneyService {
           .abortSignal(abortController.signal);
 
         if (completionsError && completionsError.name !== 'AbortError') {
-          console.warn('⚠️ Step completions fetch error (non-critical):', completionsError);
         } else if (stepCompletions) {
           // Create step ID to index mapping
           const stepIdToIndex = new Map<string, number>();
@@ -303,13 +287,9 @@ class JourneyService {
             return total + (completion.points_earned || 0);
           }, 0);
 
-          if (process.env.NODE_ENV === 'development') {
-            console.log('✅ Step completions (single source of truth):', {
-              completedIndices: completedStepIndices,
-              totalPoints: totalPointsEarned,
-              completionsCount: stepCompletions.length
-            });
-          }
+                // Debug logging only in development
+      if (process.env.NODE_ENV === 'development') {
+      }
         }
       }
 
@@ -340,17 +320,14 @@ class JourneyService {
       };
 
       if (process.env.NODE_ENV === 'development') {
-        console.log('✅ Journey service: journey created successfully:', journey.name);
       }
       return journey;
 
     } catch (error) {
       if (error.name === 'AbortError') {
-        console.log('🛑 Journey fetch aborted for:', journeyId);
         throw new Error('Request cancelled');
       }
       
-      console.error('❌ Journey service error:', error);
       throw error;
     } finally {
       this.abortControllers.delete(journeyId);
@@ -362,7 +339,6 @@ class JourneyService {
     const keysToDelete = Object.keys(this.cache).filter(key => key.startsWith(journeyId));
     keysToDelete.forEach(key => delete this.cache[key]);
     if (process.env.NODE_ENV === 'development') {
-      console.log('🗑️ Cleared cache for journey:', journeyId, 'keys:', keysToDelete.length);
     }
   }
 
@@ -370,7 +346,6 @@ class JourneyService {
   clearAllCache(): void {
     this.cache = {};
     if (process.env.NODE_ENV === 'development') {
-      console.log('🗑️ Cleared all journey cache');
     }
   }
 
@@ -379,7 +354,6 @@ class JourneyService {
     for (const [journeyId, controller] of this.abortControllers.entries()) {
       controller.abort();
       if (process.env.NODE_ENV === 'development') {
-        console.log('🛑 Cancelled request for journey:', journeyId);
       }
     }
     this.abortControllers.clear();

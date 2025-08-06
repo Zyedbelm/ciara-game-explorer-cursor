@@ -38,7 +38,6 @@ export function useJourneySteps(journeyId: string | null) {
         .order('step_order');
 
       if (error) {
-        console.error('Erreur lors de la récupération des étapes:', error);
         throw error;
       }
 

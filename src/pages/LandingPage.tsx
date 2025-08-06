@@ -85,7 +85,6 @@ const LandingPage = () => {
 
         setDestinations(cityDestinations);
       } catch (error) {
-        console.error('Error fetching cities:', error);
         setDestinations([]);
       }
     };

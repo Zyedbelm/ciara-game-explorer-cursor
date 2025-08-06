@@ -87,7 +87,6 @@ const BlogPage = () => {
   // Reload articles when language changes
   useEffect(() => {
     if (currentLanguage) {
-      console.log('[BlogPage] Language changed to:', currentLanguage);
       // No need to refetch, just refilter the display
     }
   }, [currentLanguage]);
@@ -116,7 +115,6 @@ const BlogPage = () => {
       if (error) throw error;
       setCountries(data || []);
     } catch (err) {
-      console.warn('Error fetching countries:', err);
     }
   };
 
@@ -130,28 +128,20 @@ const BlogPage = () => {
       if (error) throw error;
       setCities(data || []);
     } catch (err) {
-      console.warn('Error fetching cities:', err);
     }
   };
 
   const fetchArticles = async () => {
     try {
       setLoading(true);
-      console.log('[BlogPage] Fetching articles...');
-      
       const selectQuery = getMultilingualArticleSelect();
-      console.log('[BlogPage] Select query:', selectQuery);
-      
       const { data, error } = await supabase
         .from('articles')
         .select(selectQuery)
         .eq('status', 'published')
         .order('published_at', { ascending: false });
 
-      console.log('[BlogPage] Articles response:', { data, error, count: data?.length });
-
       if (error) {
-        console.error('[BlogPage] Error fetching articles:', error);
         toast({
           title: 'Erreur',
           description: 'Impossible de charger les articles',
@@ -161,14 +151,11 @@ const BlogPage = () => {
       }
 
       if (data) {
-        console.log('[BlogPage] Setting articles:', data.length);
         setArticles(data as any[]);
       } else {
-        console.log('[BlogPage] No articles returned');
         setArticles([]);
       }
     } catch (error) {
-      console.error('[BlogPage] Unexpected error:', error);
       toast({
         title: 'Erreur',
         description: 'Une erreur est survenue',
@@ -204,15 +191,7 @@ const BlogPage = () => {
     const matches = matchesSearch && matchesCategory && matchesCountry && matchesCity;
     
     if (!matches) {
-      console.log('[BlogPage] Article filtered out:', {
-        title: localizedTitle,
-        matchesSearch,
-        matchesCategory,
-        matchesCountry,
-        matchesCity,
-        currentLang: currentLanguage
-      });
-    }
+      }
     
     return matches;
   });
@@ -220,14 +199,6 @@ const BlogPage = () => {
   // Use only database articles - no fallback
   const displayArticles = filteredDbArticles;
   
-  console.log('[BlogPage] Render info:', {
-    totalArticles: articles.length,
-    filteredArticles: displayArticles.length,
-    currentLanguage,
-    selectedCategory,
-    searchTerm
-  });
-
   const categories = [
     currentLanguage === 'en' ? 'All' : currentLanguage === 'de' ? 'Alle' : 'Tous',
     'general',
@@ -310,7 +281,6 @@ const BlogPage = () => {
         setNewsletterEmail('');
       }
     } catch (error) {
-      console.error('Newsletter subscription error:', error);
       toast({
         title: 'Erreur',
         description: currentLanguage === 'en' 

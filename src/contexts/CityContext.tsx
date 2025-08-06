@@ -38,11 +38,8 @@ export function CityProvider({ children }: { children: React.ReactNode }) {
   const citySlug = useCitySlug();
   const location = useLocation();
 
-  console.log('🏙️ CityProvider - citySlug from hook:', citySlug);
-
   useEffect(() => {
     if (!citySlug) {
-      console.log('🏙️ CityProvider - No city slug, clearing city data');
       setCity(null);
       setLoading(false);
       setError(null);
@@ -51,7 +48,6 @@ export function CityProvider({ children }: { children: React.ReactNode }) {
 
     // Don't fetch if citySlug is 'undefined'
     if (citySlug === 'undefined') {
-      console.error('🚨 CityProvider - Invalid slug "undefined"');
       setCity(null);
       setLoading(false);
       setError('Invalid city identifier');
@@ -64,7 +60,6 @@ export function CityProvider({ children }: { children: React.ReactNode }) {
   // Reset to default colors when navigating back to homepage
   useEffect(() => {
     if (isOnHomepage()) {
-      console.log('🏠 CityProvider - On homepage, resetting to default colors');
       resetToDefaultColors();
     }
   }, [location.pathname]);
@@ -86,7 +81,6 @@ export function CityProvider({ children }: { children: React.ReactNode }) {
   const applyColorsToDOM = (primaryColor: string, secondaryColor: string) => {
     // DÉSACTIVÉ : Les couleurs de ville ne sont plus appliquées dynamiquement
     // pour maintenir une interface cohérente
-    console.log('🎨 CityProvider - Color application disabled for consistent UI');
     return;
   };
 
@@ -95,8 +89,6 @@ export function CityProvider({ children }: { children: React.ReactNode }) {
       setLoading(true);
       setError(null);
 
-      console.log('🔍 CityProvider - Fetching city with slug:', slug);
-
       const { data, error: fetchError } = await supabase
         .from('cities')
         .select('*')
@@ -104,26 +96,21 @@ export function CityProvider({ children }: { children: React.ReactNode }) {
         .maybeSingle();
 
       if (fetchError) {
-        console.error('❌ CityProvider - Error fetching city:', fetchError);
         throw fetchError;
       }
 
       if (!data) {
-        console.warn('⚠️ CityProvider - No city found with slug:', slug);
         setCity(null);
         setError(`City with slug "${slug}" not found`);
         setLoading(false);
         return;
       }
 
-      console.log('✅ CityProvider - City fetched successfully:', data.name);
       setCity(data);
       
       // DÉSACTIVÉ : Les couleurs de ville ne sont plus appliquées automatiquement
       // pour maintenir une interface cohérente
-      console.log('🎨 CityProvider - Automatic color application disabled');
-    } catch (err) {
-      console.error('❌ CityProvider - Error in fetchCity:', err);
+      } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
       setCity(null);
     } finally {
@@ -134,7 +121,6 @@ export function CityProvider({ children }: { children: React.ReactNode }) {
   const setCityColors = (primaryColor: string, secondaryColor: string) => {
     // DÉSACTIVÉ : Les couleurs de ville ne sont plus modifiables
     // pour maintenir une interface cohérente
-    console.log('🎨 CityProvider - setCityColors disabled for consistent UI');
     return;
   };
 

@@ -70,8 +70,6 @@ export interface AggregatedUserStats {
 class UserJourneysService {
   async getUserJourneyProgress(userId: string, language: string = 'fr'): Promise<UserJourneyProgress[]> {
     try {
-      console.log('🔍 Fetching user journey progress for user:', userId);
-
       const { data, error } = await supabase
         .from('user_journey_progress')
         .select(`
@@ -116,12 +114,10 @@ class UserJourneysService {
         .order('updated_at', { ascending: false });
 
       if (error) {
-        console.error('❌ Error fetching user journey progress:', error);
         throw error;
       }
 
       if (!data || data.length === 0) {
-        console.log('📭 No journey progress found for user');
         return [];
       }
 
@@ -185,7 +181,6 @@ class UserJourneysService {
               sum + (completion.points_earned || 0), 0
             );
           } else if (completionsError) {
-            console.warn(`⚠️ Error fetching step completions for journey ${journey.id}:`, completionsError);
             // Use the progress total as fallback only
             realPointsEarned = progress.total_points_earned || 0;
           }
@@ -201,8 +196,6 @@ class UserJourneysService {
               estimatedDuration = `${minutes}min`;
             }
           }
-
-          console.log(`🎯 Journey ${journey.name}: Real points earned: ${realPointsEarned}, Real total points: ${realTotalPoints}`);
 
           return {
             id: progress.id,
@@ -236,19 +229,15 @@ class UserJourneysService {
         })
       );
 
-      console.log('✅ Successfully fetched and transformed journey progress:', progressData.length);
       return progressData;
 
     } catch (error) {
-      console.error('💥 Error in getUserJourneyProgress:', error);
       throw error;
     }
   }
 
   async getUserStats(userId: string): Promise<UserStats> {
     try {
-      console.log('📊 Fetching user stats for user:', userId);
-
       // Get user's total points from profile (le vrai total de tous les parcours)
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
@@ -257,7 +246,6 @@ class UserJourneysService {
         .single();
 
       if (profileError) {
-        console.error('❌ Error fetching profile:', profileError);
       }
 
       // Get user's journey progress
@@ -309,15 +297,12 @@ class UserJourneysService {
       };
 
     } catch (error) {
-      console.error('💥 Error in getUserStats:', error);
       throw error;
     }
   }
 
   async getAggregatedUserStats(cityId?: string, activityPeriodDays: number = 30): Promise<AggregatedUserStats> {
     try {
-      console.log('📈 Fetching aggregated stats for city:', cityId || 'all');
-
       // Build base query for user journey progress
       let progressQuery = supabase
         .from('user_journey_progress')
@@ -341,7 +326,6 @@ class UserJourneysService {
       const { data: progressData, error: progressError } = await progressQuery;
 
       if (progressError) {
-        console.error('❌ Error fetching progress data:', progressError);
         throw progressError;
       }
 
@@ -367,7 +351,6 @@ class UserJourneysService {
 
       const { data: stepCompletions, error: stepError } = await stepCompletionsQuery;
       if (stepError) {
-        console.error('❌ Error fetching step completions:', stepError);
         throw stepError;
       }
 
@@ -432,19 +415,15 @@ class UserJourneysService {
         popularJourneys
       };
 
-      console.log('✅ Aggregated stats calculated:', result);
       return result;
 
     } catch (error) {
-      console.error('💥 Error in getAggregatedUserStats:', error);
       throw error;
     }
   }
 
   async updateJourneyStatus(progressId: string, status: 'saved' | 'in_progress' | 'completed' | 'abandoned'): Promise<void> {
     try {
-      console.log('🔄 Updating journey status:', { progressId, status });
-
       const updateData: any = {
         status,
         updated_at: new Date().toISOString()
@@ -465,13 +444,10 @@ class UserJourneysService {
         .eq('id', progressId);
 
       if (error) {
-        console.error('❌ Error updating journey status:', error);
         throw error;
       }
 
-      console.log('✅ Journey status updated successfully');
-    } catch (error) {
-      console.error('💥 Error in updateJourneyStatus:', error);
+      } catch (error) {
       throw error;
     }
   }

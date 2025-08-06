@@ -75,12 +75,6 @@ export function usePersistentChat(options: PersistentChatOptions = {}) {
   const initializeSession = useCallback(async () => {
     if (!user || sessionInitialized.current) return;
 
-    console.log('🔄 Initializing persistent chat session...', { 
-      userId: user.id, 
-      journeyId, 
-      currentStepId 
-    });
-
     setIsLoading(true);
     
     try {
@@ -100,11 +94,8 @@ export function usePersistentChat(options: PersistentChatOptions = {}) {
         });
 
       if (sessionError) {
-        console.error('❌ Error creating/getting session:', sessionError);
         throw sessionError;
       }
-
-      console.log('✅ Chat session ID obtained:', sessionId);
 
       // Load session data
       const { data: session, error: sessionFetchError } = await supabase
@@ -114,7 +105,6 @@ export function usePersistentChat(options: PersistentChatOptions = {}) {
         .single();
 
       if (sessionFetchError) {
-        console.error('❌ Error fetching session data:', sessionFetchError);
         throw sessionFetchError;
       }
 
@@ -134,10 +124,7 @@ export function usePersistentChat(options: PersistentChatOptions = {}) {
       // Load existing messages
       await loadMessages(sessionId);
 
-      console.log('✅ Persistent chat session initialized successfully');
-
-    } catch (error) {
-      console.error('❌ Error initializing chat session:', error);
+      } catch (error) {
       toast({
         title: 'Erreur de chat',
         description: 'Impossible d\'initialiser la session de chat',
@@ -174,10 +161,7 @@ export function usePersistentChat(options: PersistentChatOptions = {}) {
       }));
 
       setMessages(loadedMessages);
-      console.log('✅ Loaded chat messages:', loadedMessages.length);
-
-    } catch (error) {
-      console.error('❌ Error loading messages:', error);
+      } catch (error) {
     } finally {
       setIsLoadingMessages(false);
     }
@@ -186,7 +170,6 @@ export function usePersistentChat(options: PersistentChatOptions = {}) {
   // Save message to database with throttling
   const saveMessage = useCallback(async (message: PersistentChatMessage, immediate = false) => {
     if (!sessionData) {
-      console.warn('⚠️ No session data available for saving message');
       return;
     }
 
@@ -220,14 +203,10 @@ export function usePersistentChat(options: PersistentChatOptions = {}) {
         });
 
       if (error) {
-        console.error('❌ Error saving message:', error);
         throw error;
       }
 
-      console.log('💾 Message saved to database');
-
-    } catch (error) {
-      console.error('❌ Failed to save message:', error);
+      } catch (error) {
       // Don't show toast for message save failures - they're not critical
     }
   }, [sessionData, currentLanguage]);
@@ -254,8 +233,6 @@ export function usePersistentChat(options: PersistentChatOptions = {}) {
   const recoverSession = useCallback(async () => {
     if (!user) return false;
 
-    console.log('🔄 Attempting to recover chat session...');
-    
     try {
       const sessionKey = generateSessionKey();
       
@@ -300,8 +277,6 @@ export function usePersistentChat(options: PersistentChatOptions = {}) {
         setSessionData(recoveredSession);
         await loadMessages(session.id);
 
-        console.log('✅ Chat session recovered successfully');
-        
         toast({
           title: 'Session récupérée',
           description: 'Votre conversation précédente a été restaurée',
@@ -313,7 +288,6 @@ export function usePersistentChat(options: PersistentChatOptions = {}) {
       return false;
 
     } catch (error) {
-      console.error('❌ Error recovering session:', error);
       return false;
     }
   }, [user, generateSessionKey, sessionExpiryHours, loadMessages, toast]);
@@ -327,7 +301,6 @@ export function usePersistentChat(options: PersistentChatOptions = {}) {
           .update({ is_active: false })
           .eq('id', sessionData.id);
       } catch (error) {
-        console.error('❌ Error deactivating session:', error);
       }
     }
 

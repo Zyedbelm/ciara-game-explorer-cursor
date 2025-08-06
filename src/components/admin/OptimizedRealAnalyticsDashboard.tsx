@@ -203,12 +203,6 @@ export const OptimizedRealAnalyticsDashboard: React.FC<AnalyticsProps> = ({
     setError(null);
     
     try {
-      console.log('📊 Fetching optimized analytics data', {
-        cityId: effectiveCityId,
-        timeRange,
-        filters
-      });
-
       // Build city filter for queries
       const cityFilter = effectiveCityId ? { city_id: effectiveCityId } : {};
 
@@ -436,7 +430,6 @@ export const OptimizedRealAnalyticsDashboard: React.FC<AnalyticsProps> = ({
       setLastFetchTime(new Date());
 
     } catch (error) {
-      console.error('❌ Error fetching analytics:', error);
       const errorMessage = error instanceof Error ? error.message : 'Erreur inconnue';
       setError(errorMessage);
       

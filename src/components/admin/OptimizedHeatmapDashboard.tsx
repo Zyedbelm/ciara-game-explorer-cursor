@@ -70,8 +70,6 @@ export const OptimizedHeatmapDashboard: React.FC<OptimizedHeatmapDashboardProps>
     [analytics?.heatmapData]
   );
 
-  console.log('🗺️ OptimizedHeatmapDashboard render - City:', stableCityId, 'Range:', stableTimeRange, 'HasData:', hasData);
-
   if (loading) {
     return (
       <Card>

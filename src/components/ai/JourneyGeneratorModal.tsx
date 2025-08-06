@@ -57,29 +57,22 @@ const JourneyGeneratorModal: React.FC<{ trigger?: React.ReactNode }> = ({ trigge
       return;
     }
 
-    console.log('🎯 JourneyGeneratorModal - Starting generation with preferences:', preferences);
-    
     // Validate that we have the minimum required fields
     if (!preferences.duration || !preferences.difficulty || preferences.interests.length === 0) {
-      console.warn('⚠️ Missing required preferences for generation');
       return;
     }
 
     const result = await generateJourney(preferences);
     if (result) {
-      console.log('✅ Journey generation completed successfully');
-    } else {
-      console.log('⚠️ Journey generation failed or was cancelled');
-    }
+      } else {
+      }
   };
 
   const handleSave = async () => {
     if (!generatedJourney) {
-      console.warn('⚠️ No journey to save');
       return;
     }
     
-    console.log('💾 Saving generated journey:', generatedJourney.name);
     const success = await saveJourney(generatedJourney);
     if (success) {
       setOpen(false);

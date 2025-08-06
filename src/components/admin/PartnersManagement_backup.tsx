@@ -286,7 +286,6 @@ const PartnersManagement: React.FC<PartnersManagementProps> = ({ cityId }) => {
       setTopPartners(sortedPartners.slice(0, 3));
 
     } catch (err) {
-      console.error('Error fetching partner stats:', err);
       toast({
         title: 'Erreur',
         description: 'Impossible de charger les statistiques des partenaires',
@@ -365,7 +364,6 @@ const PartnersManagement: React.FC<PartnersManagementProps> = ({ cityId }) => {
       setCityStats(stats);
 
     } catch (err) {
-      console.error('Error fetching city stats:', err);
     }
   };
 
@@ -435,7 +433,6 @@ const PartnersManagement: React.FC<PartnersManagementProps> = ({ cityId }) => {
       setShowPartnerDetail(true);
 
     } catch (err) {
-      console.error('Error fetching partner detail:', err);
       toast({
         title: 'Erreur',
         description: 'Impossible de charger les détails du partenaire',
@@ -506,7 +503,6 @@ const PartnersManagement: React.FC<PartnersManagementProps> = ({ cityId }) => {
       await fetchPartnerStats();
       await fetchCityStats();
     } catch (err) {
-      console.error('Error initializing dashboard:', err);
     } finally {
       setDashboardLoading(false);
     }
@@ -619,7 +615,6 @@ const PartnersManagement: React.FC<PartnersManagementProps> = ({ cityId }) => {
       if (error) throw error;
       setCountries(data || []);
     } catch (err) {
-      console.warn('Error fetching countries:', err);
     }
   };
 
@@ -633,7 +628,6 @@ const PartnersManagement: React.FC<PartnersManagementProps> = ({ cityId }) => {
       if (error) throw error;
       setCities(data || []);
     } catch (err) {
-      console.warn('Error fetching cities:', err);
     }
   };
 
@@ -735,7 +729,6 @@ const PartnersManagement: React.FC<PartnersManagementProps> = ({ cityId }) => {
               cityName: getCityName(formData.city_id)
             });
           } catch (emailError) {
-            console.warn('Failed to send welcome email:', emailError);
           }
         }
       }

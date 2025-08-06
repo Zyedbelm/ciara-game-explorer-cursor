@@ -25,7 +25,6 @@ export const EnhancedAudioPlayer: React.FC<EnhancedAudioPlayerProps> = ({
   const hasAutoPlayedRef = useRef(false);
 
   const handleError = (error: string) => {
-    console.error('Enhanced audio player error:', error);
     toast({
       title: "Audio Error",
       description: "Failed to play audio message",
@@ -35,7 +34,6 @@ export const EnhancedAudioPlayer: React.FC<EnhancedAudioPlayerProps> = ({
   };
 
   const handlePlaybackComplete = () => {
-    console.log('Audio playback completed');
     onPlaybackComplete?.();
   };
 
@@ -48,8 +46,7 @@ export const EnhancedAudioPlayer: React.FC<EnhancedAudioPlayerProps> = ({
   useEffect(() => {
     if (autoPlay && !hasAutoPlayedRef.current && (audioData || audioUrl)) {
       hasAutoPlayedRef.current = true;
-      console.log('Auto-playing audio message');
-    }
+      }
   }, [autoPlay, audioData, audioUrl]);
 
   if (!audioData && !audioUrl) {

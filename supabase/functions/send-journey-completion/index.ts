@@ -535,7 +535,6 @@ interface JourneyCompletionRequest {
 
 // Main handler function
 const handler = async (req: Request): Promise<Response> => {
-  console.log('📧 Journey completion email function called');
 
   // Handle CORS preflight
   if (req.method === 'OPTIONS') {
@@ -551,27 +550,18 @@ const handler = async (req: Request): Promise<Response> => {
 
   try {
     const body: JourneyCompletionRequest = await req.json();
-    console.log('📨 Processing journey completion email:', {
-      email: body.email,
-      journeyName: body.journeyName,
-      pointsEarned: body.pointsEarned,
-      language: body.language || 'fr'
-    });
 
     // Verify Resend API key is configured
     const resendApiKey = Deno.env.get('RESEND_API_KEY');
     if (!resendApiKey) {
-      console.error('❌ RESEND_API_KEY not configured');
       return new Response(
         JSON.stringify({ error: 'Email service not configured - missing RESEND_API_KEY' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
-    console.log('✅ RESEND_API_KEY found, length:', resendApiKey.length);
 
     // Validate required fields
     if (!body.email || !body.userName || !body.journeyName || typeof body.pointsEarned !== 'number') {
-      console.error('❌ Missing required fields');
       return new Response(
         JSON.stringify({ error: 'Missing required fields: email, userName, journeyName, pointsEarned' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -634,11 +624,9 @@ const handler = async (req: Request): Promise<Response> => {
       </html>
     `;
 
-    console.log('🎨 Email HTML rendered successfully');
 
     // Send email via Resend with enhanced data
     try {
-      console.log('📤 Attempting to send email to:', body.email);
       const emailResult = await resend.emails.send({
         from: 'CIARA <noreply@ciara.city>',
         to: [body.email],
@@ -652,7 +640,6 @@ const handler = async (req: Request): Promise<Response> => {
         },
       });
 
-      console.log('✅ Journey completion email sent successfully:', emailResult.data?.id);
       console.log('📧 Email result:', emailResult);
       
       return new Response(
@@ -664,13 +651,11 @@ const handler = async (req: Request): Promise<Response> => {
         { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     } catch (emailError) {
-      console.error('❌ Failed to send email via Resend:', emailError);
       throw emailError;
     }
 
 
   } catch (error) {
-    console.error('❌ Error sending journey completion email:', error);
     
     return new Response(
       JSON.stringify({ 

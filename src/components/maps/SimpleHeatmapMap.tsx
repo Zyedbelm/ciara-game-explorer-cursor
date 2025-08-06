@@ -45,8 +45,6 @@ const SimpleHeatmapMap: React.FC<SimpleHeatmapMapProps> = ({
       if (!mapRef.current || mapInstanceRef.current) return;
 
       try {
-        console.log('🗺️ SimpleHeatmapMap: Starting initialization...');
-        
         // Get API key
         let apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
         if (!apiKey) {
@@ -89,11 +87,9 @@ const SimpleHeatmapMap: React.FC<SimpleHeatmapMapProps> = ({
         
         if (mounted) {
           setIsLoaded(true);
-          console.log('✅ SimpleHeatmapMap: Initialized successfully');
-        }
+          }
 
       } catch (err) {
-        console.error('❌ SimpleHeatmapMap initialization failed:', err);
         if (mounted) {
           setError(err instanceof Error ? err.message : 'Failed to initialize map');
         }

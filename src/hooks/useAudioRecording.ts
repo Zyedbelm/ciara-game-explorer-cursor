@@ -42,8 +42,6 @@ export const useAudioRecording = ({
     if (isRecording) return;
 
     try {
-      console.log('Starting audio recording...');
-      
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: {
           echoCancellation: true,
@@ -72,14 +70,12 @@ export const useAudioRecording = ({
       };
 
       mediaRecorder.onstop = () => {
-        console.log('Recording stopped');
         const duration = Math.round((Date.now() - startTimeRef.current) / 1000);
         
         if (chunksRef.current.length > 0) {
           const audioBlob = new Blob(chunksRef.current, { 
             type: mediaRecorder.mimeType || 'audio/webm' 
           });
-          console.log('Audio blob created:', audioBlob.size, 'bytes');
           onRecordingComplete?.(audioBlob, duration);
         }
         
@@ -87,7 +83,6 @@ export const useAudioRecording = ({
       };
 
       mediaRecorder.onerror = (event) => {
-        console.error('MediaRecorder error:', event);
         onError?.('Recording failed');
         cleanup();
       };
@@ -107,10 +102,7 @@ export const useAudioRecording = ({
         }
       }, 100);
 
-      console.log('Recording started successfully');
-
-    } catch (error) {
-      console.error('Error starting recording:', error);
+      } catch (error) {
       onError?.(getAudioErrorMessage(error as Error, language));
       cleanup();
     }
@@ -119,8 +111,6 @@ export const useAudioRecording = ({
   const stopRecording = useCallback(() => {
     if (!isRecording || !mediaRecorderRef.current) return;
 
-    console.log('Stopping recording...');
-    
     if (mediaRecorderRef.current.state === 'recording') {
       mediaRecorderRef.current.stop();
     }
@@ -147,7 +137,6 @@ export const useAudioRecording = ({
   }, []);
 
   const cancelRecording = useCallback(() => {
-    console.log('Cancelling recording...');
     cleanup();
   }, [cleanup]);
 

@@ -139,7 +139,6 @@ export const RadarComparison: React.FC<RadarComparisonProps> = ({ cityId, timeRa
 
         setData(radarData);
       } catch (error) {
-        console.error('Error fetching radar data:', error);
       } finally {
         setLoading(false);
       }

@@ -25,12 +25,9 @@ const ResetPasswordPage = () => {
   // Extract parameters from both query string and hash fragment
   useEffect(() => {
     const extractParams = async () => {
-      console.log('🔍 ResetPasswordPage: Extracting auth parameters');
-      
       // First, sign out any existing user to ensure clean state
       const { data: sessionData } = await supabase.auth.getSession();
       if (sessionData.session) {
-        console.log('🔄 User is logged in, signing out for password reset');
         await supabase.auth.signOut();
       }
       
@@ -49,16 +46,6 @@ const ResetPasswordPage = () => {
       const hashAccessToken = hashParams.get('access_token');
       const hashRefreshToken = hashParams.get('refresh_token');
       
-      console.log('🔍 URL parameters:', {
-        queryType: type,
-        queryToken: !!token,
-        hashType,
-        hashToken: !!hashToken,
-        hashError,
-        hasAccessToken: !!hashAccessToken,
-        hasRefreshToken: !!hashRefreshToken
-      });
-      
       // Check for errors in hash first
       if (hashError) {
         let errorMessage = "Une erreur s'est produite lors de la récupération.";
@@ -69,7 +56,6 @@ const ResetPasswordPage = () => {
           errorMessage = decodeURIComponent(hashErrorDescription);
         }
         
-        console.log('❌ Hash error detected:', hashError, errorMessage);
         toast({
           title: "Lien expiré",
           description: errorMessage,
@@ -81,7 +67,6 @@ const ResetPasswordPage = () => {
       
       // If we have access_token and refresh_token in hash, this means verification was successful
       if (hashAccessToken && hashRefreshToken) {
-        console.log('✅ Found access tokens in hash, user was successfully verified');
         try {
           // Set the session from the tokens
           const { data, error } = await supabase.auth.setSession({
@@ -93,14 +78,12 @@ const ResetPasswordPage = () => {
             throw error;
           }
           
-          console.log('✅ Session set successfully');
           setTokenVerified(true);
           
           // Clean up URL hash
           window.history.replaceState({}, document.title, window.location.pathname);
           return;
         } catch (error) {
-          console.error('❌ Error setting session:', error);
           toast({
             title: "Erreur",
             description: "Impossible de valider la session",
@@ -115,10 +98,7 @@ const ResetPasswordPage = () => {
       const finalType = hashType || type;
       const finalToken = hashToken || token;
       
-      console.log('🔍 Final parameters:', { finalType, hasToken: !!finalToken });
-      
       if (finalType !== 'recovery' || !finalToken) {
-        console.log('❌ Invalid recovery parameters');
         toast({
           title: "Lien invalide",
           description: "Ce lien de récupération n'est pas valide.",
@@ -131,8 +111,7 @@ const ResetPasswordPage = () => {
       // Store the token for later use during password update
       setTokenHash(finalToken);
       setTokenVerified(true);
-      console.log('✅ Token stored for verification');
-    };
+      };
 
     extractParams();
   }, [searchParams, navigate, toast]);
@@ -172,7 +151,6 @@ const ResetPasswordPage = () => {
       const { data: currentSession } = await supabase.auth.getSession();
       
       if (currentSession.session) {
-        console.log('✅ Using existing session to update password');
         // We already have a valid session, just update the password
         const { error: updateError } = await supabase.auth.updateUser({
           password: formData.password
@@ -182,7 +160,6 @@ const ResetPasswordPage = () => {
           throw updateError;
         }
       } else if (tokenHash) {
-        console.log('🔑 Verifying token and updating password');
         // First verify the OTP token and get the session
         const { data: sessionData, error: verifyError } = await supabase.auth.verifyOtp({
           token_hash: tokenHash,
@@ -226,7 +203,6 @@ const ResetPasswordPage = () => {
       }, 3000);
 
     } catch (error: any) {
-      console.error('Password reset error:', error);
       toast({
         title: "Erreur",
         description: error.message || "Impossible de réinitialiser le mot de passe",

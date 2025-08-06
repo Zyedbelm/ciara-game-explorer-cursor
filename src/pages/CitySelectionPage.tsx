@@ -99,7 +99,6 @@ const CitySelectionPage = () => {
         setCities(citiesWithJourneyCount);
         setFilteredCities(citiesWithJourneyCount);
       } catch (error) {
-        console.error('Error fetching cities:', error);
       } finally {
         setLoading(false);
       }

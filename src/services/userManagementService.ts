@@ -28,7 +28,6 @@ export class UserManagementService {
       const { data, error } = await query.order('created_at', { ascending: false });
       
       if (error) {
-        console.error('Error fetching users:', error);
         throw new Error(`Failed to fetch users: ${error.message}`);
       }
 
@@ -48,7 +47,6 @@ export class UserManagementService {
         avatar_url: user.avatar_url,
       }));
     } catch (error) {
-      console.error('UserManagementService.fetchUsers error:', error);
       throw error;
     }
   }
@@ -61,11 +59,9 @@ export class UserManagementService {
         .eq('user_id', userId);
       
       if (error) {
-        console.error('Error updating user city:', error);
         throw new Error(`Failed to update user city: ${error.message}`);
       }
     } catch (error) {
-      console.error('UserManagementService.updateUserCity error:', error);
       throw error;
     }
   }
@@ -78,11 +74,9 @@ export class UserManagementService {
         .eq('user_id', userId);
       
       if (error) {
-        console.error('Error updating user role:', error);
         throw new Error(`Failed to update user role: ${error.message}`);
       }
     } catch (error) {
-      console.error('UserManagementService.updateUserRole error:', error);
       throw error;
     }
   }
@@ -95,11 +89,9 @@ export class UserManagementService {
         .eq('user_id', userId);
       
       if (error) {
-        console.error('Error deleting user:', error);
         throw new Error(`Failed to delete user: ${error.message}`);
       }
     } catch (error) {
-      console.error('UserManagementService.deleteUser error:', error);
       throw error;
     }
   }

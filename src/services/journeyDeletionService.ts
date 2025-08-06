@@ -24,26 +24,21 @@ class JourneyDeletionService {
    */
   async deleteJourneyCompletely(userId: string, journeyId: string): Promise<DeletionResult> {
     try {
-      console.log('🗑️ Starting complete journey deletion:', { userId, journeyId });
-      
       const { data, error } = await supabase.rpc('delete_user_journey_completely', {
         p_user_id: userId,
         p_journey_id: journeyId
       });
 
       if (error) {
-        console.error('❌ Journey deletion failed:', error);
         throw error;
       }
 
       // Clear the journey cache to prevent stale data
       journeyService.clearJourneyCache(journeyId);
       
-      console.log('✅ Journey deletion completed:', data);
       return data as unknown as DeletionResult;
       
     } catch (error) {
-      console.error('❌ Error in deleteJourneyCompletely:', error);
       return {
         success: false,
         deleted_steps: 0,
@@ -59,26 +54,21 @@ class JourneyDeletionService {
    */
   async resetJourneyForReplay(userId: string, journeyId: string): Promise<ResetResult> {
     try {
-      console.log('🔄 Starting journey reset for replay:', { userId, journeyId });
-      
       const { data, error } = await supabase.rpc('reset_journey_for_replay', {
         p_user_id: userId,
         p_journey_id: journeyId
       });
 
       if (error) {
-        console.error('❌ Journey reset failed:', error);
         throw error;
       }
 
       // Clear the journey cache to prevent stale data
       journeyService.clearJourneyCache(journeyId);
       
-      console.log('✅ Journey reset completed:', data);
       return data as unknown as ResetResult;
       
     } catch (error) {
-      console.error('❌ Error in resetJourneyForReplay:', error);
       return {
         success: false,
         deleted_steps: 0,
@@ -94,8 +84,6 @@ class JourneyDeletionService {
    */
   async acquireCompletedJourney(userId: string, journeyId: string): Promise<boolean> {
     try {
-      console.log('🏆 Acquiring completed journey:', { userId, journeyId });
-      
       const { error } = await supabase
         .from('user_journey_progress')
         .update({ 
@@ -107,15 +95,12 @@ class JourneyDeletionService {
         .eq('is_completed', true);
 
       if (error) {
-        console.error('❌ Journey acquisition failed:', error);
         return false;
       }
 
-      console.log('✅ Journey acquired successfully');
       return true;
       
     } catch (error) {
-      console.error('❌ Error in acquireCompletedJourney:', error);
       return false;
     }
   }
@@ -133,13 +118,11 @@ class JourneyDeletionService {
         .maybeSingle();
 
       if (error) {
-        console.error('❌ Journey validation error:', error);
         return false;
       }
 
       return !!data;
     } catch (error) {
-      console.error('❌ Error validating journey:', error);
       return false;
     }
   }
@@ -152,8 +135,6 @@ class JourneyDeletionService {
     conflictingSteps: string[];
   }> {
     try {
-      console.log('👻 Checking for ghost validations:', { userId, journeyId });
-      
       // Get journey steps
       const { data: journeySteps, error: stepsError } = await supabase
         .from('journey_steps')
@@ -161,7 +142,6 @@ class JourneyDeletionService {
         .eq('journey_id', journeyId);
 
       if (stepsError || !journeySteps) {
-        console.error('❌ Error fetching journey steps:', stepsError);
         return { hasConflicts: false, conflictingSteps: [] };
       }
 
@@ -175,7 +155,6 @@ class JourneyDeletionService {
         .in('step_id', stepIds);
 
       if (completionsError) {
-        console.error('❌ Error checking step completions:', completionsError);
         return { hasConflicts: false, conflictingSteps: [] };
       }
 
@@ -183,15 +162,12 @@ class JourneyDeletionService {
       const hasConflicts = conflictingSteps.length > 0;
 
       if (hasConflicts) {
-        console.warn('⚠️ Ghost validations detected:', { conflictingSteps: conflictingSteps.length });
       } else {
-        console.log('✅ No ghost validations found');
-      }
+        }
 
       return { hasConflicts, conflictingSteps };
       
     } catch (error) {
-      console.error('❌ Error checking for ghost validations:', error);
       return { hasConflicts: false, conflictingSteps: [] };
     }
   }

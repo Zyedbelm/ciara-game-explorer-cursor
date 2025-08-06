@@ -120,12 +120,7 @@ const StepsList: React.FC<StepsListProps> = ({ journey, onStepClick, onForceStep
             
             // Debug logging for step completion state
             if (index === 0) {
-              console.log('🔍 Steps completion debug:', {
-                journeyCompletedSteps: journey.completedSteps,
-                currentStepIndex: journey.currentStepIndex,
-                totalSteps: journey.steps.length
-              });
-            }
+              }
             
             return (
               <div

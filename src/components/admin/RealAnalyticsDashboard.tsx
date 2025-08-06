@@ -83,8 +83,6 @@ const RealAnalyticsDashboard: React.FC<AnalyticsProps> = ({ cityId }) => {
   const fetchAnalyticsData = async () => {
     setLoading(true);
     try {
-      console.log('📊 Fetching analytics data for city:', cityId);
-
       // Build city filter
       const cityFilter = cityId ? { city_id: cityId } : {};
 
@@ -247,11 +245,9 @@ const RealAnalyticsDashboard: React.FC<AnalyticsProps> = ({ cityId }) => {
         journeyCategories: journeyCategories.filter(cat => cat.count > 0)
       };
 
-      console.log('✅ Analytics data calculated:', analyticsData);
       setData(analyticsData);
 
     } catch (error) {
-      console.error('❌ Error fetching analytics:', error);
       toast({
         title: "Erreur",
         description: "Impossible de charger les données analytiques",

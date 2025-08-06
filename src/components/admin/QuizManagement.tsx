@@ -162,7 +162,6 @@ const QuizManagement: React.FC<QuizManagementProps> = ({ cityId }) => {
       if (error) throw error;
       setSteps(data || []);
     } catch (error) {
-      console.error('Error fetching steps:', error);
       toast({
         title: "Erreur",
         description: "Impossible de charger les étapes",
@@ -192,7 +191,6 @@ const QuizManagement: React.FC<QuizManagementProps> = ({ cityId }) => {
 
       setQuizzes(transformedQuizzes);
     } catch (error) {
-      console.error('Error fetching quizzes:', error);
       toast({
         title: "Erreur",
         description: "Impossible de charger les quiz",
@@ -246,7 +244,6 @@ const QuizManagement: React.FC<QuizManagementProps> = ({ cityId }) => {
       form.reset();
       fetchQuizzes();
     } catch (error) {
-      console.error('Error saving quiz:', error);
       toast({
         title: "Erreur",
         description: "Impossible de sauvegarder le quiz",
@@ -288,7 +285,6 @@ const QuizManagement: React.FC<QuizManagementProps> = ({ cityId }) => {
 
       fetchQuizzes();
     } catch (error) {
-      console.error('Error deleting quiz:', error);
       toast({
         title: "Erreur",
         description: "Impossible de supprimer le quiz",

@@ -47,7 +47,6 @@ export const useVisitorNotifications = () => {
         await markAsShownAsToast(notificationIds);
       }
     } catch (error) {
-      console.error('Erreur lors de la récupération des notifications:', error);
     }
   };
 
@@ -91,7 +90,6 @@ export const useVisitorNotifications = () => {
 
       if (error) throw error;
     } catch (error) {
-      console.error('Erreur lors du marquage des notifications:', error);
     }
   };
 
@@ -111,7 +109,6 @@ export const useVisitorNotifications = () => {
       if (error) throw error;
       setNotifications(data || []);
     } catch (error) {
-      console.error('Erreur lors de la récupération des notifications:', error);
     } finally {
       setLoading(false);
     }
@@ -132,7 +129,6 @@ export const useVisitorNotifications = () => {
         prev.map(n => n.id === notificationId ? { ...n, is_read: true } : n)
       );
     } catch (error) {
-      console.error('Erreur lors du marquage comme lu:', error);
     }
   };
 
@@ -183,7 +179,6 @@ export const useVisitorNotifications = () => {
 
       if (error) throw error;
     } catch (error) {
-      console.error('Erreur lors de la création de notification:', error);
     }
   };
 

@@ -691,7 +691,6 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    console.log('📖 Travel journal generation started');
 
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
@@ -883,7 +882,6 @@ const handler = async (req: Request): Promise<Response> => {
           }
         });
     } catch (dbError) {
-      console.log('DB save failed, continuing with response');
     }
 
     return new Response(JSON.stringify({
@@ -903,7 +901,6 @@ const handler = async (req: Request): Promise<Response> => {
     });
 
   } catch (error: any) {
-    console.error('❌ Error in generate-travel-journal function:', error);
     return new Response(
       JSON.stringify({ 
         error: 'Failed to generate travel journal',

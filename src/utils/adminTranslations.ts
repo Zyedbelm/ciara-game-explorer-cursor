@@ -403,7 +403,6 @@ export const getAdminTranslation = (
   // This is kept for backward compatibility
   const translation = adminTranslations[key as keyof typeof adminTranslations];
   if (!translation) {
-    console.warn(`Missing admin translation for key: ${key}`);
     return key;
   }
   

@@ -116,7 +116,6 @@ export function StepQuizzesTab({ stepId, onQuizAdded }: StepQuizzesTabProps) {
       if (error) throw error;
       setQuizzes(data || []);
     } catch (error) {
-      console.error('Error fetching quizzes:', error);
       toast({
         title: "Erreur",
         description: "Impossible de charger les quiz",
@@ -185,8 +184,6 @@ export function StepQuizzesTab({ stepId, onQuizAdded }: StepQuizzesTabProps) {
         step_id: stepId,
       };
 
-      console.log('🔄 Saving quiz:', quizData);
-
       if (editingQuiz) {
         const { error } = await supabase
           .from('quiz_questions')
@@ -194,7 +191,6 @@ export function StepQuizzesTab({ stepId, onQuizAdded }: StepQuizzesTabProps) {
           .eq('id', editingQuiz.id);
 
         if (error) {
-          console.error('❌ Error updating quiz:', error);
           throw error;
         }
 
@@ -208,7 +204,6 @@ export function StepQuizzesTab({ stepId, onQuizAdded }: StepQuizzesTabProps) {
           .insert([quizData]);
 
         if (error) {
-          console.error('❌ Error creating quiz:', error);
           throw error;
         }
 
@@ -231,7 +226,6 @@ export function StepQuizzesTab({ stepId, onQuizAdded }: StepQuizzesTabProps) {
       form.reset();
       fetchQuizzes();
     } catch (error) {
-      console.error('Error saving quiz:', error);
       const errorMessage = error instanceof Error ? error.message : 'Erreur inconnue';
       toast({
         title: "Erreur",
@@ -286,7 +280,6 @@ export function StepQuizzesTab({ stepId, onQuizAdded }: StepQuizzesTabProps) {
       fetchQuizzes();
       onQuizAdded?.();
     } catch (error) {
-      console.error('Error deleting quiz:', error);
       toast({
         title: "Erreur",
         description: "Impossible de supprimer le quiz",

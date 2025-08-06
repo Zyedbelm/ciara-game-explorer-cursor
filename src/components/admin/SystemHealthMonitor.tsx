@@ -31,7 +31,6 @@ export function SystemHealthMonitor() {
       const { data, error } = await supabase.rpc('system_health_check');
       
       if (error) {
-        console.error('Health check failed:', error);
         toast({
           title: 'Erreur de vérification',
           description: 'Impossible de vérifier l\'état du système',
@@ -66,7 +65,6 @@ export function SystemHealthMonitor() {
         });
       }
     } catch (error) {
-      console.error('Health check error:', error);
       toast({
         title: 'Erreur',
         description: 'Erreur lors de la vérification système',
@@ -83,7 +81,6 @@ export function SystemHealthMonitor() {
       const { data, error } = await supabase.rpc('run_daily_maintenance');
       
       if (error) {
-        console.error('Maintenance failed:', error);
         toast({
           title: 'Erreur de maintenance',
           description: 'Impossible d\'exécuter la maintenance',
@@ -101,7 +98,6 @@ export function SystemHealthMonitor() {
       // Re-run health check after maintenance
       setTimeout(() => runHealthCheck(), 2000);
     } catch (error) {
-      console.error('Maintenance error:', error);
       toast({
         title: 'Erreur',
         description: 'Erreur lors de la maintenance',

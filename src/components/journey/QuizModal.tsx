@@ -139,7 +139,6 @@ const QuizModal: React.FC<QuizModalProps> = ({
         }
       }
     } catch (error) {
-      console.error('Error fetching questions:', error);
       toast({
         title: "Erreur",
         description: "Impossible de charger les questions du quiz.",
@@ -223,7 +222,6 @@ const QuizModal: React.FC<QuizModalProps> = ({
           });
 
         if (error) {
-          console.error('Error saving quiz completion:', error);
         }
       }
 
@@ -234,7 +232,6 @@ const QuizModal: React.FC<QuizModalProps> = ({
 
       onQuizComplete?.(totalPoints);
     } catch (error) {
-      console.error('Error completing quiz:', error);
     }
 
     // Reset quiz state

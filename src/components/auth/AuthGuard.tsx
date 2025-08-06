@@ -39,18 +39,11 @@ const AuthGuard: React.FC<AuthGuardProps> = ({
 
   // If specific role is required but user doesn't have it
   if (requiredRole.length > 0 && profile && !requiredRole.includes(profile.role)) {
-    console.log('🚫 [AuthGuard] Access denied - Required roles:', requiredRole, 'User role:', profile.role);
     return <Navigate to="/" replace />;
   }
   
   // Debug logging for partner dashboard access
   if (location.pathname === '/partner-dashboard') {
-    console.log('🔍 [AuthGuard] Partner dashboard access check:', {
-      isAuthenticated,
-      profile: profile ? { role: profile.role, email: profile.email } : null,
-      requiredRole,
-      hasRequiredRole: requiredRole.length > 0 && profile ? requiredRole.includes(profile.role) : false
-    });
   }
 
   // If user is authenticated but trying to access auth pages, redirect to home

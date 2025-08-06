@@ -146,7 +146,6 @@ const PartnerDashboard: React.FC = () => {
       setCities(mockCities);
       setPartners(mockPartners);
     } catch (error) {
-      console.error('Error fetching filter data:', error);
     }
   };
 
@@ -220,7 +219,6 @@ const PartnerDashboard: React.FC = () => {
 
       setAnalytics(mockAnalytics);
     } catch (error) {
-      console.error('Error fetching partner analytics:', error);
       toast({
         title: 'Erreur',
         description: 'Impossible de charger les données du partenaire.',

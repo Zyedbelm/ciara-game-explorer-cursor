@@ -51,7 +51,6 @@ const MonthlyStatsCard: React.FC = () => {
           });
         }
       } catch (error) {
-        console.error('Erreur lors du chargement des statistiques:', error);
         // Utiliser des données par défaut en cas d'erreur
         setStats({
           totalDistance: 2.5,

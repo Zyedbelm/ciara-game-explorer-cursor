@@ -49,7 +49,6 @@ const SimpleGoogleMap: React.FC<MapProps> = ({
   // Enhanced geolocation function with device orientation
   const handleGeolocation = useCallback(() => {
     if (!navigator.geolocation) {
-      console.warn('La géolocalisation n\'est pas supportée par votre navigateur');
       return;
     }
 
@@ -127,7 +126,6 @@ const SimpleGoogleMap: React.FC<MapProps> = ({
         setIsLocating(false);
       },
       (error) => {
-        console.warn('Géolocalisation non disponible:', error.message);
         setIsLocating(false);
       },
       {
@@ -149,12 +147,9 @@ const SimpleGoogleMap: React.FC<MapProps> = ({
   useEffect(() => {
     const fetchApiKey = async () => {
       try {
-        console.log('🗺️ Fetching Google Maps API key...');
-        
         // Try to get API key from environment variable first (for development)
         const envApiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
         if (envApiKey) {
-          console.log('✅ Using Google Maps API key from environment variable');
           setApiKey(envApiKey);
           return;
         }
@@ -162,16 +157,13 @@ const SimpleGoogleMap: React.FC<MapProps> = ({
         // Fallback to Supabase function
         const { data, error } = await supabase.functions.invoke('get-google-maps-key');
         if (error) {
-          console.error('❌ Error fetching API key from Supabase:', error);
           throw error;
         }
         if (!data?.apiKey) {
           throw new Error('API key not found in response');
         }
-        console.log('✅ Google Maps API key fetched successfully from Supabase');
         setApiKey(data.apiKey);
       } catch (err) {
-        console.error('❌ Error fetching Google Maps API key:', err);
         setError('Impossible de charger la carte - clé API non disponible');
         setIsLoading(false);
       }
@@ -188,7 +180,6 @@ const SimpleGoogleMap: React.FC<MapProps> = ({
 
     const initializeMap = async () => {
       try {
-        console.log('🗺️ Initializing Google Maps...');
         setIsLoading(true);
         setError(null);
         
@@ -207,13 +198,10 @@ const SimpleGoogleMap: React.FC<MapProps> = ({
         });
 
         const google = await loader.load();
-        console.log('✅ Google Maps API loaded');
-        
         if (!mapRef.current) {
           throw new Error('Map element not available');
         }
 
-        console.log('🗺️ Creating map instance...');
         const mapInstance = new google.maps.Map(mapRef.current, {
           center: {
             lat: Number(center.lat),
@@ -233,12 +221,10 @@ const SimpleGoogleMap: React.FC<MapProps> = ({
           zoomControl: true
         });
 
-        console.log(`✅ Map created successfully at center [${center.lat}, ${center.lng}]`);
         setMap(mapInstance);
         setIsLoading(false);
         
       } catch (err) {
-        console.error('❌ Map initialization failed:', err);
         setError(`Erreur lors de l'initialisation de la carte: ${err instanceof Error ? err.message : 'Erreur inconnue'}`);
         setIsLoading(false);
       }
@@ -265,8 +251,6 @@ const SimpleGoogleMap: React.FC<MapProps> = ({
   // Add numbered markers and walking route
   useEffect(() => {
     if (!map || !window.google) return;
-
-    console.log('🗺️ Adding numbered markers and walking route to map...');
 
     // Clear existing markers and route with explicit cleanup
     markersRef.current.forEach(marker => marker.setMap(null));

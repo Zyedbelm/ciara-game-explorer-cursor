@@ -131,7 +131,6 @@ export function StepDocumentsTab({ stepId, cityId }: StepDocumentsTabProps) {
       if (error) throw error;
       setDocuments(data || []);
     } catch (error) {
-      console.error('Error fetching documents:', error);
       toast({
         title: "Erreur",
         description: "Impossible de charger les documents",
@@ -164,7 +163,6 @@ export function StepDocumentsTab({ stepId, cityId }: StepDocumentsTabProps) {
 
       return publicUrl;
     } catch (error) {
-      console.error('Error uploading file:', error);
       throw new Error('Erreur lors du téléchargement du fichier');
     }
   };
@@ -241,8 +239,6 @@ export function StepDocumentsTab({ stepId, cityId }: StepDocumentsTabProps) {
         is_active: true,
       };
 
-      console.log('🔄 Saving document:', documentData);
-
       if (editingDocument) {
         const { error } = await supabase
           .from('content_documents')
@@ -250,7 +246,6 @@ export function StepDocumentsTab({ stepId, cityId }: StepDocumentsTabProps) {
           .eq('id', editingDocument.id);
 
         if (error) {
-          console.error('❌ Error updating document:', error);
           toast({
             title: "Erreur de mise à jour",
             description: `Impossible de modifier le document: ${error.message}`,
@@ -269,7 +264,6 @@ export function StepDocumentsTab({ stepId, cityId }: StepDocumentsTabProps) {
           .insert([documentData]);
 
         if (error) {
-          console.error('❌ Error creating document:', error);
           toast({
             title: "Erreur de création",
             description: `Impossible de créer le document: ${error.message}`,
@@ -290,7 +284,6 @@ export function StepDocumentsTab({ stepId, cityId }: StepDocumentsTabProps) {
       form.reset();
       fetchDocuments();
     } catch (error) {
-      console.error('Error saving document:', error);
       
       // Handle specific database errors
       let errorMessage = 'Erreur inconnue';
@@ -346,7 +339,6 @@ export function StepDocumentsTab({ stepId, cityId }: StepDocumentsTabProps) {
       });
       fetchDocuments();
     } catch (error) {
-      console.error('Error deleting document:', error);
       toast({
         title: "Erreur",
         description: "Impossible de supprimer le document",
@@ -400,7 +392,6 @@ export function StepDocumentsTab({ stepId, cityId }: StepDocumentsTabProps) {
         window.open(document.file_url, '_blank');
       }
     } catch (error) {
-      console.error('Error downloading document:', error);
       toast({
         title: "Erreur",
         description: "Impossible de télécharger le document",
@@ -545,7 +536,6 @@ export function StepDocumentsTab({ stepId, cityId }: StepDocumentsTabProps) {
                         onChange={(e) => {
                           const file = e.target.files?.[0];
                           if (file) {
-                            console.log('🔧 File selected:', file.name, file.size, file.type);
                             setSelectedFile(file);
                             form.setValue('file_name', file.name);
                             form.setValue('file_size', file.size);

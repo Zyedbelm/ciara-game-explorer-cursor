@@ -152,7 +152,6 @@ const RewardOffersManagement: React.FC<RewardOffersManagementProps> = ({ cityId 
       if (error) throw error;
       setCountries(data || []);
     } catch (err) {
-      console.warn('Error fetching countries:', err);
     }
   };
 
@@ -166,7 +165,6 @@ const RewardOffersManagement: React.FC<RewardOffersManagementProps> = ({ cityId 
       if (error) throw error;
       setCities(data || []);
     } catch (err) {
-      console.warn('Error fetching cities:', err);
     }
   };
 
@@ -319,7 +317,6 @@ const RewardOffersManagement: React.FC<RewardOffersManagementProps> = ({ cityId 
               description: 'Récompense créée et partenaire notifié',
             });
           } catch (emailError) {
-            console.warn('Failed to send partner notification:', emailError);
             toast({
               title: 'Attention',
               description: 'Récompense créée mais notification partenaire non envoyée',

@@ -248,16 +248,12 @@ export function useStableJourneyState(
       // Trigger data synchronization after the step completion is recorded
       // This ensures quiz_responses are rebuilt correctly from step_completions
       try {
-        console.log(`🔄 [STEP-VALIDATION] Synchronizing data after step completion...`);
         const syncResult = await journeyDataSynchronizer.synchronizeJourneyData(user.id, state.journey.id);
         
         if (syncResult.success) {
-          console.log(`✅ [STEP-VALIDATION] Data synchronized successfully`);
-        } else {
-          console.warn(`⚠️ [STEP-VALIDATION] Data synchronization had issues:`, syncResult.errors);
+          } else {
         }
       } catch (syncError) {
-        console.error(`❌ [STEP-VALIDATION] Data synchronization failed:`, syncError);
         // Continue even if sync fails - step completion is still recorded
       }
 
@@ -289,7 +285,6 @@ export function useStableJourneyState(
       };
 
     } catch (error) {
-      console.error('❌ Error validating step:', error);
       toast({
         title: 'Erreur de validation',
         description: "Impossible de valider l'étape. Veuillez réessayer.",

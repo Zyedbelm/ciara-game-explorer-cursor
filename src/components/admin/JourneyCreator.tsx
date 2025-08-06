@@ -141,9 +141,6 @@ const JourneyCreatorContent: React.FC<JourneyCreatorProps> = ({
 
   const fetchInitialData = async () => {
     try {
-      console.log('🔄 Fetching initial data for journey creator');
-      console.log('👤 Profile:', { role: profile?.role, city_id: profile?.city_id });
-      
       let cityData = null;
       
       if (profile?.role === 'tenant_admin' && profile?.city_id) {
@@ -154,7 +151,6 @@ const JourneyCreatorContent: React.FC<JourneyCreatorProps> = ({
           .single();
           
         if (cityError) {
-          console.error('Error fetching tenant city:', cityError);
           throw new Error('Impossible de récupérer votre ville assignée');
         }
         cityData = tenantCity;
@@ -178,36 +174,30 @@ const JourneyCreatorContent: React.FC<JourneyCreatorProps> = ({
           .order('name');
           
         if (cityError) {
-          console.error('Error fetching cities for super admin:', cityError);
           throw cityError;
         }
         
-        console.log('📍 Available cities for super admin:', allCities?.length || 0);
         setCities(allCities || []);
         
         // If editing a journey, set the city to the journey's city
         if (editingJourney?.city_id) {
           cityData = allCities?.find(c => c.id === editingJourney.city_id);
-          console.log('📍 Using journey city for editing:', cityData?.name);
-        } else if (allCities && allCities.length > 0) {
+          } else if (allCities && allCities.length > 0) {
           // Default to first city when creating new journey
           cityData = allCities[0];
-          console.log('📍 Using first available city for new journey:', cityData.name);
-        }
+          }
       }
       
       if (!cityData) {
         throw new Error('Aucune ville disponible');
       }
       
-      console.log('🏙️ Selected city:', cityData.name);
       setCity(cityData);
 
       // Load data for the selected city
       await loadDataForCity(cityData.id);
 
     } catch (error) {
-      console.error('❌ Error fetching data:', error);
       toast({
         title: "Erreur",
         description: error instanceof Error ? error.message : t('admin.error.load_failed'),
@@ -218,21 +208,17 @@ const JourneyCreatorContent: React.FC<JourneyCreatorProps> = ({
 
   const loadDataForCity = async (cityId: string) => {
     try {
-      console.log('📂 Fetching categories for city:', cityId);
       const { data: categoriesData, error: categoriesError } = await supabase
         .from('journey_categories')
         .select('*')
         .eq('city_id', cityId);
       
       if (categoriesError) {
-        console.error('Error fetching categories:', categoriesError);
         throw categoriesError;
       }
       
-      console.log('✅ Categories loaded:', categoriesData?.length || 0);
       setCategories(categoriesData || []);
 
-      console.log('👣 Fetching steps for city:', cityId);
       const { data: stepsData, error: stepsError } = await supabase
         .from('steps')
         .select('*')
@@ -240,27 +226,20 @@ const JourneyCreatorContent: React.FC<JourneyCreatorProps> = ({
         .eq('is_active', true);
       
       if (stepsError) {
-        console.error('Error fetching steps:', stepsError);
         throw stepsError;
       }
-      
-      console.log('✅ Steps loaded for city:', stepsData?.length || 0);
-      console.log('🔍 Sample step data:', stepsData?.[0] || 'No steps found');
       
       // Validate step data and filter out any incomplete steps
       const validSteps = (stepsData || []).filter(step => {
         // Vérification supplémentaire de sécurité : s'assurer que city_id correspond
         const isValid = step.id && step.name && step.latitude && step.longitude && step.city_id === cityId;
         if (!isValid) {
-          console.warn('⚠️ Invalid or wrong city step found:', step);
         }
         return isValid;
       });
       
-      console.log('✅ Valid steps after filtering for city:', validSteps.length);
       setAvailableSteps(validSteps);
     } catch (error) {
-      console.error('❌ Error loading city data:', error);
       toast({
         title: "Erreur",
         description: "Impossible de charger les données de la ville",
@@ -272,7 +251,6 @@ const JourneyCreatorContent: React.FC<JourneyCreatorProps> = ({
   const handleCityChange = async (cityId: string) => {
     const selectedCity = cities.find(c => c.id === cityId);
     if (selectedCity) {
-      console.log('🏙️ Changing city to:', selectedCity.name);
       setCity(selectedCity);
       setSelectedSteps([]); // Clear selected steps when changing city
       setAvailableSteps([]); // Clear available steps immediately
@@ -283,14 +261,8 @@ const JourneyCreatorContent: React.FC<JourneyCreatorProps> = ({
 
   const populateFormWithJourney = () => {
     if (!editingJourney) {
-      console.log('⚠️ No editing journey provided');
       return;
     }
-    
-    console.log('🔄 Populating form with journey data:', editingJourney.id);
-    console.log('📋 Journey steps data structure:', editingJourney.journey_steps);
-    console.log('🏷️ Journey category_id:', editingJourney.category_id);
-    console.log('🏷️ Available categories:', categories.map(c => ({ id: c.id, name: c.name })));
     
     form.reset({
       name: editingJourney.name,
@@ -306,19 +278,13 @@ const JourneyCreatorContent: React.FC<JourneyCreatorProps> = ({
 
     // Verify the category was set correctly
     const formCategoryId = form.getValues('category_id');
-    console.log('✅ Form category_id after reset:', formCategoryId);
     const categoryExists = categories.find(c => c.id === formCategoryId);
-    console.log('🔍 Category exists in available list:', !!categoryExists, categoryExists?.name);
-
     if (editingJourney.journey_steps && Array.isArray(editingJourney.journey_steps)) {
-      console.log('👣 Processing journey steps:', editingJourney.journey_steps.length);
-      
       // Handle new data structure: journey_steps contains step_order and steps object
       const steps = editingJourney.journey_steps
         .filter((js: any) => {
           const isValid = js && js.steps && js.steps.id && js.steps.name;
           if (!isValid) {
-            console.warn('⚠️ Invalid journey step data:', js);
           }
           return isValid;
         })
@@ -326,15 +292,11 @@ const JourneyCreatorContent: React.FC<JourneyCreatorProps> = ({
         .map((js: any) => {
           // Extract the step data from the nested structure
           const step = js.steps;
-          console.log('📍 Processing step:', step.name, 'Order:', js.step_order);
           return step;
         });
       
-      console.log('✅ Valid steps loaded:', steps.length);
-      console.log('🔍 Sample step structure:', steps[0] || 'No valid steps');
       setSelectedSteps(steps);
     } else {
-      console.log('⚠️ No valid journey_steps found in editing journey');
       setSelectedSteps([]);
     }
   };
@@ -403,15 +365,8 @@ const JourneyCreatorContent: React.FC<JourneyCreatorProps> = ({
   };
 
   const onSubmit = async (data: JourneyFormData) => {
-    console.log('🚀 Starting journey submission');
-    console.log('📋 Form data:', data);
-    console.log('👤 Profile:', { id: profile?.user_id, role: profile?.role });
-    console.log('🏙️ City:', city);
-    console.log('👣 Selected steps:', selectedSteps.length);
-
     // Validation checks
     if (selectedSteps.length === 0) {
-      console.warn('⚠️ No steps selected');
       toast({
         title: "Erreur",
         description: "Veuillez ajouter au moins une étape au parcours",
@@ -421,7 +376,6 @@ const JourneyCreatorContent: React.FC<JourneyCreatorProps> = ({
     }
 
     if (!city?.id) {
-      console.error('❌ No city selected');
       toast({
         title: "Erreur",
         description: "Aucune ville sélectionnée",
@@ -431,7 +385,6 @@ const JourneyCreatorContent: React.FC<JourneyCreatorProps> = ({
     }
 
     if (!profile?.user_id) {
-      console.error('❌ No authenticated user');
       toast({
         title: "Erreur",
         description: "Utilisateur non authentifié",
@@ -444,7 +397,6 @@ const JourneyCreatorContent: React.FC<JourneyCreatorProps> = ({
     
     // Set up timeout to prevent infinite loading
     const timeoutId = setTimeout(() => {
-      console.error('⏰ Operation timeout after 30 seconds');
       setLoading(false);
       toast({
         title: "Erreur",
@@ -454,7 +406,6 @@ const JourneyCreatorContent: React.FC<JourneyCreatorProps> = ({
     }, 30000);
 
     try {
-      console.log('📝 Preparing journey data');
       const journeyData = {
         name: data.name,
         description: data.description,
@@ -471,26 +422,19 @@ const JourneyCreatorContent: React.FC<JourneyCreatorProps> = ({
         updated_at: new Date().toISOString(), // Force update of modification date
       };
 
-      console.log('💾 Journey data prepared:', journeyData);
-
       let journey;
       if (editingJourney) {
-        console.log('✏️ Updating existing journey:', editingJourney.id);
-        
         // Delete existing journey steps first
-        console.log('🗑️ Deleting existing journey steps');
         const { error: deleteError } = await supabase
           .from('journey_steps')
           .delete()
           .eq('journey_id', editingJourney.id);
 
         if (deleteError) {
-          console.error('❌ Error deleting journey steps:', deleteError);
           throw deleteError;
         }
 
         // Update journey
-        console.log('🔄 Updating journey');
         const { data: updatedJourney, error: journeyError } = await supabase
           .from('journeys')
           .update(journeyData)
@@ -499,14 +443,11 @@ const JourneyCreatorContent: React.FC<JourneyCreatorProps> = ({
           .single();
 
         if (journeyError) {
-          console.error('❌ Error updating journey:', journeyError);
           throw journeyError;
         }
         
-        console.log('✅ Journey updated successfully');
         journey = updatedJourney;
       } else {
-        console.log('➕ Creating new journey');
         const { data: newJourney, error: journeyError } = await supabase
           .from('journeys')
           .insert(journeyData)
@@ -514,35 +455,26 @@ const JourneyCreatorContent: React.FC<JourneyCreatorProps> = ({
           .single();
 
         if (journeyError) {
-          console.error('❌ Error creating journey:', journeyError);
           throw journeyError;
         }
         
-        console.log('✅ Journey created successfully:', newJourney.id);
         journey = newJourney;
       }
 
       // Insert journey steps
-      console.log('👣 Inserting journey steps');
       const journeySteps = selectedSteps.map((step, index) => ({
         journey_id: journey.id,
         step_id: step.id,
         step_order: index + 1,
       }));
 
-      console.log('📊 Journey steps to insert:', journeySteps);
-
       const { error: stepsError } = await supabase
         .from('journey_steps')
         .insert(journeySteps);
 
       if (stepsError) {
-        console.error('❌ Error inserting journey steps:', stepsError);
         throw stepsError;
       }
-
-      console.log('✅ Journey steps inserted successfully');
-      console.log('🎉 Journey operation completed successfully');
 
       // Clear timeout since we succeeded
       clearTimeout(timeoutId);
@@ -561,18 +493,12 @@ const JourneyCreatorContent: React.FC<JourneyCreatorProps> = ({
       }
 
     } catch (error) {
-      console.error('❌ Error saving journey:', error);
       clearTimeout(timeoutId);
       
       // Use static error message to avoid translation issues in catch block
       let errorMessage = "Une erreur est survenue lors de la sauvegarde";
       
       if (error instanceof Error) {
-        console.error('Error details:', {
-          message: error.message,
-          name: error.name,
-          stack: error.stack
-        });
         
         // Provide more specific error messages based on common issues
         if (error.message.includes('duplicate key')) {
@@ -590,7 +516,6 @@ const JourneyCreatorContent: React.FC<JourneyCreatorProps> = ({
         variant: "destructive",
       });
     } finally {
-      console.log('🏁 Cleaning up journey submission');
       setLoading(false);
     }
   };
@@ -916,7 +841,6 @@ const JourneyCreatorContent: React.FC<JourneyCreatorProps> = ({
                                   const isNotAlreadySelected = !selectedSteps.find(s => s.id === step.id);
                                   
                                   if (!isFromCorrectCity) {
-                                    console.warn('🚨 Step from wrong city detected and filtered out:', step);
                                   }
                                   
                                   return isFromCorrectCity && isNotAlreadySelected;

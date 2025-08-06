@@ -158,13 +158,7 @@ const JourneyTabs: React.FC<JourneyTabsProps> = ({
                   info: step.description
                 }));
 
-                console.log('🗺️ JourneyTabs - Map data:', {
-                  center: mapCenter,
-                  markersCount: mapMarkers.length,
-                  firstStep: journey.steps[0],
-                  hasValidCoordinates: mapMarkers.every(m => 
-                    m.position.lat && m.position.lng && 
-                    !isNaN(m.position.lat) && !isNaN(m.position.lng)
+                && !isNaN(m.position.lng)
                   )
                 });
 

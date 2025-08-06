@@ -116,7 +116,6 @@ export const AdminGeographicalFilters: React.FC<AdminGeographicalFiltersProps> =
         }
 
       } catch (error) {
-        console.error('Error fetching geographical data:', error);
         toast({
           title: "Erreur",
           description: "Impossible de charger les données géographiques",

@@ -40,8 +40,6 @@ export function useUserJourneys() {
       setLoading(true);
       setError(null);
 
-      console.log('🔄 [Optimized] Fetching journeys for user:', userId);
-
       const allProgress = await userJourneysService.getUserJourneyProgress(userId, language);
 
       // Traitement optimisé des données
@@ -52,18 +50,10 @@ export function useUserJourneys() {
         abandoned: allProgress.filter(j => j.status === 'abandoned')
       };
 
-      console.log('📊 [Optimized] Journey categories:', {
-        saved: categorizedJourneys.saved.length,
-        inProgress: categorizedJourneys.inProgress.length,
-        completed: categorizedJourneys.completed.length,
-        abandoned: categorizedJourneys.abandoned.length
-      });
-
       setJourneys(categorizedJourneys);
 
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Erreur lors du chargement des parcours';
-      console.error('❌ [Optimized] Error fetching journeys:', errorMessage);
       setError(errorMessage);
       
       // Affichage de l'erreur avec toast

@@ -70,7 +70,6 @@ export const PerformanceDashboard: React.FC<PerformanceDashboardProps> = ({
       }
 
     } catch (error) {
-      console.error('Error fetching performance metrics:', error);
       logger.error('performance', 'Failed to fetch performance metrics', { error });
     } finally {
       setLoading(false);

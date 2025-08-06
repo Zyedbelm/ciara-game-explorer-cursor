@@ -60,7 +60,6 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({
         }
       }
     } catch (err) {
-      console.error('Audio playback error:', err);
       onError?.('Failed to play audio');
     }
   };

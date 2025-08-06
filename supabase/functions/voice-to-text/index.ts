@@ -48,7 +48,6 @@ serve(async (req) => {
       throw new Error('No audio data provided');
     }
 
-    console.log('Processing voice-to-text request with language:', language);
 
     // Process audio in chunks
     const binaryAudio = processBase64Chunks(audio);
@@ -63,10 +62,8 @@ serve(async (req) => {
     // Always pass language to maintain consistency
     if (language) {
       formData.append('language', language);
-      console.log('Language parameter set to:', language);
     }
 
-    console.log('Sending to OpenAI Whisper API...');
 
     // Send to OpenAI
     const response = await fetch('https://api.openai.com/v1/audio/transcriptions', {
@@ -79,12 +76,10 @@ serve(async (req) => {
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('OpenAI API error:', errorText);
       throw new Error(`OpenAI API error: ${errorText}`);
     }
 
     const result = await response.json();
-    console.log('Transcription successful:', result.text?.substring(0, 100) + '...');
 
     return new Response(
       JSON.stringify({ text: result.text }),
@@ -92,7 +87,6 @@ serve(async (req) => {
     );
 
   } catch (error) {
-    console.error('Error in voice-to-text function:', error);
     return new Response(
       JSON.stringify({ error: error.message }),
       {

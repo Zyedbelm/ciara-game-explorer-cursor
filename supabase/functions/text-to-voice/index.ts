@@ -18,7 +18,6 @@ serve(async (req) => {
       throw new Error('Text is required');
     }
 
-    console.log('Processing text-to-voice request for text:', text.substring(0, 100) + '...');
 
     // Choose voice based on language if not specified
     let selectedVoice = voice || 'alloy';
@@ -34,7 +33,6 @@ serve(async (req) => {
       selectedVoice = voiceMap[language] || 'alloy';
     }
 
-    console.log('Using voice:', selectedVoice);
 
     // Generate speech from text
     const response = await fetch('https://api.openai.com/v1/audio/speech', {
@@ -53,11 +51,9 @@ serve(async (req) => {
 
     if (!response.ok) {
       const error = await response.json();
-      console.error('OpenAI TTS API error:', error);
       throw new Error(error.error?.message || 'Failed to generate speech');
     }
 
-    console.log('TTS generation successful');
 
     // Convert audio buffer to base64 in chunks to prevent stack overflow
     const arrayBuffer = await response.arrayBuffer();
@@ -83,7 +79,6 @@ serve(async (req) => {
       },
     );
   } catch (error) {
-    console.error('Error in text-to-voice function:', error);
     return new Response(
       JSON.stringify({ error: error.message }),
       {

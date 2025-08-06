@@ -166,7 +166,6 @@ const AdvancedAnalytics: React.FC = () => {
       });
 
     } catch (error) {
-      console.error('Error fetching analytics:', error);
       toast.error('Erreur lors du chargement des analytics');
     } finally {
       setLoading(false);

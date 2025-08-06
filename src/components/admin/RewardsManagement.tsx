@@ -146,7 +146,6 @@ const RewardsManagement = () => {
 
       setRewardStats(statsMap);
     } catch (err) {
-      console.error('Error fetching reward stats:', err);
     }
   };
 
@@ -161,7 +160,6 @@ const RewardsManagement = () => {
       if (error) throw error;
       setCountries(data || []);
     } catch (error) {
-      console.error('Error fetching countries:', error);
     }
   };
 
@@ -175,7 +173,6 @@ const RewardsManagement = () => {
       if (error) throw error;
       setCities(data || []);
     } catch (error) {
-      console.error('Error fetching cities:', error);
     }
   };
 

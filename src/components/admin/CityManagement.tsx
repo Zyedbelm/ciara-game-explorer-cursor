@@ -190,7 +190,6 @@ const CityManagement: React.FC = () => {
       
       setCities(citiesWithPackages);
     } catch (error) {
-      console.error('Error fetching cities:', error);
       toast({
         title: "Erreur",
         description: "Impossible de charger les villes",
@@ -297,7 +296,6 @@ const CityManagement: React.FC = () => {
       form.reset();
       fetchCities();
     } catch (error: any) {
-      console.error('Error saving city:', error);
       
       // Message d'erreur plus détaillé
       let errorMessage = "Impossible de sauvegarder la ville.";
@@ -412,7 +410,6 @@ const CityManagement: React.FC = () => {
 
       fetchCities();
     } catch (error) {
-      console.error('Error toggling archive status:', error);
       toast({
         title: "Erreur",
         description: "Impossible de modifier le statut d'archivage de la ville",
@@ -437,7 +434,6 @@ const CityManagement: React.FC = () => {
 
       fetchCities();
     } catch (error) {
-      console.error('Error toggling active status:', error);
       toast({
         title: "Erreur",
         description: "Impossible de modifier le statut d'activité de la ville",
@@ -452,29 +448,23 @@ const CityManagement: React.FC = () => {
     }
 
     try {
-      console.log('Début de la suppression de la ville:', city.id);
-
       // 1. Supprimer les packages de la ville
-      console.log('Suppression des packages de la ville...');
       const { error: packageError } = await supabase
         .from('city_packages')
         .delete()
         .eq('city_id', city.id);
 
       if (packageError) {
-        console.error('Erreur suppression packages:', packageError);
         throw packageError;
       }
 
       // 2. Supprimer les étapes de la ville (et leurs références)
-      console.log('Suppression des étapes de la ville...');
       const { data: citySteps, error: stepsFetchError } = await supabase
         .from('steps')
         .select('id')
         .eq('city_id', city.id);
 
       if (stepsFetchError) {
-        console.error('Erreur récupération des étapes:', stepsFetchError);
         throw stepsFetchError;
       }
 
@@ -488,7 +478,6 @@ const CityManagement: React.FC = () => {
           .in('step_id', stepIds);
 
         if (journeyStepsError) {
-          console.error('Erreur suppression journey_steps:', journeyStepsError);
           throw journeyStepsError;
         }
 
@@ -499,7 +488,6 @@ const CityManagement: React.FC = () => {
           .in('step_id', stepIds);
 
         if (completionsError) {
-          console.error('Erreur suppression step_completions:', completionsError);
           throw completionsError;
         }
 
@@ -510,7 +498,6 @@ const CityManagement: React.FC = () => {
           .in('step_id', stepIds);
 
         if (analyticsError) {
-          console.error('Erreur suppression analytics_events:', analyticsError);
           // Ne pas throw car cette table pourrait ne pas exister
         }
 
@@ -521,7 +508,6 @@ const CityManagement: React.FC = () => {
           .in('step_id', stepIds);
 
         if (quizError) {
-          console.error('Erreur suppression quiz_questions:', quizError);
           // Ne pas throw car cette table pourrait ne pas exister
         }
 
@@ -532,7 +518,6 @@ const CityManagement: React.FC = () => {
           .in('step_id', stepIds);
 
         if (documentsError) {
-          console.error('Erreur suppression step_content_documents:', documentsError);
           // Ne pas throw car cette table pourrait ne pas exister
         }
 
@@ -543,49 +528,41 @@ const CityManagement: React.FC = () => {
           .in('id', stepIds);
 
         if (stepsDeleteError) {
-          console.error('Erreur suppression des étapes:', stepsDeleteError);
           throw stepsDeleteError;
         }
       }
 
       // 3. Supprimer les parcours de la ville
-      console.log('Suppression des parcours de la ville...');
       const { error: journeysError } = await supabase
         .from('journeys')
         .delete()
         .eq('city_id', city.id);
 
       if (journeysError) {
-        console.error('Erreur suppression des parcours:', journeysError);
         throw journeysError;
       }
 
       // 4. Supprimer les catégories de parcours de la ville
-      console.log('Suppression des catégories de parcours...');
       const { error: categoriesError } = await supabase
         .from('journey_categories')
         .delete()
         .eq('city_id', city.id);
 
       if (categoriesError) {
-        console.error('Erreur suppression des catégories:', categoriesError);
         throw categoriesError;
       }
 
       // 5. Supprimer les utilisateurs de la ville (tenant_admin et visitor)
-      console.log('Suppression des utilisateurs de la ville...');
       const { error: usersError } = await supabase
         .from('profiles')
         .delete()
         .eq('city_id', city.id);
 
       if (usersError) {
-        console.error('Erreur suppression des utilisateurs:', usersError);
         throw usersError;
       }
 
       // 6. Supprimer la ville elle-même
-      console.log('Suppression de la ville elle-même...');
       const { data: deleteResult, error: cityDeleteError } = await supabase
         .from('cities')
         .delete()
@@ -593,18 +570,12 @@ const CityManagement: React.FC = () => {
         .select('id');
 
       if (cityDeleteError) {
-        console.error('Erreur suppression de la ville:', cityDeleteError);
         throw cityDeleteError;
       }
 
       if (!deleteResult || deleteResult.length === 0) {
-        console.error('Aucune ville supprimée - aucune ligne affectée');
         throw new Error('Aucune ville supprimée - vérifiez les permissions ou les contraintes');
       }
-
-      console.log('Résultat de la suppression:', deleteResult);
-
-      console.log('Ville supprimée avec succès');
 
       // Vérifier que la ville a bien été supprimée
       const { data: checkCity, error: checkError } = await supabase
@@ -622,7 +593,6 @@ const CityManagement: React.FC = () => {
         fetchCities();
       } else if (checkCity) {
         // Ville toujours présente
-        console.error('La ville existe encore après suppression:', checkCity);
         toast({
           title: "Erreur de suppression",
           description: `La ville "${city.name}" n'a pas pu être supprimée. Vérifiez les logs pour plus de détails.`,
@@ -630,7 +600,6 @@ const CityManagement: React.FC = () => {
         });
       } else {
         // Erreur de vérification
-        console.error('Erreur lors de la vérification de suppression:', checkError);
         toast({
           title: "Erreur de vérification",
           description: `Impossible de vérifier si la ville "${city.name}" a été supprimée.`,
@@ -638,7 +607,6 @@ const CityManagement: React.FC = () => {
         });
       }
     } catch (error: any) {
-      console.error('Error deleting city:', error);
       
       let errorMessage = "Impossible de supprimer la ville.";
       

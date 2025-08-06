@@ -114,7 +114,6 @@ export function useSimpleAudioChat(context: ChatContext = {}) {
       setMessages(prev => [...prev, assistantMessage]);
 
     } catch (error) {
-      console.error('Error sending message:', error);
       
       const errorMessage: SimpleChatMessage = {
         id: (Date.now() + 1).toString(),
@@ -148,8 +147,6 @@ export function useSimpleAudioChat(context: ChatContext = {}) {
     setIsLoading(true);
     
     try {
-      console.log('🎤 Processing audio message...');
-      
       // Convert audio to base64
       const base64Audio = await new Promise<string>((resolve, reject) => {
         const reader = new FileReader();
@@ -163,7 +160,6 @@ export function useSimpleAudioChat(context: ChatContext = {}) {
       });
 
       // Transcribe audio to text
-      console.log('🔄 Transcribing audio...');
       const { data: transcriptionData, error: transcriptionError } = await supabase.functions.invoke('voice-to-text', {
         body: {
           audio: base64Audio,
@@ -178,14 +174,11 @@ export function useSimpleAudioChat(context: ChatContext = {}) {
         throw new Error('No text could be transcribed from audio');
       }
 
-      console.log('✅ Transcription successful:', transcribedText);
-
       // Process the transcribed text as a regular message
       // Don't add the user message manually - sendTextMessage will do it
       await sendTextMessage(transcribedText);
 
     } catch (error) {
-      console.error('Error processing audio:', error);
       
       const errorMessage: SimpleChatMessage = {
         id: Date.now().toString(),

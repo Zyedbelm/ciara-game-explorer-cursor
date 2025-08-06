@@ -59,7 +59,6 @@ const NotificationCenter: React.FC = () => {
       setNotifications(activeNotifications);
       setUnreadCount(activeNotifications.filter(n => !n.is_read).length);
     } catch (error) {
-      console.error('Error fetching notifications:', error);
     } finally {
       setLoading(false);
     }
@@ -86,7 +85,6 @@ const NotificationCenter: React.FC = () => {
       );
       setUnreadCount(prev => Math.max(0, prev - 1));
     } catch (error) {
-      console.error('Error marking notification as read:', error);
     }
   };
 
@@ -111,7 +109,6 @@ const NotificationCenter: React.FC = () => {
       );
       setUnreadCount(0);
     } catch (error) {
-      console.error('Error marking all notifications as read:', error);
     }
   };
 

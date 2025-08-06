@@ -53,7 +53,6 @@ export const SocialProofSection: React.FC = () => {
 
   // Handle errors
   if (testimonialsError) {
-    console.error('Social proof data loading error:', testimonialsError);
     return null; // Gracefully fail without breaking the page
   }
 

@@ -67,7 +67,7 @@ const EmailDiagnosticDashboard = () => {
 
         for (const func of functions) {
           try {
-            const response = await fetch(`https://pohqkspsdvvbqrgzfayl.supabase.co/functions/v1/${func}`, {
+            const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/${func}`, {
               method: 'OPTIONS'
             });
             
@@ -185,19 +185,14 @@ const EmailDiagnosticDashboard = () => {
     setEmailTests(prev => [newTest, ...prev]);
 
     try {
-      console.log('🔍 Début test reset password pour:', testEmail);
-      
       const { error } = await supabase.auth.resetPasswordForEmail(testEmail, {
         redirectTo: `${window.location.origin}/reset-password`
       });
 
       if (error) {
-        console.error('❌ Erreur reset password:', error);
         throw error;
       }
 
-      console.log('✅ Reset password envoyé avec succès');
-      
       setEmailTests(prev => prev.map(test => 
         test.id === testId 
           ? { ...test, status: 'success', response: { message: 'Email envoyé' } }
@@ -211,7 +206,6 @@ const EmailDiagnosticDashboard = () => {
       });
 
     } catch (error: any) {
-      console.error('❌ Erreur complète:', error);
       
       setEmailTests(prev => prev.map(test => 
         test.id === testId 
@@ -253,8 +247,6 @@ const EmailDiagnosticDashboard = () => {
     setEmailTests(prev => [newTest, ...prev]);
 
     try {
-      console.log('🔍 Début test confirmation email pour:', testEmail);
-      
       const { error } = await supabase.auth.signUp({
         email: testEmail,
         password: 'TestPassword123!',
@@ -264,12 +256,9 @@ const EmailDiagnosticDashboard = () => {
       });
 
       if (error && error.message !== 'User already registered') {
-        console.error('❌ Erreur signup:', error);
         throw error;
       }
 
-      console.log('✅ Email confirmation envoyé');
-      
       setEmailTests(prev => prev.map(test => 
         test.id === testId 
           ? { ...test, status: 'success', response: { message: 'Email confirmation envoyé' } }
@@ -283,7 +272,6 @@ const EmailDiagnosticDashboard = () => {
       });
 
     } catch (error: any) {
-      console.error('❌ Erreur complète:', error);
       
       setEmailTests(prev => prev.map(test => 
         test.id === testId 

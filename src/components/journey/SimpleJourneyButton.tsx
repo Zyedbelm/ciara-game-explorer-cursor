@@ -42,8 +42,6 @@ const SimpleJourneyButton: React.FC<SimpleJourneyButtonProps> = ({
     e.preventDefault();
     e.stopPropagation();
     
-    console.log('🎯 SimpleJourneyButton - Button clicked for journey:', journey.name);
-    
     if (!user) {
       toast({
         title: 'Erreur',
@@ -60,8 +58,6 @@ const SimpleJourneyButton: React.FC<SimpleJourneyButtonProps> = ({
       let citySlug = journey.citySlug;
       
       if (!citySlug) {
-        console.log('🔍 Fetching city slug for journey:', journey.id);
-        
         const { data: journeyData, error: journeyError } = await supabase
           .from('journeys')
           .select(`
@@ -72,7 +68,6 @@ const SimpleJourneyButton: React.FC<SimpleJourneyButtonProps> = ({
           .single();
 
         if (journeyError || !journeyData) {
-          console.error('❌ Failed to fetch journey city:', journeyError);
           toast({
             title: 'Erreur',
             description: 'Ville invalide',
@@ -141,16 +136,12 @@ const SimpleJourneyButton: React.FC<SimpleJourneyButtonProps> = ({
         });
       } else if (variant === 'replay' && userProgress?.id) {
         // Reset completed journey for replay - use complete reset
-        console.log('🔄 Resetting journey for replay:', journey.id);
-        
         const resetResult = await journeyDeletionService.resetJourneyForReplay(user.id, journey.id);
         
         if (!resetResult.success) {
           throw new Error(resetResult.error || 'Failed to reset journey');
         }
 
-        console.log('✅ Journey reset successful:', resetResult);
-        
         toast({
           title: 'Succès',
           description: `${t('replay_journey')} "${journey.name}" - Clean slate!`,
@@ -164,11 +155,9 @@ const SimpleJourneyButton: React.FC<SimpleJourneyButtonProps> = ({
 
       // Navigate to journey using the citySlug
       const journeyUrl = `/destinations/${citySlug}/journey/${journey.id}`;
-      console.log('🔗 Navigating to journey:', journeyUrl);
       navigate(journeyUrl);
 
     } catch (error) {
-      console.error('❌ SimpleJourneyButton - Error:', error);
       toast({
         title: 'Erreur',
         description: 'Échec du démarrage du parcours',

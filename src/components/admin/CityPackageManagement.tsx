@@ -91,7 +91,6 @@ export default function CityPackageManagement() {
       const { data, error } = await query;
       
       if (error) {
-        console.error('Error fetching packages:', error);
         toast({
           title: 'Erreur',
           description: 'Impossible de charger les packages',
@@ -102,7 +101,6 @@ export default function CityPackageManagement() {
 
       setPackages(data || []);
     } catch (error) {
-      console.error('Error:', error);
       toast({
         title: 'Erreur',
         description: 'Une erreur est survenue',
@@ -128,13 +126,11 @@ export default function CityPackageManagement() {
       const { data, error } = await query;
 
       if (error) {
-        console.error('Error fetching cities:', error);
         return;
       }
 
       setCities(data || []);
     } catch (error) {
-      console.error('Error:', error);
     }
   };
 
@@ -173,7 +169,6 @@ export default function CityPackageManagement() {
       }
 
       if (result.error) {
-        console.error('Error saving package:', result.error);
         toast({
           title: 'Erreur',
           description: result.error.message,
@@ -191,7 +186,6 @@ export default function CityPackageManagement() {
       resetForm();
       fetchPackages();
     } catch (error) {
-      console.error('Error:', error);
       toast({
         title: 'Erreur',
         description: 'Une erreur est survenue',

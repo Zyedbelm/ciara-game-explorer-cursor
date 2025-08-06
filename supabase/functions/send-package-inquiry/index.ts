@@ -112,7 +112,6 @@ const handler = async (req: Request): Promise<Response> => {
       userMessage = ""
     }: PackageInquiryRequest = await req.json();
 
-    console.log('📧 Sending package inquiry for:', packageName);
 
     // Render React Email template
     const htmlContent = await renderAsync(
@@ -134,7 +133,6 @@ const handler = async (req: Request): Promise<Response> => {
       html: htmlContent,
     });
 
-    console.log("✅ Package inquiry email sent successfully:", emailResponse);
 
     return new Response(JSON.stringify({ 
       success: true, 
@@ -147,7 +145,6 @@ const handler = async (req: Request): Promise<Response> => {
       },
     });
   } catch (error: any) {
-    console.error("❌ Error sending package inquiry:", error);
     return new Response(
       JSON.stringify({ 
         success: false, 

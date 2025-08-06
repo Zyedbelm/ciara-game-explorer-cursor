@@ -85,7 +85,6 @@ const JourneyMiniMap: React.FC<JourneyMiniMapProps> = ({ steps, className = "" }
         }
 
       } catch (error) {
-        console.error('Erreur lors du chargement de la carte:', error);
       }
     };
 

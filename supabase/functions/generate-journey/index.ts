@@ -37,11 +37,9 @@ interface GeneratedJourney {
 }
 
 serve(async (req) => {
-  console.log('🚀 Generate-journey function called');
   
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    console.log('✅ CORS preflight handled');
     return new Response(null, { headers: corsHeaders });
   }
 
@@ -57,7 +55,6 @@ serve(async (req) => {
     // Get auth header
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
-      console.error('❌ No authorization header provided');
       return new Response(JSON.stringify({ 
         error: 'Authentication required. Please log in to generate journeys.' 
       }), {
@@ -71,7 +68,6 @@ serve(async (req) => {
     const { data: { user }, error: authError } = await supabaseAuth.auth.getUser(token);
     
     if (authError || !user) {
-      console.error('❌ Authentication failed:', authError?.message || 'Invalid token');
       return new Response(JSON.stringify({ 
         error: 'Invalid authentication. Please log in again.' 
       }), {
@@ -80,26 +76,21 @@ serve(async (req) => {
       });
     }
 
-    console.log('✅ User authenticated:', user.email);
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
     
     const requestBody = await req.json();
-    console.log('📝 Request body received:', JSON.stringify(requestBody, null, 2));
     
     const { preferences, cityId }: { preferences: JourneyPreferences; cityId: string } = requestBody;
     
     if (!preferences || !cityId) {
-      console.error('❌ Missing required parameters:', { preferences: !!preferences, cityId: !!cityId });
       throw new Error('Missing preferences or cityId');
     }
 
     if (!openAIApiKey) {
-      console.error('❌ OpenAI API key not configured');
       throw new Error('OpenAI API key not configured');
     }
 
-    console.log('🏙️ Fetching city information for ID:', cityId);
     
     // Get city information
     const { data: city, error: cityError } = await supabase
@@ -109,19 +100,15 @@ serve(async (req) => {
       .single();
       
     if (cityError) {
-      console.error('❌ City fetch error:', cityError);
       throw new Error(`Failed to fetch city: ${cityError.message}`);
     }
     
     if (!city) {
-      console.error('❌ City not found for ID:', cityId);
       throw new Error('City not found');
     }
 
-    console.log('✅ City found:', city.name);
 
     // Get available steps for this city
-    console.log('🔍 Fetching steps for city:', cityId);
     const { data: steps, error: stepsError } = await supabase
       .from('steps')
       .select('*')
@@ -129,38 +116,30 @@ serve(async (req) => {
       .eq('is_active', true);
       
     if (stepsError) {
-      console.error('❌ Steps fetch error:', stepsError);
       throw new Error(`Failed to fetch steps: ${stepsError.message}`);
     }
 
-    console.log(`✅ Found ${steps?.length || 0} active steps`);
 
     // Get journey categories for this city
-    console.log('🔍 Fetching categories for city:', cityId);
     const { data: categories, error: categoriesError } = await supabase
       .from('journey_categories')
       .select('*')
       .eq('city_id', cityId);
       
     if (categoriesError) {
-      console.error('❌ Categories fetch error:', categoriesError);
       throw new Error(`Failed to fetch categories: ${categoriesError.message}`);
     }
 
-    console.log(`✅ Found ${categories?.length || 0} categories`);
 
     if (!steps || steps.length === 0) {
-      console.error('❌ No steps available for city:', cityId);
       throw new Error('No steps available for this city');
     }
 
     if (!categories || categories.length === 0) {
-      console.error('❌ No categories available for city:', cityId);
       throw new Error('No categories available for this city');
     }
 
     // Generate journey using OpenAI
-    console.log('🤖 Calling OpenAI API...');
     const prompt = `
 Tu es un expert en tourisme pour la ville de ${city.name}. 
 Génère un parcours touristique personnalisé basé sur ces préférences :
@@ -223,43 +202,34 @@ RÈGLES IMPORTANTES :
     });
 
     if (!response.ok) {
-      console.error('❌ OpenAI API request failed:', response.status, response.statusText);
       const errorText = await response.text();
-      console.error('❌ OpenAI error response:', errorText);
       throw new Error(`OpenAI API request failed: ${response.status} ${response.statusText}`);
     }
 
     const data = await response.json();
-    console.log('📨 OpenAI response received');
     
     if (!data.choices || data.choices.length === 0) {
-      console.error('❌ No choices in OpenAI response:', data);
       throw new Error('No response from OpenAI');
     }
     
     const journeyContent = data.choices[0].message.content;
-    console.log('🤖 AI response content:', journeyContent);
     
     let journeyData: GeneratedJourney;
     try {
       // Clean the response to ensure it's valid JSON
       const cleanContent = journeyContent.trim().replace(/```json\n?|\n?```/g, '');
       journeyData = JSON.parse(cleanContent);
-      console.log('✅ Successfully parsed AI response');
     } catch (parseError) {
-      console.error('❌ Failed to parse AI response:', journeyContent);
       console.error('❌ Parse error:', parseError);
       throw new Error(`Invalid AI response format: ${parseError.message}`);
     }
 
     // Validate the generated journey structure
     if (!journeyData.name || !journeyData.steps || !Array.isArray(journeyData.steps)) {
-      console.error('❌ Invalid journey structure:', journeyData);
       throw new Error('Invalid journey structure from AI');
     }
 
     if (journeyData.steps.length === 0) {
-      console.error('❌ No steps in generated journey');
       throw new Error('Generated journey has no steps');
     }
 
@@ -268,7 +238,6 @@ RÈGLES IMPORTANTES :
     const invalidSteps = journeyData.steps.filter(step => !validStepIds.has(step.stepId));
     
     if (invalidSteps.length > 0) {
-      console.error('❌ Invalid step IDs found:', invalidSteps.map(s => s.stepId));
       throw new Error(`Invalid step IDs: ${invalidSteps.map(s => s.stepId).join(', ')}`);
     }
 
@@ -280,23 +249,14 @@ RÈGLES IMPORTANTES :
     );
     
     if (!matchingCategory) {
-      console.error('❌ Invalid category specified:', journeyData.category);
       console.error('❌ Available categories:', categories.map(c => c.name));
       // Use the first available category as fallback
       const fallbackCategory = categories[0];
-      console.log('🔄 Using fallback category:', fallbackCategory.name);
       journeyData.category = fallbackCategory.name;
     }
 
     const finalCategory = matchingCategory || categories[0];
     
-    console.log('✅ Journey generated successfully for user:', user.email, {
-      name: journeyData.name,
-      steps: journeyData.steps.length,
-      category: finalCategory.name,
-      duration: journeyData.estimatedDuration,
-      points: journeyData.totalPoints
-    });
 
     const response_data = {
       journey: {
@@ -313,7 +273,6 @@ RÈGLES IMPORTANTES :
     });
 
   } catch (error) {
-    console.error('💥 Error in generate-journey function:', error);
     const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
     
     return new Response(JSON.stringify({ 

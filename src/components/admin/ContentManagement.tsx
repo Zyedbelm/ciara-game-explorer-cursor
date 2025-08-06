@@ -112,7 +112,6 @@ const ContentManagement = ({ cityId }: ContentManagementProps) => {
         fetchCities()
       ]);
     } catch (error) {
-      console.error('Error fetching data:', error);
     } finally {
       setLoading(false);
     }
@@ -154,7 +153,6 @@ const ContentManagement = ({ cityId }: ContentManagementProps) => {
       if (error) throw error;
       setJourneys(data || []);
     } catch (error) {
-      console.error('Error fetching journeys:', error);
       toast({
         title: "Erreur",
         description: "Impossible de charger les parcours",
@@ -174,7 +172,6 @@ const ContentManagement = ({ cityId }: ContentManagementProps) => {
       if (error) throw error;
       setCountries(data || []);
     } catch (error) {
-      console.error('Error fetching countries:', error);
     }
   };
 
@@ -188,7 +185,6 @@ const ContentManagement = ({ cityId }: ContentManagementProps) => {
       if (error) throw error;
       setCities(data || []);
     } catch (error) {
-      console.error('Error fetching cities:', error);
     }
   };
 
@@ -221,7 +217,6 @@ const ContentManagement = ({ cityId }: ContentManagementProps) => {
 
       fetchJourneys();
     } catch (error) {
-      console.error('Error deleting journey:', error);
       toast({
         title: "Erreur",
         description: "Impossible de supprimer le parcours",
@@ -246,7 +241,6 @@ const ContentManagement = ({ cityId }: ContentManagementProps) => {
 
       fetchJourneys();
     } catch (error) {
-      console.error('Error toggling journey status:', error);
       toast({
         title: "Erreur",
         description: "Impossible de modifier le statut du parcours",

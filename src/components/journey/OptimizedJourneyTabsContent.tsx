@@ -48,7 +48,6 @@ EmptyTabContent.displayName = 'EmptyTabContent';
 
 // Fonction helper pour mapper correctement les variants
 const getJourneyVariant = (status: string): 'saved' | 'in-progress' | 'completed' => {
-  console.log('🔄 Mapping journey status:', status);
   switch (status) {
     case 'saved':
       return 'saved';
@@ -57,7 +56,6 @@ const getJourneyVariant = (status: string): 'saved' | 'in-progress' | 'completed
     case 'completed':
       return 'completed';
     default:
-      console.warn('⚠️ Unknown journey status:', status);
       return 'saved';
   }
 };
@@ -106,8 +104,6 @@ const JourneyGridWithControls = memo<{
       <div className={`grid ${columns} gap-6`}>
         {journeys.map((journey) => {
           const variant = getJourneyVariant(journey.status);
-          console.log('🎴 Rendering JourneyCard:', journey.title, 'status:', journey.status, 'variant:', variant);
-          
           return (
             <JourneyCard
               key={journey.id}
@@ -132,7 +128,6 @@ const OptimizedJourneyTabsContent: React.FC<OptimizedJourneyTabsContentProps> = 
   const { expandAllCards, collapseAllCards } = useJourneyCards();
 
   const handleStatusChange = useCallback(() => {
-    console.log('🔄 [OptimizedTabsContent] Status change triggered');
     onStatusChange();
   }, [onStatusChange]);
 

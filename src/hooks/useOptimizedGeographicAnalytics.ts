@@ -93,13 +93,11 @@ export const useOptimizedGeographicAnalytics = (cityId?: string, timeRange: stri
   const fetchGeographicAnalytics = useCallback(async () => {
     // Strict guards to prevent unnecessary API calls
     if (!stableProfileId || !stableRole || !isMountedRef.current) {
-      console.log('🚫 Geographic analytics: Missing profile data');
       return;
     }
 
     // Check cache first
     if (isCacheValid()) {
-      console.log('✅ Using cached geographic analytics');
       if (isMountedRef.current) {
         setAnalytics(globalCache!.data);
         setLoading(false);
@@ -120,8 +118,6 @@ export const useOptimizedGeographicAnalytics = (cityId?: string, timeRange: stri
       
       setLoading(true);
       setError(null);
-      console.log(`🗺️ Fetching geographic analytics - City: ${stableCityId}, Range: ${stableTimeRange}`);
-
       const isSuperAdmin = stableRole === 'super_admin';
       const targetCityId = isSuperAdmin ? stableCityId : profile?.city_id;
 
@@ -248,15 +244,11 @@ export const useOptimizedGeographicAnalytics = (cityId?: string, timeRange: stri
 
       if (!isMountedRef.current) return;
       setAnalytics(result);
-      console.log('✅ Geographic analytics loaded successfully');
-
-    } catch (err) {
+      } catch (err) {
       if (err.name === 'AbortError') {
-        console.log('🔄 Geographic analytics request aborted');
         return;
       }
       
-      console.error('❌ Error fetching geographic analytics:', err);
       if (!isMountedRef.current) return;
       setError(err instanceof Error ? err.message : 'Error loading geographic analytics');
     } finally {
@@ -267,7 +259,6 @@ export const useOptimizedGeographicAnalytics = (cityId?: string, timeRange: stri
   }, [stableProfileId, stableRole, stableCityId, stableTimeRange, profile?.city_id, isCacheValid]);
 
   const refetch = useCallback(() => {
-    console.log('🔄 Forcing refetch of geographic analytics');
     globalCache = null; // Clear cache
     fetchGeographicAnalytics();
   }, [fetchGeographicAnalytics]);

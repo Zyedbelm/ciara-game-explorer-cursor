@@ -357,7 +357,6 @@ const handler = async (req: Request): Promise<Response> => {
       html: emailHtml,
     });
 
-    console.log("Security alert email sent successfully:", emailResponse);
 
     return new Response(
       JSON.stringify({ 
@@ -374,7 +373,6 @@ const handler = async (req: Request): Promise<Response> => {
       }
     );
   } catch (error: any) {
-    console.error("Error in send-security-alert function:", error);
     return new Response(
       JSON.stringify({ 
         error: "Failed to send security alert email",

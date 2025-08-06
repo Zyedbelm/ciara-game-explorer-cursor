@@ -143,7 +143,6 @@ const ContextualAIChat: React.FC<ContextualAIChatProps> = ({
       if (error) throw error;
       return data || [];
     } catch (error) {
-      console.error('Error fetching step documents:', error);
       return [];
     }
   };
@@ -251,7 +250,6 @@ const ContextualAIChat: React.FC<ContextualAIChatProps> = ({
       }
 
     } catch (error) {
-      console.error('Error sending message:', error);
       toast({
         title: "Erreur",
         description: "Impossible d'envoyer le message. Vérifiez votre connexion.",

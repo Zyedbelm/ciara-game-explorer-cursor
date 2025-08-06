@@ -62,7 +62,6 @@ const ContactPage = () => {
         priority: 'normal'
       });
     } catch (error) {
-      console.error('Error sending contact form:', error);
       toast({
         title: language === 'en' ? "Error sending message" : "Erreur d'envoi",
         description: language === 'en' 

@@ -40,24 +40,13 @@ const GoogleMap: React.FC<MapProps> = ({
   const [apiKey, setApiKey] = useState<string | null>(null);
   const { toast } = useToast();
 
-  console.log('🗺️ GoogleMap render state:', { 
-    apiKey: !!apiKey, 
-    mapRef: !!mapRef.current,
-    isLoading,
-    error,
-    center
-  });
-
   // Fetch Google Maps API key with fallback support
   useEffect(() => {
     const fetchApiKey = async () => {
       try {
-        console.log('🗺️ Fetching Google Maps API key...');
-        
         // Try to get API key from environment variable first (for development)
         const envApiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
         if (envApiKey) {
-          console.log('✅ Using Google Maps API key from environment variable');
           setApiKey(envApiKey);
           return;
         }
@@ -65,16 +54,13 @@ const GoogleMap: React.FC<MapProps> = ({
         // Fallback to Supabase function
         const { data, error } = await supabase.functions.invoke('get-google-maps-key');
         if (error) {
-          console.error('❌ Error fetching API key from Supabase:', error);
           throw error;
         }
         if (!data?.apiKey) {
           throw new Error('API key not found in response');
         }
-        console.log('✅ Google Maps API key fetched successfully from Supabase');
         setApiKey(data.apiKey);
       } catch (err) {
-        console.error('❌ Error fetching Google Maps API key:', err);
         setError('Impossible de charger la carte - clé API non disponible');
         setIsLoading(false);
         toast({
@@ -93,19 +79,11 @@ const GoogleMap: React.FC<MapProps> = ({
     let mounted = true;
     
     const initializeMap = async () => {
-      console.log('🗺️ Initializing GoogleMap:', { 
-        apiKey: !!apiKey, 
-        mapRef: !!mapRef.current,
-        mounted
-      });
-
       if (!apiKey) {
-        console.log('🗺️ Waiting for API key...');
         return;
       }
 
       if (!mapRef.current) {
-        console.log('🗺️ Waiting for DOM element...');
         setTimeout(() => {
           if (mounted) initializeMap();
         }, 100);
@@ -113,7 +91,6 @@ const GoogleMap: React.FC<MapProps> = ({
       }
 
       try {
-        console.log('🗺️ Starting GoogleMap initialization...');
         setIsLoading(true);
         setError(null);
         
@@ -132,10 +109,7 @@ const GoogleMap: React.FC<MapProps> = ({
         });
 
         const google = await loader.load();
-        console.log('✅ Google Maps API loaded successfully');
-        
         if (!mounted || !mapRef.current) {
-          console.log('🗺️ Component unmounted during initialization');
           return;
         }
 
@@ -156,8 +130,6 @@ const GoogleMap: React.FC<MapProps> = ({
         });
 
         mapInstanceRef.current = map;
-        console.log('✅ GoogleMap instance created successfully');
-
         // Add markers
         updateMarkers(map, google);
 
@@ -185,7 +157,6 @@ const GoogleMap: React.FC<MapProps> = ({
         }
         
       } catch (err) {
-        console.error('❌ Error initializing GoogleMap:', err);
         if (mounted) {
           setError(err instanceof Error ? err.message : 'Failed to load map');
           setIsLoading(false);

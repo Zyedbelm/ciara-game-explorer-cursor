@@ -64,7 +64,6 @@ export const useOptimizedUserManagement = (cityId?: string) => {
       
       // Check authentication first
       if (!profile) {
-        console.log('⚠️ No profile available, skipping user fetch');
         setUsers([]);
         return;
       }
@@ -89,12 +88,14 @@ export const useOptimizedUserManagement = (cityId?: string) => {
         query = query.eq('city_id', cityId);
       } else if (profile?.role === 'tenant_admin' && profile?.city_id) {
         query = query.or(`city_id.eq.${profile.city_id},city_id.is.null`);
+      } else if (profile?.role === 'tenant_admin' && !profile?.city_id) {
+        // If tenant admin has no city_id, only show users with no city_id
+        query = query.is('city_id', null);
       }
 
       const { data, error } = await query.order('created_at', { ascending: false });
 
       if (error) {
-        console.error('🔥 Error fetching users:', error);
         throw new Error(`Database error: ${error.message}`);
       }
 
@@ -114,10 +115,8 @@ export const useOptimizedUserManagement = (cityId?: string) => {
         avatar_url: user.avatar_url,
       }));
 
-      console.log(`✅ Fetched ${transformedUsers.length} users successfully`);
       setUsers(transformedUsers);
     } catch (error: any) {
-      console.error('🔥 useOptimizedUserManagement.fetchUsers error:', error);
       toast({
         title: "Erreur de chargement",
         description: error.message || "Impossible de charger les utilisateurs",
@@ -152,13 +151,10 @@ export const useOptimizedUserManagement = (cityId?: string) => {
         .order('name');
 
       if (error) {
-        console.error('🔥 Error fetching cities:', error);
         return;
       }
-      console.log(`✅ Fetched ${data?.length || 0} cities`);
       setCities(data || []);
     } catch (error) {
-      console.error('🔥 fetchCities error:', error);
       setCities([]);
     }
   }, []);
@@ -172,13 +168,10 @@ export const useOptimizedUserManagement = (cityId?: string) => {
         .order('name_fr');
 
       if (error) {
-        console.error('🔥 Error fetching countries:', error);
         return;
       }
-      console.log(`✅ Fetched ${data?.length || 0} countries`);
       setCountries(data || []);
     } catch (error) {
-      console.error('🔥 fetchCountries error:', error);
       setCountries([]);
     }
   }, []);

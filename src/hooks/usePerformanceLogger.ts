@@ -35,8 +35,7 @@ export const usePerformanceLogger = ({
     const key = `${component}-${action}`;
     timersRef.current.set(key, performance.now());
     
-    console.time(`⏱️ ${key}`);
-  }, [enabled, component]);
+    }, [enabled, component]);
 
   // End timing and log metrics
   const endTimer = useCallback((action: string, metadata?: Record<string, any>) => {
@@ -46,14 +45,11 @@ export const usePerformanceLogger = ({
     const startTime = timersRef.current.get(key);
     
     if (startTime === undefined) {
-      console.warn(`⚠️ No start time found for ${key}`);
       return;
     }
     
     const duration = performance.now() - startTime;
     timersRef.current.delete(key);
-    
-    console.timeEnd(`⏱️ ${key}`);
     
     // Only log if duration exceeds threshold
     if (duration >= threshold) {
@@ -68,11 +64,7 @@ export const usePerformanceLogger = ({
       metricsRef.current.push(metrics);
       
       if (logToConsole) {
-        console.log(
-          `📊 ${component}.${action}: ${metrics.duration}ms`,
-          metadata ? metadata : ''
-        );
-      }
+        }
 
       // Keep only last 100 metrics
       if (metricsRef.current.length > 100) {
@@ -150,10 +142,7 @@ export const usePerformanceLogger = ({
       if (enabled && logToConsole && metricsRef.current.length > 0) {
         const summary = getSummary();
         if (summary) {
-          console.group(`📊 Performance Summary: ${component}`);
-          console.table(summary.actions);
-          console.groupEnd();
-        }
+          }
       }
     };
   }, [enabled, logToConsole, component, getSummary]);

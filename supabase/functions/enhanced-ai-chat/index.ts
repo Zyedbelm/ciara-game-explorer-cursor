@@ -66,7 +66,6 @@ serve(async (req) => {
 
     const { message, sessionKey, context, language = 'fr', messageType = 'text', audioUrl }: ChatRequest = await req.json();
 
-    console.log('Enhanced AI Chat request:', { sessionKey, messageType, language });
 
     // Get or create chat session
     const { data: sessionData, error: sessionError } = await supabase.rpc('get_or_create_chat_session', {
@@ -75,12 +74,10 @@ serve(async (req) => {
     });
 
     if (sessionError) {
-      console.error('Session error:', sessionError);
       throw new Error('Failed to get chat session');
     }
 
     const sessionId = sessionData;
-    console.log('Using session ID:', sessionId);
 
     // Store user message
     const { error: messageError } = await supabase
@@ -95,7 +92,6 @@ serve(async (req) => {
       });
 
     if (messageError) {
-      console.error('Message insert error:', messageError);
       throw new Error('Failed to store user message');
     }
 
@@ -108,7 +104,6 @@ serve(async (req) => {
       .limit(20);
 
     if (historyError) {
-      console.error('History error:', historyError);
     }
 
     // Build system prompt
@@ -136,12 +131,6 @@ serve(async (req) => {
       content: message
     });
 
-    console.log('🤖 Sending to OpenAI:', {
-      messagesCount: messages.length,
-      systemPromptLength: contextualPrompt.length,
-      hasDocuments: !!(context.stepDocuments && context.stepDocuments.length > 0),
-      language
-    });
 
     // Call OpenAI
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -162,17 +151,12 @@ serve(async (req) => {
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('OpenAI API error:', errorText);
       throw new Error(`OpenAI API error: ${response.status}`);
     }
 
     const data = await response.json();
     const assistantMessage = data.choices[0].message.content;
 
-    console.log('✅ AI response generated:', { 
-      responseLength: assistantMessage.length, 
-      language 
-    });
 
     // Store assistant message
     const { error: assistantMessageError } = await supabase
@@ -186,7 +170,6 @@ serve(async (req) => {
       });
 
     if (assistantMessageError) {
-      console.error('Assistant message error:', assistantMessageError);
     }
 
     // Generate suggestions based on context
@@ -201,7 +184,6 @@ serve(async (req) => {
     });
 
   } catch (error) {
-    console.error('Error in enhanced-ai-chat function:', error);
     return new Response(JSON.stringify({ error: error.message }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -214,7 +196,6 @@ async function getSystemPrompt(supabase: any, language: string): Promise<string>
     const { data } = await supabase.rpc('get_ai_system_prompt', { lang: language });
     return data || getDefaultSystemPrompt(language);
   } catch (error) {
-    console.error('Error getting system prompt:', error);
     return getDefaultSystemPrompt(language);
   }
 }
@@ -280,9 +261,7 @@ function buildContextualPrompt(basePrompt: string, context: any, language: strin
     
     prompt += docHeader + '\n' + docContent + docInstruction;
     
-    console.log('📋 Step documents added to context:', { count: context.stepDocuments.length });
   } else {
-    console.log('⚠️ No step documents available for this request');
   }
 
   return prompt;

@@ -155,7 +155,6 @@ const RewardCard: React.FC<RewardCardProps> = ({ reward, onRedeem }) => {
       }
 
     } catch (error) {
-      console.error('Error redeeming reward:', error);
       toast({
         title: "Erreur",
         description: t('rewards.exchange_error'),

@@ -27,13 +27,6 @@ interface ArticleData {
 
 Deno.serve(async (req) => {
   // Log incoming request details for debugging
-  console.log('Webhook request received:', {
-    method: req.method,
-    url: req.url,
-    headers: Object.fromEntries(req.headers.entries()),
-    contentType: req.headers.get('content-type'),
-    isCompressed: req.headers.get('content-encoding'),
-  });
 
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -43,7 +36,6 @@ Deno.serve(async (req) => {
   try {
     // Only allow POST requests
     if (req.method !== 'POST') {
-      console.error('Invalid method:', req.method);
       return new Response(JSON.stringify({ error: 'Method not allowed' }), {
         status: 405,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -53,7 +45,6 @@ Deno.serve(async (req) => {
     // Check content type
     const contentType = req.headers.get('content-type');
     if (!contentType || !contentType.includes('application/json')) {
-      console.error('Invalid content type:', contentType);
       return new Response(JSON.stringify({ 
         error: 'Content-Type must be application/json',
         received: contentType 
@@ -68,7 +59,6 @@ Deno.serve(async (req) => {
     const expectedToken = Deno.env.get('WEBHOOK_TOKEN');
     
     if (!expectedToken || webhookToken !== expectedToken) {
-      console.log('Unauthorized webhook request - token mismatch');
       return new Response(JSON.stringify({ error: 'Unauthorized' }), {
         status: 401,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -219,24 +209,19 @@ Deno.serve(async (req) => {
       bodyText = await req.text();
       const originalBodyLength = bodyText.length;
       
-      console.log('=== ENHANCED JSON PROCESSING START ===');
       console.log('Raw request body length:', originalBodyLength);
-      console.log('Raw request body (first 1000 chars):', bodyText.substring(0, 1000));
       
       // Show raw character codes around the problem area (position 517)
       if (originalBodyLength > 515) {
         const problemArea = bodyText.substring(510, 525);
-        console.log('Character analysis around position 517:');
         Array.from(problemArea).forEach((char, index) => {
           const pos = 510 + index;
           const code = char.charCodeAt(0);
-          console.log(`  [${pos}]: "${char}" (dec:${code}, hex:0x${code.toString(16)}, cat:${getCharCategory(code)})`);
         });
       }
       
       // Check for common issues before cleaning
       if (bodyText.length === 0) {
-        console.error('Empty request body received');
         return new Response(JSON.stringify({ 
           error: 'Empty request body',
           bodyLength: 0
@@ -247,7 +232,6 @@ Deno.serve(async (req) => {
       }
 
       if (bodyText.trim().startsWith('<')) {
-        console.error('HTML content received instead of JSON:', bodyText.substring(0, 200));
         return new Response(JSON.stringify({ 
           error: 'HTML content received instead of JSON',
           receivedContent: bodyText.substring(0, 200)
@@ -263,32 +247,24 @@ Deno.serve(async (req) => {
       cleaningLog = log;
       
       // Enhanced logging
-      console.log('=== MULTI-PASS CLEANING RESULTS ===');
-      cleaningLog.forEach(logEntry => console.log(logEntry));
       
-      console.log('=== FINAL CLEANED RESULT ===');
       console.log(`Final length: ${bodyText.length}`);
-      console.log('Final content (first 500 chars):', bodyText.substring(0, 500));
       console.log('Final content (last 50 chars):', bodyText.slice(-50));
       
       // Length validation
       const expectedMinLength = 200; // Rough estimate for minimum valid JSON
       if (bodyText.length < expectedMinLength) {
-        console.warn(`Cleaned body seems too short (${bodyText.length} chars), might be over-cleaned`);
       }
       
       // JSON structure validation
       const openBraces = (bodyText.match(/\{/g) || []).length;
       const closeBraces = (bodyText.match(/\}/g) || []).length;
       if (openBraces !== closeBraces) {
-        console.error(`JSON structure issue: ${openBraces} opening braces vs ${closeBraces} closing braces`);
       }
       
-      console.log(`JSON structure check: ${openBraces} open braces, ${closeBraces} close braces`);
       console.log('=== ENHANCED JSON PROCESSING END ===');
       
     } catch (textError) {
-      console.error('Error reading request body as text:', textError);
       return new Response(JSON.stringify({ 
         error: 'Failed to read request body',
         details: textError.message
@@ -305,7 +281,6 @@ Deno.serve(async (req) => {
     try {
       // Attempt 1: Direct parsing
       requestData = JSON.parse(bodyText) as ArticleData;
-      console.log('✓ Successfully parsed JSON on first attempt');
     } catch (parseError) {
       parseAttempts.push(`Attempt 1 failed: ${parseError.message}`);
       
@@ -317,7 +292,6 @@ Deno.serve(async (req) => {
           .replace(/\r/g, '\n');
         
         requestData = JSON.parse(sanitizedBody) as ArticleData;
-        console.log('✓ Successfully parsed JSON on second attempt (after additional sanitization)');
         parseAttempts.push('Attempt 2 succeeded with extended sanitization');
       } catch (parseError2) {
         parseAttempts.push(`Attempt 2 failed: ${parseError2.message}`);
@@ -326,17 +300,13 @@ Deno.serve(async (req) => {
           // Attempt 3: Try parsing with escaped quotes fix
           const quotesFixedBody = bodyText.replace(/([^\\])"/g, '$1\\"');
           requestData = JSON.parse(quotesFixedBody) as ArticleData;
-          console.log('✓ Successfully parsed JSON on third attempt (after quotes fix)');
           parseAttempts.push('Attempt 3 succeeded with quotes fix');
         } catch (parseError3) {
           parseAttempts.push(`Attempt 3 failed: ${parseError3.message}`);
           
           // Final attempt: log detailed error information
-          console.error('All JSON parsing attempts failed:');
           parseAttempts.forEach((attempt, index) => {
-            console.error(`  ${index + 1}. ${attempt}`);
           });
-          console.error('Final body for parsing:', bodyText);
           console.error('Body character analysis:');
           
           // Analyze problematic characters
@@ -344,7 +314,6 @@ Deno.serve(async (req) => {
             const code = char.charCodeAt(0);
             return `${bodyText.length - 50 + index}: "${char}" (${code}, 0x${code.toString(16)})`;
           }).join('\n  ');
-          console.error(`Last 50 characters:\n  ${charAnalysis}`);
           
           return new Response(JSON.stringify({ 
             error: 'Invalid JSON in request body - all parsing attempts failed',
@@ -361,7 +330,6 @@ Deno.serve(async (req) => {
       }
     }
 
-    console.log('Received article data:', requestData);
 
     // Validate required fields
     if (!requestData.title || !requestData.content) {
@@ -483,7 +451,6 @@ Deno.serve(async (req) => {
       published_at: requestData.status === 'published' ? new Date().toISOString() : null
     };
 
-    console.log('Creating article with data:', articleData);
 
     // Insert article into database
     const { data: article, error } = await supabase
@@ -493,7 +460,6 @@ Deno.serve(async (req) => {
       .single();
 
     if (error) {
-      console.error('Database error:', error);
       return new Response(JSON.stringify({ 
         error: 'Failed to create article', 
         details: error.message 
@@ -503,7 +469,6 @@ Deno.serve(async (req) => {
       });
     }
 
-    console.log('Article created successfully:', article.id);
 
     // Return success response
     return new Response(JSON.stringify({
@@ -521,7 +486,6 @@ Deno.serve(async (req) => {
     });
 
   } catch (error) {
-    console.error('Webhook error:', error);
     return new Response(JSON.stringify({ 
       error: 'Internal server error',
       message: error.message 

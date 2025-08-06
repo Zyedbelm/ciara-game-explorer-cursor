@@ -48,21 +48,18 @@ export function useEnhancedStepValidation(
     options: ValidationOptions = {}
   ) => {
     if (!user || !journey || !sessionData) {
-      console.log('🚫 Validation cancelled - missing requirements');
       return { success: false, reason: 'missing_requirements' };
     }
 
     // Prevent duplicate validations within 3 seconds
     const now = Date.now();
     if (!options.forceValidation && (now - lastValidationTime.current < 3000 || validatingStepId.current === step.id)) {
-      console.log('🚫 Validation cancelled - too recent or already validating');
       return { success: false, reason: 'duplicate_validation' };
     }
 
     // Check if step is already completed
     const stepIndex = journey.steps.findIndex(s => s.id === step.id);
     if (sessionData.completed_steps.includes(stepIndex)) {
-      console.log('ℹ️ Step already completed in session');
       toast({
         title: 'Étape déjà validée',
         description: 'Cette étape est déjà complétée dans votre progression',
@@ -70,15 +67,6 @@ export function useEnhancedStepValidation(
       return { success: true, reason: 'already_completed' };
     }
 
-    console.log('🚀 Step validation details:', {
-      stepName: step.name,
-      stepIndex,
-      journeyStepsCount: journey.steps.length,
-      completedSteps: sessionData.completed_steps,
-      currentStepIndex: sessionData.current_step_index
-    });
-
-    console.log('🎯 Starting enhanced step validation for:', step.name);
     setValidatingStep(true);
     validatingStepId.current = step.id;
     lastValidationTime.current = now;
@@ -89,7 +77,7 @@ export function useEnhancedStepValidation(
 
       // Handle different validation methods
       if (options.bypassGPS || options.method === 'manual') {
-        console.log('🔓 Bypassing GPS validation (manual mode)');
+        ');
         isLocationValid = true;
       } else if (location) {
         distance = calculateDistance(
@@ -99,9 +87,7 @@ export function useEnhancedStepValidation(
           step.longitude
         );
         isLocationValid = distance <= step.validation_radius;
-        console.log('📏 Distance check:', { distance, required: step.validation_radius, valid: isLocationValid });
-      } else {
-        console.log('📍 No location provided for validation');
+        } else {
         toast({
           title: 'Position requise',
           description: 'Activez votre géolocalisation pour valider cette étape',
@@ -126,11 +112,9 @@ export function useEnhancedStepValidation(
           p_success: isLocationValid
         });
       } catch (logError) {
-        console.warn('Failed to log validation attempt:', logError);
       }
 
       if (!isLocationValid) {
-        console.log('📍 User too far from step');
         toast({
           title: 'Position incorrecte',
           description: `Vous devez être à moins de ${step.validation_radius}m du point d'intérêt (vous êtes à ${Math.round(distance)}m)`,
@@ -148,7 +132,6 @@ export function useEnhancedStepValidation(
         .maybeSingle();
 
       if (existingCompletion) {
-        console.log('ℹ️ Step already completed in database');
         // Update session to reflect database state
         markStepCompleted(stepIndex, step, options.method || 'geolocation');
         return { success: true, reason: 'already_completed_db' };
@@ -166,7 +149,6 @@ export function useEnhancedStepValidation(
         });
 
       if (completionError) {
-        console.error('❌ Error recording completion:', completionError);
         
         if (completionError.code === '23505') { // Unique violation
           toast({
@@ -183,19 +165,9 @@ export function useEnhancedStepValidation(
       // Update session with completion
       markStepCompleted(stepIndex, step, options.method || 'geolocation');
 
-      console.log('✅ Step validation successful');
-
       // Check if journey is complete
       const newCompletedSteps = [...sessionData.completed_steps, stepIndex];
-      console.log('🔍 Journey completion check:', {
-        newCompletedStepsCount: newCompletedSteps.length,
-        totalStepsCount: journey.steps.length,
-        isComplete: newCompletedSteps.length >= journey.steps.length
-      });
-      
       if (newCompletedSteps.length >= journey.steps.length) {
-        console.log('🎉 Journey completed! Triggering completion flow...');
-        
         // Update journey with completion
         const updatedJourney = {
           ...journey,
@@ -215,7 +187,6 @@ export function useEnhancedStepValidation(
       };
 
     } catch (error) {
-      console.error('❌ Error validating step:', error);
       
       // Enhanced error handling
       if (error && typeof error === 'object' && 'code' in error) {
@@ -279,7 +250,6 @@ export function useEnhancedStepValidation(
   const forceUnlockStep = useCallback(async (stepIndex: number) => {
     if (!sessionData || !journey) return;
     
-    console.log('🔓 Force unlocking step:', stepIndex);
     // This just updates the current step without completing the previous one
     const newCurrentIndex = Math.max(stepIndex, sessionData.current_step_index);
     // Update session through the session hook

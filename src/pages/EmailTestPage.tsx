@@ -36,7 +36,6 @@ const EmailTestPage = () => {
         variant: "default"
       });
     } catch (error: any) {
-      console.error('Error:', error);
       toast({
         title: "Erreur",
         description: error.message,
@@ -81,7 +80,6 @@ const EmailTestPage = () => {
         variant: "default"
       });
     } catch (error: any) {
-      console.error('Error:', error);
       toast({
         title: "Erreur",
         description: error.message,

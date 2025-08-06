@@ -56,7 +56,6 @@ export const OpenAIKeyValidator: React.FC = () => {
         });
       }
     } catch (error) {
-      console.error('OpenAI validation error:', error);
       setValidationResult({
         isValid: false,
         message: 'Erreur de connexion',

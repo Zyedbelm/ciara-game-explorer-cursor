@@ -17,12 +17,9 @@ export const useAudioCleanup = () => {
           .not('audio_url', 'is', null);
 
         if (error) {
-          console.error('Error cleaning up old audio messages:', error);
         } else {
-          console.log('Old audio messages cleanup completed');
-        }
+          }
       } catch (error) {
-        console.error('Audio cleanup error:', error);
       }
     };
 

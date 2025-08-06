@@ -89,7 +89,6 @@ export const useUserManagement = (cityId?: string) => {
       const { data, error } = await query.order('created_at', { ascending: false });
 
       if (error) {
-        console.error('Error fetching users:', error);
         throw new Error(`Database error: ${error.message}`);
       }
 
@@ -111,7 +110,6 @@ export const useUserManagement = (cityId?: string) => {
 
       setUsers(transformedUsers);
     } catch (error: any) {
-      console.error('useUserManagement.fetchUsers error:', error);
       toast({
         title: "Erreur de chargement",
         description: error.message || "Impossible de charger les utilisateurs",

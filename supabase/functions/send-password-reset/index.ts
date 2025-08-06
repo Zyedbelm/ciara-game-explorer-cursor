@@ -175,7 +175,6 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    console.log(`📧 Sending bilingual password reset email to: ${email}`);
 
     // Render the React Email template
     const emailHtml = await renderAsync(
@@ -194,7 +193,6 @@ const handler = async (req: Request): Promise<Response> => {
       html: emailHtml,
     });
 
-    console.log("✅ Bilingual password reset email sent successfully:", emailResponse);
 
     return new Response(JSON.stringify({ 
       success: true, 
@@ -207,7 +205,6 @@ const handler = async (req: Request): Promise<Response> => {
       },
     });
   } catch (error: any) {
-    console.error("❌ Error sending bilingual password reset email:", error);
     return new Response(
       JSON.stringify({ error: error.message }),
       {

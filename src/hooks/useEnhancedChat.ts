@@ -114,7 +114,6 @@ export function useEnhancedChat(context: ChatContext = {}) {
       if (error) throw error;
       return data || [];
     } catch (error) {
-      console.error('Error fetching step documents:', error);
       return [];
     }
   }, []);
@@ -130,7 +129,6 @@ export function useEnhancedChat(context: ChatContext = {}) {
       if (error) throw error;
       return data || [];
     } catch (error) {
-      console.error('Error fetching quiz questions:', error);
       return [];
     }
   }, []);
@@ -203,11 +201,6 @@ export function useEnhancedChat(context: ChatContext = {}) {
   const translateMessages = useCallback(async () => {
     if (messages.length === 0) return;
 
-    console.log('🔄 Starting translation process...', { 
-      messageCount: messages.length, 
-      targetLanguage: currentLanguage 
-    });
-
     setIsTranslating(true);
     const startTime = Date.now();
     
@@ -224,13 +217,10 @@ export function useEnhancedChat(context: ChatContext = {}) {
 
       for (let batchIndex = 0; batchIndex < batches.length; batchIndex++) {
         const batch = batches[batchIndex];
-        console.log(`🔄 Processing batch ${batchIndex + 1}/${batches.length}`);
-
         const translatedBatch = await Promise.all(
           batch.map(async (message, index) => {
             // Skip if already in current language
             if (message.originalLanguage === currentLanguage) {
-              console.log(`✅ Message ${index} already in target language`);
               return message;
             }
 
@@ -238,13 +228,11 @@ export function useEnhancedChat(context: ChatContext = {}) {
             const cacheKey = `${message.id}_${message.originalLanguage}_${currentLanguage}`;
             if (translationCache.current.has(cacheKey)) {
               const cached = translationCache.current.get(cacheKey);
-              console.log(`📦 Using cached translation for message ${index}`);
               return { ...message, content: cached!.content };
             }
 
             // Translate message
             try {
-              console.log(`🌍 Translating message ${index}...`);
               const translationStart = Date.now();
               
               const { data, error } = await supabase.functions.invoke('translate-text', {
@@ -256,8 +244,6 @@ export function useEnhancedChat(context: ChatContext = {}) {
               });
 
               const translationTime = Date.now() - translationStart;
-              console.log(`⏱️ Translation took ${translationTime}ms`);
-
               if (error) throw error;
 
               const translatedContent = data.translatedText || message.content;
@@ -267,7 +253,6 @@ export function useEnhancedChat(context: ChatContext = {}) {
               
               return { ...message, content: translatedContent };
             } catch (error) {
-              console.error('Translation error:', error);
               return message; // Return original on error
             }
           })
@@ -294,10 +279,7 @@ export function useEnhancedChat(context: ChatContext = {}) {
       setMessages(allTranslatedMessages);
       
       const totalTime = Date.now() - startTime;
-      console.log(`🎉 Translation complete! Total time: ${totalTime}ms`);
-      
-    } catch (error) {
-      console.error('Error translating messages:', error);
+      } catch (error) {
     } finally {
       setIsTranslating(false);
     }
@@ -363,7 +345,6 @@ export function useEnhancedChat(context: ChatContext = {}) {
       }
 
     } catch (error) {
-      console.error('Error sending message:', error);
       
       const errorMessage: EnhancedChatMessage = {
         id: (Date.now() + 1).toString(),

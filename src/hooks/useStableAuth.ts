@@ -43,23 +43,16 @@ const fetchProfileOnce = async (userId: string): Promise<Profile | null> => {
   }
 
   try {
-    console.log('🔍 [Stable] Fetching profile for user:', userId);
-    console.log('🔍 [Stable] About to query supabase...');
-    
     const { data, error } = await supabase
       .from('profiles')
       .select('*')
       .eq('user_id', userId)
       .maybeSingle();
     
-    console.log('🔍 [Stable] Query completed - data:', data, 'error:', error);
-
     if (error) {
-      console.error('⚠️ [Stable] Profile fetch error:', error.message);
       
       // Si c'est une erreur RLS, créer un profil temporaire
       if (error.message.includes('row-level security') || error.message.includes('42501')) {
-        console.log('🔧 [Stable] RLS error detected, creating temporary profile');
         const tempProfile = {
           user_id: userId,
           email: 'hedi.elmeddeb@gmail.com',
@@ -83,16 +76,12 @@ const fetchProfileOnce = async (userId: string): Promise<Profile | null> => {
     }
 
     if (data) {
-      console.log('✅ [Stable] Profile fetched successfully:', data);
       globalProfileCache[userId] = data;
     } else {
-      console.log('⚠️ [Stable] No profile found for user:', userId);
       globalProfileCache[userId] = null;
     }
-    console.log('🔍 [Stable] fetchProfileOnce returning:', data);
     return data;
   } catch (error) {
-    console.error('❌ [Stable] Profile fetch failed:', error);
     globalProfileCache[userId] = null;
     return null;
   }
@@ -108,18 +97,14 @@ const initializeAuth = (() => {
     initPromise = (async () => {
       if (globalAuthState.initialized) return;
       
-      console.log('🔧 [Stable] Initializing global auth state (once)');
+      // Initialize auth state
       
       const handleAuthChange = async (event: string, session: Session | null) => {
-        console.log('🔄 [Stable] Auth state changed:', event, session?.user?.id);
-        
         globalAuthState.session = session;
         globalAuthState.user = session?.user ?? null;
         
         if (session?.user) {
-          console.log('🔍 [Stable] Fetching profile for user:', session.user.id);
           const profileData = await fetchProfileOnce(session.user.id);
-          console.log('✅ [Stable] Profile fetched successfully:', profileData);
           globalAuthState.profile = profileData;
           
           // Setup real-time profile updates once
@@ -135,7 +120,6 @@ const initializeAuth = (() => {
                   filter: `user_id=eq.${session.user.id}`
                 },
                 (payload) => {
-                  console.log('🔄 [Stable] Profile updated in real-time:', payload);
                   if (payload.new) {
                     globalAuthState.profile = payload.new as Profile;
                     globalProfileCache[session.user.id] = payload.new as Profile;
@@ -168,8 +152,7 @@ const initializeAuth = (() => {
       await handleAuthChange('INITIAL_SESSION', session);
       
       globalAuthState.initialized = true;
-      console.log('✅ [Stable] Global auth state initialized');
-    })();
+      })();
     
     return initPromise;
   };
@@ -204,7 +187,6 @@ export function useStableAuth() {
       throw new Error('Non connecté');
     }
 
-    console.log('📝 [Stable] Updating profile for user:', globalAuthState.user.id);
     const { data, error } = await supabase
       .from('profiles')
       .update(updates)
@@ -213,14 +195,11 @@ export function useStableAuth() {
       .single();
 
     if (error) {
-      console.error('❌ [Stable] Profile update error:', error);
       throw error;
     }
 
     globalAuthState.profile = data;
     globalProfileCache[globalAuthState.user.id] = data;
-    console.log('✅ [Stable] Profile updated successfully');
-    
     // Notify all listeners
     globalAuthState.listeners.forEach(listener => listener());
     
@@ -232,17 +211,14 @@ export function useStableAuth() {
       throw new Error('Non connecté');
     }
 
-    console.log('📧 [Stable] Updating email for user:', globalAuthState.user.id);
     const { error } = await supabase.auth.updateUser({
       email: newEmail
     });
 
     if (error) {
-      console.error('❌ [Stable] Email update error:', error);
       throw error;
     }
 
-    console.log('✅ [Stable] Email update successful');
     return { error: null };
   };
 
@@ -251,24 +227,20 @@ export function useStableAuth() {
       throw new Error('Non connecté');
     }
 
-    console.log('🔐 [Stable] Updating password for user:', globalAuthState.user.id);
     const { error } = await supabase.auth.updateUser({
       password: newPassword
     });
 
     if (error) {
-      console.error('❌ [Stable] Password update error:', error);
       throw error;
     }
 
-    console.log('✅ [Stable] Password updated successfully');
     return { error: null };
   };
 
   const refreshProfile = async () => {
     if (!globalAuthState.user) return null;
     
-    console.log('🔄 [Stable] Refreshing profile for user:', globalAuthState.user.id);
     // Clear cache to force fresh fetch
     delete globalProfileCache[globalAuthState.user.id];
     const profileData = await fetchProfileOnce(globalAuthState.user.id);
@@ -283,11 +255,9 @@ export function useStableAuth() {
   };
 
   const signOut = async () => {
-    console.log('🚪 [Stable] Signing out user');
     const { error } = await supabase.auth.signOut();
     
     if (error) {
-      console.error('❌ [Stable] Sign out error:', error);
       throw error;
     }
     
@@ -300,7 +270,6 @@ export function useStableAuth() {
     // Notify all listeners
     globalAuthState.listeners.forEach(listener => listener());
     
-    console.log('✅ [Stable] User signed out successfully');
     return { error: null };
   };
 

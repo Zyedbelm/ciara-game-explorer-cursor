@@ -118,10 +118,7 @@ export const EnhancedGoogleMap: React.FC<EnhancedGoogleMapProps> = ({
       }
 
       setIsLoading(false);
-      console.log('✅ Enhanced Google Map initialized successfully');
-
-    } catch (error) {
-      console.error('❌ Error initializing map:', error);
+      } catch (error) {
       setError('Failed to load map');
       setIsLoading(false);
     }
