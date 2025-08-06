@@ -116,8 +116,11 @@ const PartnerDashboardNew: React.FC = () => {
 
         if (redemptionsError) throw redemptionsError;
 
+        console.log('Raw redemptions data:', redemptionsData);
+
         // Récupérer les détails des récompenses pour les rédactions
         const rewardIds = [...new Set(redemptionsData?.map(r => r.reward_id) || [])];
+        console.log('Reward IDs found:', rewardIds);
         const { data: rewardsData, error: rewardsError } = await supabase
           .from('rewards')
           .select('id, title, value_chf, partner_id')
@@ -170,6 +173,7 @@ const PartnerDashboardNew: React.FC = () => {
           partnerData,
           offersData: offersData?.length,
           redemptionsData: enrichedRedemptions?.length,
+          enrichedRedemptions: enrichedRedemptions,
           stats: {
             totalOffers,
             activeOffers,
@@ -568,7 +572,13 @@ const PartnerDashboardNew: React.FC = () => {
             <CardContent>
               <div className="flex justify-between items-center mb-4">
                 <h3 className="text-lg font-medium">Vos Offres</h3>
-                <Button>Nouvelle Offre</Button>
+                <Button onClick={() => toast({
+                  title: "Fonctionnalité à venir",
+                  description: "La création d'offres sera bientôt disponible",
+                  variant: "default",
+                })}>
+                  Nouvelle Offre
+                </Button>
               </div>
               
               <Table>
@@ -596,8 +606,34 @@ const PartnerDashboardNew: React.FC = () => {
                       </TableCell>
                       <TableCell>
                         <div className="flex space-x-2">
-                          <Button variant="outline" size="sm">Modifier</Button>
-                          <Button variant="outline" size="sm">Supprimer</Button>
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            className="p-2"
+                            onClick={() => toast({
+                              title: "Modification",
+                              description: `Modifier l'offre: ${offer.title}`,
+                              variant: "default",
+                            })}
+                          >
+                            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                            </svg>
+                          </Button>
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            className="p-2"
+                            onClick={() => toast({
+                              title: "Suppression",
+                              description: `Supprimer l'offre: ${offer.title}`,
+                              variant: "destructive",
+                            })}
+                          >
+                            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                          </Button>
                         </div>
                       </TableCell>
                     </TableRow>

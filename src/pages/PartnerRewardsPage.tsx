@@ -2,7 +2,7 @@ import React from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import PartnerRewardsManagement from '@/components/admin/PartnerRewardsManagement';
-import Header from '@/components/common/Header';
+import PartnerHeader from '@/components/common/PartnerHeader';
 import Footer from '@/components/common/Footer';
 
 const PartnerRewardsPage: React.FC = () => {
@@ -28,9 +28,9 @@ const PartnerRewardsPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <Header />
-      <main className="container mx-auto px-4 py-8">
+    <div className="min-h-screen bg-background flex flex-col">
+      <PartnerHeader />
+      <main className="flex-1 container mx-auto px-4 py-8">
         <PartnerRewardsManagement />
       </main>
       <Footer />
