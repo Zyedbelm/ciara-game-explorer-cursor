@@ -12,7 +12,6 @@ import { JourneyCardsProvider } from "@/contexts/JourneyCardsContext";
 import ErrorBoundary from "@/components/common/ErrorBoundary";
 import AuthGuard from "@/components/auth/AuthGuard";
 import LoadingSpinner from "@/components/common/LoadingSpinner";
-import { websocketService } from "@/services/websocketStabilizationService";
 import { resilientService } from "@/services/supabaseResilientService";
 
 // Lazy load pages for better performance  
@@ -72,35 +71,19 @@ const queryClient = new QueryClient({
 });
 
 function App() {
-  // Initialiser les services de résilience
+  // Initialiser les services de résilience (sans WebSocket)
   useEffect(() => {
     console.log('🚀 Initializing resilient services...');
     
-    // Écouter les événements WebSocket pour le debug
-    websocketService.addEventListener('connected', () => {
-      console.log('✅ WebSocket stabilized');
-    });
-    
-    websocketService.addEventListener('disconnected', () => {
-      console.log('⚠️ WebSocket disconnected, attempting reconnection...');
-    });
-    
-    websocketService.addEventListener('error', (error) => {
-      console.error('❌ WebSocket error:', error);
-    });
-    
-    // Log des statistiques périodiquement
+    // Log des statistiques périodiquement (sans WebSocket)
     const statsInterval = setInterval(() => {
       const stats = resilientService.getStats();
-      const wsStatus = websocketService.getConnectionStatus();
       
-      if (stats.cacheSize > 0 || stats.activeRequests > 0 || !wsStatus.isConnected) {
+      if (stats.cacheSize > 0 || stats.activeRequests > 0) {
         console.log('📊 Resilient Service Stats:', {
           cacheSize: stats.cacheSize,
           activeRequests: stats.activeRequests,
-          circuitBreakers: stats.circuitBreakers.filter(cb => cb.isOpen).length,
-          wsConnected: wsStatus.isConnected,
-          wsReconnectAttempts: wsStatus.reconnectAttempts
+          circuitBreakers: stats.circuitBreakers.filter(cb => cb.isOpen).length
         });
       }
     }, 30000); // Toutes les 30 secondes
