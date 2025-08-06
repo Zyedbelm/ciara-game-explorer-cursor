@@ -84,7 +84,10 @@ class MapErrorBoundary extends Component<Props, State> {
     // In production, send error to monitoring service
     if (process.env.NODE_ENV === 'production') {
       // Example: Send to error tracking service
-      .toISOString(),
+      console.error('Map Error:', {
+        message: error.message,
+        stack: error.stack,
+        timestamp: new Date().toISOString(),
         userAgent: navigator.userAgent,
         url: window.location.href
       });
