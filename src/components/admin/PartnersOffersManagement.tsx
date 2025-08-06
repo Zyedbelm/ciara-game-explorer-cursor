@@ -82,6 +82,10 @@ const PartnersOffersManagement = ({
   onPartnerChange
 }: PartnersOffersManagementProps) => {
   const { toast } = useToast();
+  const { profile } = useAuth();
+  
+  const isSuperAdmin = () => profile?.role === 'super_admin';
+  const isTenantAdmin = () => profile?.role === 'tenant_admin';
   const [offers, setOffers] = useState<OfferData[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -104,6 +108,28 @@ const PartnersOffersManagement = ({
     fetchOffers();
   }, [selectedPartner]);
 
+  // Pour les Admin Ville, auto-sélectionner le partenaire si disponible
+  useEffect(() => {
+    if (isTenantAdmin() && partners.length > 0 && !formData.partner_id) {
+      setFormData(prev => ({ ...prev, partner_id: partners[0].id }));
+    }
+  }, [partners, isTenantAdmin]);
+
+  const resetForm = () => {
+    setFormData({
+      title: '',
+      description: '',
+      points_required: 0,
+      value_chf: 0,
+      is_active: true,
+      partner_id: isTenantAdmin() && partners.length > 0 ? partners[0].id : '',
+      validity_days: 30,
+      max_redemptions_per_user: 5,
+      max_redemptions: 100,
+      terms_conditions: ''
+    });
+  };
+
   const fetchOffers = async () => {
     setLoading(true);
     try {
@@ -111,12 +137,18 @@ const PartnersOffersManagement = ({
         .from('rewards')
         .select(`
           *,
-          partner:partners(name)
+          partner:partners(name, city_id)
         `)
         .order('created_at', { ascending: false });
 
-      if (selectedPartner !== 'all') {
-        query = query.eq('partner_id', selectedPartner);
+      // Pour Admin Ville, filtrer automatiquement par sa ville assignée
+      if (isTenantAdmin() && profile?.city_id) {
+        query = query.eq('partners.city_id', profile.city_id);
+      } else {
+        // Pour Super Admin, appliquer les filtres sélectionnés
+        if (selectedPartner !== 'all') {
+          query = query.eq('partner_id', selectedPartner);
+        }
       }
 
       const { data, error } = await query;
@@ -151,18 +183,7 @@ const PartnersOffersManagement = ({
       });
 
       setShowCreateModal(false);
-      setFormData({
-        title: '',
-        description: '',
-        points_required: 0,
-        value_chf: 0,
-        is_active: true,
-        partner_id: '',
-        validity_days: 30,
-        max_redemptions_per_user: 5,
-        max_redemptions: 100,
-        terms_conditions: ''
-      });
+      resetForm();
       fetchOffers();
     } catch (error) {
       toast({
@@ -194,18 +215,7 @@ const PartnersOffersManagement = ({
 
       setShowEditModal(false);
       setEditingOffer(null);
-      setFormData({
-        title: '',
-        description: '',
-        points_required: 0,
-        value_chf: 0,
-        is_active: true,
-        partner_id: '',
-        validity_days: 30,
-        max_redemptions_per_user: 5,
-        max_redemptions: 100,
-        terms_conditions: ''
-      });
+      resetForm();
       fetchOffers();
     } catch (error) {
       toast({
@@ -279,47 +289,63 @@ const PartnersOffersManagement = ({
 
         <div className="flex flex-wrap gap-2">
           {/* Filtres */}
-          <Select value={selectedCountry} onValueChange={onCountryChange}>
-            <SelectTrigger className="w-40">
-              <SelectValue placeholder="Pays" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Tous les pays</SelectItem>
-              {countries.map(country => (
-                <SelectItem key={country.id} value={country.id}>
-                  {country.name_fr}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          {isSuperAdmin() ? (
+            <>
+              <Select value={selectedCountry} onValueChange={onCountryChange}>
+                <SelectTrigger className="w-40">
+                  <SelectValue placeholder="Pays" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Tous les pays</SelectItem>
+                  {countries.map(country => (
+                    <SelectItem key={country.id} value={country.id}>
+                      {country.name_fr}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
 
-          <Select value={selectedCity} onValueChange={onCityChange}>
-            <SelectTrigger className="w-40">
-              <SelectValue placeholder="Ville" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Toutes les villes</SelectItem>
-              {cities.map(city => (
-                <SelectItem key={city.id} value={city.id}>
-                  {city.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+              <Select value={selectedCity} onValueChange={onCityChange}>
+                <SelectTrigger className="w-40">
+                  <SelectValue placeholder="Ville" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Toutes les villes</SelectItem>
+                  {cities.map(city => (
+                    <SelectItem key={city.id} value={city.id}>
+                      {city.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
 
-          <Select value={selectedPartner} onValueChange={onPartnerChange}>
-            <SelectTrigger className="w-40">
-              <SelectValue placeholder="Partenaire" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Tous les partenaires</SelectItem>
-              {partners.map(partner => (
-                <SelectItem key={partner.id} value={partner.id}>
-                  {partner.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+              <Select value={selectedPartner} onValueChange={onPartnerChange}>
+                <SelectTrigger className="w-40">
+                  <SelectValue placeholder="Partenaire" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Tous les partenaires</SelectItem>
+                  {partners.map(partner => (
+                    <SelectItem key={partner.id} value={partner.id}>
+                      {partner.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </>
+          ) : (
+            <>
+              <div className="w-40 px-3 py-2 text-sm text-muted-foreground bg-muted rounded-md border">
+                {countries.length > 0 ? countries[0].name_fr : 'Pays assigné'}
+              </div>
+              <div className="w-40 px-3 py-2 text-sm text-muted-foreground bg-muted rounded-md border">
+                {cities.length > 0 ? cities[0].name : 'Ville assignée'}
+              </div>
+              <div className="w-40 px-3 py-2 text-sm text-muted-foreground bg-muted rounded-md border">
+                {partners.length > 0 ? `${partners.length} partenaire(s)` : 'Aucun partenaire'}
+              </div>
+            </>
+          )}
 
           {/* Bouton de création */}
           <Dialog open={showCreateModal} onOpenChange={setShowCreateModal}>
@@ -350,18 +376,24 @@ const PartnersOffersManagement = ({
 
                 <div className="space-y-2">
                   <Label htmlFor="partner">Partenaire</Label>
-                  <Select value={formData.partner_id} onValueChange={(value) => setFormData({...formData, partner_id: value})}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Sélectionner un partenaire" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {partners.map(partner => (
-                        <SelectItem key={partner.id} value={partner.id}>
-                          {partner.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  {isSuperAdmin() ? (
+                    <Select value={formData.partner_id} onValueChange={(value) => setFormData({...formData, partner_id: value})}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Sélectionner un partenaire" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {partners.map(partner => (
+                          <SelectItem key={partner.id} value={partner.id}>
+                            {partner.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  ) : (
+                    <div className="px-3 py-2 text-sm text-muted-foreground bg-muted rounded-md border">
+                      {partners.length > 0 ? partners[0].name : 'Aucun partenaire disponible'}
+                    </div>
+                  )}
                 </div>
 
                 <div className="space-y-2">
