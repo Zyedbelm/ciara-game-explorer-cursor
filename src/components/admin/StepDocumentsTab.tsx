@@ -121,9 +121,14 @@ export function StepDocumentsTab({ stepId, cityId }: StepDocumentsTabProps) {
         query = query.eq('city_id', cityId);
       }
 
-      // Ne filtrer par step_id que si stepId n'est pas vide
+      // Ne filtrer par step_id que si stepId n'est pas vide ET si l'étape existe
       if (stepId && stepId.trim() !== '') {
         query = query.eq('step_id', stepId);
+      } else {
+        // Si pas de stepId, ne montrer aucun document (étape pas encore créée)
+        setDocuments([]);
+        setLoading(false);
+        return;
       }
 
       const { data, error } = await query.order('created_at', { ascending: false });
@@ -416,23 +421,27 @@ export function StepDocumentsTab({ stepId, cityId }: StepDocumentsTabProps) {
         <div>
           <h3 className="text-lg font-medium">Documents de l'étape</h3>
           <p className="text-sm text-muted-foreground">
-            Gérez les documents associés à cette étape
+            {stepId && stepId.trim() !== '' 
+              ? 'Gérez les documents associés à cette étape'
+              : 'Créez d\'abord l\'étape pour pouvoir ajouter des documents'
+            }
           </p>
         </div>
-        <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
-          <DialogTrigger asChild>
-            <Button 
-              className="gap-2"
-              onClick={() => {
-                setEditingDocument(null);
-                setSelectedFile(null);
-                form.reset();
-              }}
-            >
-              <Plus className="h-4 w-4" />
-              Nouveau document
-            </Button>
-          </DialogTrigger>
+        {stepId && stepId.trim() !== '' ? (
+          <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
+            <DialogTrigger asChild>
+              <Button 
+                className="gap-2"
+                onClick={() => {
+                  setEditingDocument(null);
+                  setSelectedFile(null);
+                  form.reset();
+                }}
+              >
+                <Plus className="h-4 w-4" />
+                Nouveau document
+              </Button>
+            </DialogTrigger>
           <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>
@@ -609,6 +618,7 @@ export function StepDocumentsTab({ stepId, cityId }: StepDocumentsTabProps) {
             </Form>
           </DialogContent>
         </Dialog>
+        ) : null}
       </div>
 
       {/* Filtres */}
@@ -654,6 +664,15 @@ export function StepDocumentsTab({ stepId, cityId }: StepDocumentsTabProps) {
               <TableRow>
                 <TableCell colSpan={6} className="text-center py-8">
                   Chargement...
+                </TableCell>
+              </TableRow>
+            ) : !stepId || stepId.trim() === '' ? (
+              <TableRow>
+                <TableCell colSpan={6} className="text-center py-8">
+                  <div className="flex flex-col items-center gap-2">
+                    <FileText className="h-8 w-8 text-muted-foreground" />
+                    <p className="text-muted-foreground">Créez d'abord l'étape pour pouvoir ajouter des documents</p>
+                  </div>
                 </TableCell>
               </TableRow>
             ) : filteredDocuments.length === 0 ? (

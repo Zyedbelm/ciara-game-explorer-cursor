@@ -98,15 +98,7 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({
           label: 'Articles de blog',
           icon: FileText,
         }] : []),
-        ...(typeof isPartner === 'function' && isPartner() ? [{
-          id: 'reward-offers',
-          label: 'Gestion des offres Récompenses',
-          icon: Trophy,
-        }] : [{
-          id: 'reward-offers',
-          label: 'Gestion des offres Récompenses',
-          icon: Trophy,
-        }]),
+
         ...(typeof isPartner === 'function' && isPartner() ? [] : [{
           id: 'partners',
           label: 'Gestion des Partenaires',
