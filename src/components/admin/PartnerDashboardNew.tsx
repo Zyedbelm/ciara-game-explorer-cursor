@@ -52,6 +52,10 @@ interface OfferData {
   is_active: boolean;
   total_redemptions: number;
   average_rating?: number;
+  validity_days?: number;
+  max_redemptions_per_user?: number;
+  max_redemptions?: number;
+  terms_conditions?: string;
 }
 
 const PartnerDashboardNew: React.FC = () => {
@@ -81,7 +85,11 @@ const PartnerDashboardNew: React.FC = () => {
     description: '',
     points_required: 0,
     value_chf: 0,
-    is_active: true
+    is_active: true,
+    validity_days: 30,
+    max_redemptions_per_user: 5,
+    max_redemptions: 100,
+    terms_conditions: ''
   });
 
   // Récupérer les données du partenaire
@@ -111,9 +119,14 @@ const PartnerDashboardNew: React.FC = () => {
           .select(`
             id,
             title,
+            description,
             points_required,
             value_chf,
-            is_active
+            is_active,
+            validity_days,
+            max_redemptions_per_user,
+            max_redemptions,
+            terms_conditions
           `)
           .eq('partner_id', (profile as any).partner_id);
 
@@ -311,18 +324,22 @@ const PartnerDashboardNew: React.FC = () => {
   // Fonctions pour gérer les offres
   const handleCreateOffer = async () => {
     try {
-      const { data, error } = await supabase
-        .from('rewards')
-        .insert({
-          title: formData.title,
-          description: formData.description,
-          points_required: formData.points_required,
-          value_chf: formData.value_chf,
-          is_active: formData.is_active,
-          partner_id: (profile as any).partner_id
-        })
-        .select()
-        .single();
+              const { data, error } = await supabase
+          .from('rewards')
+          .insert({
+            title: formData.title,
+            description: formData.description,
+            points_required: formData.points_required,
+            value_chf: formData.value_chf,
+            is_active: formData.is_active,
+            validity_days: formData.validity_days,
+            max_redemptions_per_user: formData.max_redemptions_per_user,
+            max_redemptions: formData.max_redemptions,
+            terms_conditions: formData.terms_conditions,
+            partner_id: (profile as any).partner_id
+          })
+          .select()
+          .single();
 
       if (error) throw error;
 
@@ -333,7 +350,17 @@ const PartnerDashboardNew: React.FC = () => {
       });
 
       setShowCreateModal(false);
-      setFormData({ title: '', description: '', points_required: 0, value_chf: 0, is_active: true });
+      setFormData({ 
+        title: '', 
+        description: '', 
+        points_required: 0, 
+        value_chf: 0, 
+        is_active: true,
+        validity_days: 30,
+        max_redemptions_per_user: 5,
+        max_redemptions: 100,
+        terms_conditions: ''
+      });
       
       // Recharger les données
       window.location.reload();
@@ -351,18 +378,22 @@ const PartnerDashboardNew: React.FC = () => {
     if (!editingOffer) return;
 
     try {
-      const { data, error } = await supabase
-        .from('rewards')
-        .update({
-          title: formData.title,
-          description: formData.description,
-          points_required: formData.points_required,
-          value_chf: formData.value_chf,
-          is_active: formData.is_active
-        })
-        .eq('id', editingOffer.id)
-        .select()
-        .single();
+              const { data, error } = await supabase
+          .from('rewards')
+          .update({
+            title: formData.title,
+            description: formData.description,
+            points_required: formData.points_required,
+            value_chf: formData.value_chf,
+            is_active: formData.is_active,
+            validity_days: formData.validity_days,
+            max_redemptions_per_user: formData.max_redemptions_per_user,
+            max_redemptions: formData.max_redemptions,
+            terms_conditions: formData.terms_conditions
+          })
+          .eq('id', editingOffer.id)
+          .select()
+          .single();
 
       if (error) throw error;
 
@@ -374,7 +405,17 @@ const PartnerDashboardNew: React.FC = () => {
 
       setShowEditModal(false);
       setEditingOffer(null);
-      setFormData({ title: '', description: '', points_required: 0, value_chf: 0, is_active: true });
+      setFormData({ 
+        title: '', 
+        description: '', 
+        points_required: 0, 
+        value_chf: 0, 
+        is_active: true,
+        validity_days: 30,
+        max_redemptions_per_user: 5,
+        max_redemptions: 100,
+        terms_conditions: ''
+      });
       
       // Recharger les données
       window.location.reload();
@@ -424,7 +465,11 @@ const PartnerDashboardNew: React.FC = () => {
       description: offer.description || '',
       points_required: offer.points_required,
       value_chf: offer.value_chf,
-      is_active: offer.is_active
+      is_active: offer.is_active,
+      validity_days: offer.validity_days || 30,
+      max_redemptions_per_user: offer.max_redemptions_per_user || 5,
+      max_redemptions: offer.max_redemptions || 100,
+      terms_conditions: offer.terms_conditions || ''
     });
     setShowEditModal(true);
   };
@@ -719,16 +764,18 @@ const PartnerDashboardNew: React.FC = () => {
               </div>
               
               <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Titre</TableHead>
-                    <TableHead>Points Requis</TableHead>
-                    <TableHead>Valeur CHF</TableHead>
-                    <TableHead>Rédactions</TableHead>
-                    <TableHead>Statut</TableHead>
-                    <TableHead>Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
+                                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Titre</TableHead>
+                        <TableHead>Points Requis</TableHead>
+                        <TableHead>Valeur CHF</TableHead>
+                        <TableHead>Rédactions</TableHead>
+                        <TableHead>Limites</TableHead>
+                        <TableHead>Validité</TableHead>
+                        <TableHead>Statut</TableHead>
+                        <TableHead>Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
                 <TableBody>
                   {offers.map((offer) => (
                     <TableRow key={offer.id}>
@@ -736,6 +783,17 @@ const PartnerDashboardNew: React.FC = () => {
                       <TableCell>{offer.points_required}</TableCell>
                       <TableCell>{formatCurrency(offer.value_chf)}</TableCell>
                       <TableCell>{offer.total_redemptions || 0}</TableCell>
+                      <TableCell>
+                        <div className="text-xs">
+                          <div>Par user: {offer.max_redemptions_per_user || 5}</div>
+                          <div>Total: {offer.max_redemptions || 100}</div>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="text-xs">
+                          {offer.validity_days || 30} jours
+                        </div>
+                      </TableCell>
                       <TableCell>
                         <Badge variant={offer.is_active ? 'default' : 'secondary'}>
                           {offer.is_active ? 'Active' : 'Inactive'}
@@ -820,6 +878,45 @@ const PartnerDashboardNew: React.FC = () => {
                 placeholder="0.00"
               />
             </div>
+            <div className="grid gap-2">
+              <Label htmlFor="validity">Jours de validité</Label>
+              <Input
+                id="validity"
+                type="number"
+                value={formData.validity_days}
+                onChange={(e) => setFormData({ ...formData, validity_days: parseInt(e.target.value) || 30 })}
+                placeholder="30"
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="max-per-user">Limite par utilisateur</Label>
+              <Input
+                id="max-per-user"
+                type="number"
+                value={formData.max_redemptions_per_user}
+                onChange={(e) => setFormData({ ...formData, max_redemptions_per_user: parseInt(e.target.value) || 5 })}
+                placeholder="5"
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="max-total">Limite globale</Label>
+              <Input
+                id="max-total"
+                type="number"
+                value={formData.max_redemptions}
+                onChange={(e) => setFormData({ ...formData, max_redemptions: parseInt(e.target.value) || 100 })}
+                placeholder="100"
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="terms">Conditions d'utilisation</Label>
+              <Textarea
+                id="terms"
+                value={formData.terms_conditions}
+                onChange={(e) => setFormData({ ...formData, terms_conditions: e.target.value })}
+                placeholder="Conditions d'utilisation de l'offre"
+              />
+            </div>
             <div className="flex items-center space-x-2">
               <Switch
                 id="active"
@@ -884,6 +981,45 @@ const PartnerDashboardNew: React.FC = () => {
                 value={formData.value_chf}
                 onChange={(e) => setFormData({ ...formData, value_chf: parseFloat(e.target.value) || 0 })}
                 placeholder="0.00"
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="edit-validity">Jours de validité</Label>
+              <Input
+                id="edit-validity"
+                type="number"
+                value={formData.validity_days}
+                onChange={(e) => setFormData({ ...formData, validity_days: parseInt(e.target.value) || 30 })}
+                placeholder="30"
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="edit-max-per-user">Limite par utilisateur</Label>
+              <Input
+                id="edit-max-per-user"
+                type="number"
+                value={formData.max_redemptions_per_user}
+                onChange={(e) => setFormData({ ...formData, max_redemptions_per_user: parseInt(e.target.value) || 5 })}
+                placeholder="5"
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="edit-max-total">Limite globale</Label>
+              <Input
+                id="edit-max-total"
+                type="number"
+                value={formData.max_redemptions}
+                onChange={(e) => setFormData({ ...formData, max_redemptions: parseInt(e.target.value) || 100 })}
+                placeholder="100"
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="edit-terms">Conditions d'utilisation</Label>
+              <Textarea
+                id="edit-terms"
+                value={formData.terms_conditions}
+                onChange={(e) => setFormData({ ...formData, terms_conditions: e.target.value })}
+                placeholder="Conditions d'utilisation de l'offre"
               />
             </div>
             <div className="flex items-center space-x-2">
