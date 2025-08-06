@@ -19,6 +19,9 @@ import {
   Clock,
   Filter
 } from 'lucide-react';
+import PartnersOffersManagement from './PartnersOffersManagement';
+import PartnersRewardsAnalytics from './PartnersRewardsAnalytics';
+import PartnersAdvancedAnalytics from './PartnersAdvancedAnalytics';
 
 interface PartnerData {
   id: string;
@@ -103,7 +106,7 @@ const PartnersDashboard = () => {
 
   useEffect(() => {
     fetchData();
-  }, [selectedCountry, selectedCity, selectedPartner]);
+  }, [selectedCountry, selectedCity, selectedPartner, partners.length]);
 
   const fetchData = async () => {
     setLoading(true);
@@ -155,22 +158,21 @@ const PartnersDashboard = () => {
       query = query.eq('city_id', profile.city_id);
     }
 
-    const { data, error } = await query;
-    if (error) throw error;
-
-    // Appliquer les filtres supplémentaires
-    let filteredPartners = data || [];
-    
+    // Appliquer les filtres de pays et ville directement dans la requête
     if (selectedCountry !== 'all') {
-      filteredPartners = filteredPartners.filter(p => 
-        p.cities?.countries?.name_fr === countries.find(c => c.id === selectedCountry)?.name_fr
-      );
+      query = query.eq('cities.country_id', selectedCountry);
     }
     
     if (selectedCity !== 'all') {
-      filteredPartners = filteredPartners.filter(p => p.city_id === selectedCity);
+      query = query.eq('city_id', selectedCity);
     }
 
+    const { data, error } = await query;
+    if (error) throw error;
+
+    // Appliquer le filtre partenaire après la requête
+    let filteredPartners = data || [];
+    
     if (selectedPartner !== 'all') {
       filteredPartners = filteredPartners.filter(p => p.id === selectedPartner);
     }
@@ -223,8 +225,16 @@ const PartnersDashboard = () => {
       // Pour Super Admin, récupérer les villes selon le pays sélectionné
       let query = supabase
         .from('cities')
-        .select('id, name, country_id')
+        .select(`
+          id, 
+          name, 
+          country_id,
+          countries!inner (
+            is_active
+          )
+        `)
         .eq('is_archived', false)
+        .eq('countries.is_active', true)
         .order('name');
       
       if (selectedCountry !== 'all') {
@@ -678,53 +688,38 @@ const PartnersDashboard = () => {
             </TabsContent>
 
             <TabsContent value="rewards" className="space-y-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Gestion des Récompenses</CardTitle>
-                  <CardDescription>
-                    Vue d'ensemble des récompenses de tous les partenaires
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-muted-foreground">
-                    Interface de gestion des récompenses pour les administrateurs.
-                  </p>
-                </CardContent>
-              </Card>
+              <PartnersRewardsAnalytics 
+                partners={partners}
+                stats={stats}
+                dailyStats={dailyStats}
+                hourlyStats={hourlyStats}
+                topOffers={topOffers}
+              />
             </TabsContent>
 
             <TabsContent value="analytics" className="space-y-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Analytics Avancés</CardTitle>
-                  <CardDescription>
-                    Analyses détaillées des performances des partenaires
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-muted-foreground">
-                    Graphiques et analyses avancées pour les administrateurs.
-                  </p>
-                </CardContent>
-              </Card>
+              <PartnersAdvancedAnalytics 
+                partners={partners}
+                stats={stats}
+                dailyStats={dailyStats}
+                hourlyStats={hourlyStats}
+              />
             </TabsContent>
           </Tabs>
         </TabsContent>
 
         <TabsContent value="management" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Gestion des Offres</CardTitle>
-              <CardDescription>
-                Interface de gestion des offres pour les administrateurs
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground">
-                Interface complète de gestion des offres adaptée aux administrateurs.
-              </p>
-            </CardContent>
-          </Card>
+          <PartnersOffersManagement 
+            partners={partners}
+            countries={countries}
+            cities={cities}
+            selectedCountry={selectedCountry}
+            selectedCity={selectedCity}
+            selectedPartner={selectedPartner}
+            onCountryChange={setSelectedCountry}
+            onCityChange={setSelectedCity}
+            onPartnerChange={setSelectedPartner}
+          />
         </TabsContent>
       </Tabs>
     </div>
