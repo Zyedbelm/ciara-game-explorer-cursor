@@ -33,10 +33,9 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
       'X-Client-Info': 'ciara-web-app',
     },
   },
+  // Désactiver complètement les fonctionnalités realtime pour éviter les erreurs WebSocket
   realtime: {
-    params: {
-      eventsPerSecond: 10,
-    },
+    disabled: true,
   },
 });
 
