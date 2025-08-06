@@ -101,25 +101,16 @@ const PartnerDashboardNew: React.FC = () => {
 
         if (offersError) throw offersError;
 
-        // Récupérer les rédactions
-        const { data: redemptionsData, error: redemptionsError } = await supabase
+        // Récupérer TOUTES les rédactions
+        const { data: allRedemptionsData, error: redemptionsError } = await supabase
           .from('reward_redemptions')
-          .select(`
-            id,
-            redeemed_at,
-            points_spent,
-            status,
-            reward_id,
-            user_id
-          `)
+          .select('*')
           .order('redeemed_at', { ascending: false });
 
-        console.log('Raw redemptions data:', redemptionsData);
+        console.log('All redemptions data:', allRedemptionsData);
         console.log('Redemptions error:', redemptionsError);
 
         if (redemptionsError) throw redemptionsError;
-
-        console.log('Raw redemptions data:', redemptionsData);
 
         // Récupérer TOUTES les récompenses du partenaire
         const { data: allRewardsData, error: allRewardsError } = await supabase
@@ -133,7 +124,7 @@ const PartnerDashboardNew: React.FC = () => {
 
         // Filtrer les rédactions qui correspondent aux récompenses du partenaire
         const partnerRewardIds = allRewardsData?.map(r => r.id) || [];
-        const partnerRedemptions = redemptionsData?.filter(r => 
+        const partnerRedemptions = allRedemptionsData?.filter(r => 
           partnerRewardIds.includes(r.reward_id)
         ) || [];
 
