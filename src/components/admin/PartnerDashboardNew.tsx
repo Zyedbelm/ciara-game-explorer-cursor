@@ -7,7 +7,6 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Progress } from '@/components/ui/progress';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import PartnerDashboardLayout from './PartnerDashboardLayout';
 import { 
   TrendingUp, 
   Gift,
@@ -166,27 +165,44 @@ const PartnerDashboardNew: React.FC = () => {
     fetchPartnerData();
   }, [profile?.partner_id, toast]);
 
-  // Données pour les graphiques
+  // Données pour les graphiques - VRAIES DONNÉES
   const hourlyData = useMemo(() => {
-    const hours = Array.from({ length: 24 }, (_, i) => i);
-    return hours.map(hour => ({
-      hour: `${hour}:00`,
-      redemptions: Math.floor(Math.random() * 5) + 1
-    }));
-  }, []);
+    if (!redemptions.length) return [];
+    
+    const hourlyStats = new Array(24).fill(0).map((_, hour) => ({ hour: `${hour}:00`, redemptions: 0 }));
+    
+    redemptions.forEach(redemption => {
+      const hour = new Date(redemption.redeemed_at).getHours();
+      hourlyStats[hour].redemptions++;
+    });
+    
+    return hourlyStats;
+  }, [redemptions]);
 
   const dailyData = useMemo(() => {
-    const days = Array.from({ length: 7 }, (_, i) => {
+    if (!redemptions.length) return [];
+    
+    const dailyStats = new Array(7).fill(0).map((_, i) => {
       const date = new Date();
       date.setDate(date.getDate() - i);
-      return date.toLocaleDateString('fr-FR', { weekday: 'short' });
+      return {
+        day: date.toLocaleDateString('fr-FR', { weekday: 'short' }),
+        redemptions: 0,
+        revenue: 0
+      };
     }).reverse();
     
-    return days.map(day => ({
-      day,
-      redemptions: Math.floor(Math.random() * 10) + 1
-    }));
-  }, []);
+    redemptions.forEach(redemption => {
+      const redemptionDate = new Date(redemption.redeemed_at);
+      const daysDiff = Math.floor((Date.now() - redemptionDate.getTime()) / (1000 * 60 * 60 * 24));
+      if (daysDiff < 7) {
+        dailyStats[daysDiff].redemptions++;
+        dailyStats[daysDiff].revenue += redemption.reward?.value_chf || 0;
+      }
+    });
+    
+    return dailyStats;
+  }, [redemptions]);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('fr-CH', {
@@ -197,19 +213,24 @@ const PartnerDashboardNew: React.FC = () => {
 
   if (loading) {
     return (
-      <PartnerDashboardLayout title="Tableau de Bord Partenaire">
-        <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-        </div>
-      </PartnerDashboardLayout>
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
     );
   }
 
   return (
-    <PartnerDashboardLayout 
-      title="Tableau de Bord Partenaire"
-      subtitle={`${stats.partnerName} - ${stats.partnerCity}`}
-    >
+    <div className="space-y-6">
+      {/* En-tête */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold">Tableau de Bord Partenaire</h1>
+          <p className="text-muted-foreground mt-2">
+            {stats.partnerName} - {stats.partnerCity}
+          </p>
+        </div>
+      </div>
+
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
         <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="overview">Vue d'ensemble</TabsTrigger>
@@ -230,7 +251,7 @@ const PartnerDashboardNew: React.FC = () => {
                 <p className="text-xs text-muted-foreground">
                   sur {stats.totalOffers} total
                 </p>
-                <Progress value={(stats.activeOffers / stats.totalOffers) * 100} className="mt-2" />
+                <Progress value={stats.totalOffers > 0 ? (stats.activeOffers / stats.totalOffers) * 100 : 0} className="mt-2" />
               </CardContent>
             </Card>
 
@@ -242,7 +263,7 @@ const PartnerDashboardNew: React.FC = () => {
               <CardContent>
                 <div className="text-2xl font-bold">{stats.totalRedemptions}</div>
                 <p className="text-xs text-muted-foreground">
-                  ce mois
+                  total
                 </p>
               </CardContent>
             </Card>
@@ -287,7 +308,7 @@ const PartnerDashboardNew: React.FC = () => {
                     <TableHead>Points</TableHead>
                     <TableHead>Valeur</TableHead>
                     <TableHead>Rédactions</TableHead>
-                    <TableHead>Note</TableHead>
+                    <TableHead>Statut</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -298,10 +319,9 @@ const PartnerDashboardNew: React.FC = () => {
                       <TableCell>{formatCurrency(offer.value_chf)}</TableCell>
                       <TableCell>{offer.total_redemptions || 0}</TableCell>
                       <TableCell>
-                        <div className="flex items-center">
-                          <Star className="h-4 w-4 fill-yellow-400 text-yellow-400 mr-1" />
-                          {offer.average_rating?.toFixed(1) || 'N/A'}
-                        </div>
+                        <Badge variant={offer.is_active ? 'default' : 'secondary'}>
+                          {offer.is_active ? 'Active' : 'Inactive'}
+                        </Badge>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -389,7 +409,7 @@ const PartnerDashboardNew: React.FC = () => {
           </div>
         </TabsContent>
       </Tabs>
-    </PartnerDashboardLayout>
+    </div>
   );
 };
 

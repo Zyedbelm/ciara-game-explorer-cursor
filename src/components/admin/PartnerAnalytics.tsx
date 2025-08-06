@@ -6,7 +6,6 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Progress } from '@/components/ui/progress';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import PartnerDashboardLayout from './PartnerDashboardLayout';
 import { 
   TrendingUp, 
   TrendingDown,
@@ -121,7 +120,7 @@ const PartnerAnalytics: React.FC = () => {
         const totalRevenue = redemptionsData?.reduce((sum, r) => sum + (r.rewards?.value_chf || 0), 0) || 0;
         const averageRating = 4.2; // À calculer avec de vraies données
 
-        // Top performing rewards
+        // Top performing rewards - VRAIES DONNÉES
         const rewardStats = rewardsData?.map(reward => {
           const rewardRedemptions = redemptionsData?.filter(r => r.rewards?.title === reward.title) || [];
           return {
@@ -132,48 +131,68 @@ const PartnerAnalytics: React.FC = () => {
           };
         }).sort((a, b) => b.redemptions - a.redemptions).slice(0, 5) || [];
 
-        // Données horaires (simulées pour l'instant)
-        const hourlyActivity = Array.from({ length: 24 }, (_, i) => ({
-          hour: `${i}:00`,
-          redemptions: Math.floor(Math.random() * 5) + 1
-        }));
+        // Données horaires - VRAIES DONNÉES
+        const hourlyActivity = new Array(24).fill(0).map((_, hour) => ({ hour: `${hour}:00`, redemptions: 0 }));
+        redemptionsData?.forEach(redemption => {
+          const hour = new Date(redemption.redeemed_at).getHours();
+          hourlyActivity[hour].redemptions++;
+        });
 
-        // Données quotidiennes (simulées pour l'instant)
-        const dailyActivity = Array.from({ length: 7 }, (_, i) => {
+        // Données quotidiennes - VRAIES DONNÉES
+        const dailyActivity = new Array(7).fill(0).map((_, i) => {
           const date = new Date();
           date.setDate(date.getDate() - i);
           return {
             day: date.toLocaleDateString('fr-FR', { weekday: 'short' }),
-            redemptions: Math.floor(Math.random() * 10) + 1,
-            revenue: Math.floor(Math.random() * 100) + 10
+            redemptions: 0,
+            revenue: 0
           };
         }).reverse();
+        
+        redemptionsData?.forEach(redemption => {
+          const redemptionDate = new Date(redemption.redeemed_at);
+          const daysDiff = Math.floor((Date.now() - redemptionDate.getTime()) / (1000 * 60 * 60 * 24));
+          if (daysDiff < 7) {
+            dailyActivity[daysDiff].redemptions++;
+            dailyActivity[daysDiff].revenue += redemption.rewards?.value_chf || 0;
+          }
+        });
 
-        // Données mensuelles (simulées pour l'instant)
-        const monthlyTrends = Array.from({ length: 6 }, (_, i) => {
+        // Données mensuelles - VRAIES DONNÉES
+        const monthlyTrends = new Array(6).fill(0).map((_, i) => {
           const date = new Date();
           date.setMonth(date.getMonth() - i);
           return {
             month: date.toLocaleDateString('fr-FR', { month: 'short' }),
-            redemptions: Math.floor(Math.random() * 50) + 10,
-            revenue: Math.floor(Math.random() * 500) + 100
+            redemptions: 0,
+            revenue: 0
           };
         }).reverse();
+        
+        redemptionsData?.forEach(redemption => {
+          const redemptionDate = new Date(redemption.redeemed_at);
+          const monthsDiff = (new Date().getFullYear() - redemptionDate.getFullYear()) * 12 + 
+                           (new Date().getMonth() - redemptionDate.getMonth());
+          if (monthsDiff < 6) {
+            monthlyTrends[monthsDiff].redemptions++;
+            monthlyTrends[monthsDiff].revenue += redemption.rewards?.value_chf || 0;
+          }
+        });
 
-        // Démographie utilisateurs (simulée pour l'instant)
+        // Démographie utilisateurs - SIMULÉE (pas de données d'âge dans la DB)
         const userDemographics = [
-          { ageGroup: '18-25', count: 25 },
-          { ageGroup: '26-35', count: 40 },
-          { ageGroup: '36-45', count: 20 },
-          { ageGroup: '46-55', count: 10 },
-          { ageGroup: '55+', count: 5 }
+          { ageGroup: '18-25', count: Math.floor(Math.random() * 20) + 10 },
+          { ageGroup: '26-35', count: Math.floor(Math.random() * 30) + 20 },
+          { ageGroup: '36-45', count: Math.floor(Math.random() * 15) + 10 },
+          { ageGroup: '46-55', count: Math.floor(Math.random() * 10) + 5 },
+          { ageGroup: '55+', count: Math.floor(Math.random() * 5) + 2 }
         ];
 
         setAnalytics({
           totalRedemptions,
           totalRevenue,
           averageRating,
-          conversionRate: 15.5, // À calculer avec de vraies données
+          conversionRate: totalRedemptions > 0 ? Math.round((totalRedemptions / (rewardsData?.length || 1)) * 100) : 0,
           topPerformingRewards: rewardStats,
           hourlyActivity,
           dailyActivity,
@@ -204,221 +223,223 @@ const PartnerAnalytics: React.FC = () => {
 
   if (loading) {
     return (
-      <PartnerDashboardLayout title="Analytics">
-        <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-        </div>
-      </PartnerDashboardLayout>
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
     );
   }
 
   return (
-    <PartnerDashboardLayout title="Analytics">
-      <div className="space-y-6">
-        {/* Filtres de temps */}
+    <div className="space-y-6">
+      {/* En-tête */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold">Analytics</h1>
+          <p className="text-muted-foreground mt-2">
+            Analyses détaillées et rapports
+          </p>
+        </div>
+      </div>
+
+      {/* Filtres de temps */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Période d'analyse</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex gap-2">
+            {['7', '30', '90'].map((days) => (
+              <Badge
+                key={days}
+                variant={timeRange === days ? 'default' : 'secondary'}
+                className="cursor-pointer"
+                onClick={() => setTimeRange(days)}
+              >
+                {days} jours
+              </Badge>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Statistiques principales */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
-          <CardHeader>
-            <CardTitle>Période d'analyse</CardTitle>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Rédactions</CardTitle>
+            <ShoppingCart className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="flex gap-2">
-              {['7', '30', '90'].map((days) => (
-                <Badge
-                  key={days}
-                  variant={timeRange === days ? 'default' : 'secondary'}
-                  className="cursor-pointer"
-                  onClick={() => setTimeRange(days)}
-                >
-                  {days} jours
-                </Badge>
-              ))}
-            </div>
+            <div className="text-2xl font-bold">{analytics.totalRedemptions}</div>
+            <p className="text-xs text-muted-foreground">
+              sur {timeRange} jours
+            </p>
           </CardContent>
         </Card>
 
-        {/* Statistiques principales */}
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Rédactions</CardTitle>
-              <ShoppingCart className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{analytics.totalRedemptions}</div>
-              <p className="text-xs text-muted-foreground">
-                <TrendingUp className="inline h-3 w-3 text-green-500 mr-1" />
-                +12% vs période précédente
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Revenus</CardTitle>
-              <CreditCard className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{formatCurrency(analytics.totalRevenue)}</div>
-              <p className="text-xs text-muted-foreground">
-                <TrendingUp className="inline h-3 w-3 text-green-500 mr-1" />
-                +8% vs période précédente
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Note Moyenne</CardTitle>
-              <Star className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{analytics.averageRating.toFixed(1)}</div>
-              <p className="text-xs text-muted-foreground">
-                sur 5 étoiles
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Taux de Conversion</CardTitle>
-              <Target className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{analytics.conversionRate}%</div>
-              <p className="text-xs text-muted-foreground">
-                <TrendingDown className="inline h-3 w-3 text-red-500 mr-1" />
-                -2% vs période précédente
-              </p>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Graphiques */}
-        <div className="grid gap-4 md:grid-cols-2">
-          <Card>
-            <CardHeader>
-              <CardTitle>Activité Horaire</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={analytics.hourlyActivity}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="hour" />
-                  <YAxis />
-                  <Tooltip />
-                  <Bar dataKey="redemptions" fill="#8884d8" />
-                </BarChart>
-              </ResponsiveContainer>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Activité Quotidienne</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ResponsiveContainer width="100%" height={300}>
-                <LineChart data={analytics.dailyActivity}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="day" />
-                  <YAxis />
-                  <Tooltip />
-                  <Line type="monotone" dataKey="redemptions" stroke="#8884d8" />
-                  <Line type="monotone" dataKey="revenue" stroke="#82ca9d" />
-                </LineChart>
-              </ResponsiveContainer>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Tendances Mensuelles</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={analytics.monthlyTrends}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="month" />
-                  <YAxis />
-                  <Tooltip />
-                  <Bar dataKey="redemptions" fill="#8884d8" />
-                  <Bar dataKey="revenue" fill="#82ca9d" />
-                </BarChart>
-              </ResponsiveContainer>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Démographie Utilisateurs</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ResponsiveContainer width="100%" height={300}>
-                <PieChart>
-                  <Pie
-                    data={analytics.userDemographics}
-                    cx="50%"
-                    cy="50%"
-                    labelLine={false}
-                    label={({ ageGroup, percent }) => `${ageGroup} ${(percent * 100).toFixed(0)}%`}
-                    outerRadius={80}
-                    fill="#8884d8"
-                    dataKey="count"
-                  >
-                    {analytics.userDemographics.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip />
-                </PieChart>
-              </ResponsiveContainer>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Top performing rewards */}
         <Card>
-          <CardHeader>
-            <CardTitle>Meilleures Performances</CardTitle>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Revenus</CardTitle>
+            <CreditCard className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Récompense</TableHead>
-                  <TableHead>Rédactions</TableHead>
-                  <TableHead>Revenus</TableHead>
-                  <TableHead>Note</TableHead>
-                  <TableHead>Performance</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {analytics.topPerformingRewards.map((reward, index) => (
-                  <TableRow key={index}>
-                    <TableCell className="font-medium">{reward.title}</TableCell>
-                    <TableCell>{reward.redemptions}</TableCell>
-                    <TableCell>{formatCurrency(reward.revenue)}</TableCell>
-                    <TableCell>
-                      <div className="flex items-center">
-                        <Star className="h-4 w-4 fill-yellow-400 text-yellow-400 mr-1" />
-                        {reward.rating.toFixed(1)}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center">
-                        <Zap className="h-4 w-4 text-yellow-500 mr-1" />
-                        {index === 0 ? 'Top' : `${index + 1}ème`}
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+            <div className="text-2xl font-bold">{formatCurrency(analytics.totalRevenue)}</div>
+            <p className="text-xs text-muted-foreground">
+              sur {timeRange} jours
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Note Moyenne</CardTitle>
+            <Star className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{analytics.averageRating.toFixed(1)}</div>
+            <p className="text-xs text-muted-foreground">
+              sur 5 étoiles
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Taux de Conversion</CardTitle>
+            <Target className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{analytics.conversionRate}%</div>
+            <p className="text-xs text-muted-foreground">
+              rédactions/offres
+            </p>
           </CardContent>
         </Card>
       </div>
-    </PartnerDashboardLayout>
+
+      {/* Graphiques */}
+      <div className="grid gap-4 md:grid-cols-2">
+        <Card>
+          <CardHeader>
+            <CardTitle>Activité Horaire</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={analytics.hourlyActivity}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="hour" />
+                <YAxis />
+                <Tooltip />
+                <Bar dataKey="redemptions" fill="#8884d8" />
+              </BarChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Activité Quotidienne</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={300}>
+              <LineChart data={analytics.dailyActivity}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="day" />
+                <YAxis />
+                <Tooltip />
+                <Line type="monotone" dataKey="redemptions" stroke="#8884d8" />
+              </LineChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Tendances Mensuelles</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={analytics.monthlyTrends}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="month" />
+                <YAxis />
+                <Tooltip />
+                <Bar dataKey="redemptions" fill="#8884d8" />
+                <Bar dataKey="revenue" fill="#82ca9d" />
+              </BarChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Démographie Utilisateurs</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={300}>
+              <PieChart>
+                <Pie
+                  data={analytics.userDemographics}
+                  cx="50%"
+                  cy="50%"
+                  labelLine={false}
+                  label={({ ageGroup, percent }) => `${ageGroup} ${(percent * 100).toFixed(0)}%`}
+                  outerRadius={80}
+                  fill="#8884d8"
+                  dataKey="count"
+                >
+                  {analytics.userDemographics.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  ))}
+                </Pie>
+                <Tooltip />
+              </PieChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Top performing rewards */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Meilleures Performances</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Récompense</TableHead>
+                <TableHead>Rédactions</TableHead>
+                <TableHead>Revenus</TableHead>
+                <TableHead>Note</TableHead>
+                <TableHead>Performance</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {analytics.topPerformingRewards.map((reward, index) => (
+                <TableRow key={index}>
+                  <TableCell className="font-medium">{reward.title}</TableCell>
+                  <TableCell>{reward.redemptions}</TableCell>
+                  <TableCell>{formatCurrency(reward.revenue)}</TableCell>
+                  <TableCell>
+                    <div className="flex items-center">
+                      <Star className="h-4 w-4 fill-yellow-400 text-yellow-400 mr-1" />
+                      {reward.rating.toFixed(1)}
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center">
+                      <Zap className="h-4 w-4 text-yellow-500 mr-1" />
+                      {index === 0 ? 'Top' : `${index + 1}ème`}
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+    </div>
   );
 };
 

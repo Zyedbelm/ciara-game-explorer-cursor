@@ -10,7 +10,6 @@ import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import PartnerDashboardLayout from './PartnerDashboardLayout';
 import { 
   Plus,
   Edit,
@@ -218,215 +217,221 @@ const PartnerRewardsManagement: React.FC = () => {
 
   if (loading) {
     return (
-      <PartnerDashboardLayout title="Gestion des Récompenses">
-        <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-        </div>
-      </PartnerDashboardLayout>
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
     );
   }
 
   return (
-    <PartnerDashboardLayout title="Gestion des Récompenses">
-      <div className="space-y-6">
-        {/* En-tête avec recherche et bouton d'ajout */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-          <div className="flex-1 max-w-sm">
-            <div className="relative">
-              <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Rechercher une récompense..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-8"
-              />
-            </div>
-          </div>
-          <Button onClick={() => setIsCreating(true)}>
-            <Plus className="mr-2 h-4 w-4" />
-            Nouvelle Récompense
-          </Button>
+    <div className="space-y-6">
+      {/* En-tête */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold">Gestion des Récompenses</h1>
+          <p className="text-muted-foreground mt-2">
+            Gérez vos offres et récompenses
+          </p>
         </div>
+      </div>
 
-        {/* Formulaire de création/édition */}
-        {(isCreating || editingReward) && (
-          <Card>
-            <CardHeader>
-              <CardTitle>
-                {isCreating ? 'Créer une nouvelle récompense' : 'Modifier la récompense'}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="title">Titre</Label>
-                  <Input
-                    id="title"
-                    value={formData.title}
-                    onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-                    placeholder="Titre de la récompense"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="points">Points requis</Label>
-                  <Input
-                    id="points"
-                    type="number"
-                    value={formData.points_required}
-                    onChange={(e) => setFormData(prev => ({ ...prev, points_required: parseInt(e.target.value) || 0 }))}
-                    placeholder="0"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="value">Valeur (CHF)</Label>
-                  <Input
-                    id="value"
-                    type="number"
-                    step="0.01"
-                    value={formData.value_chf}
-                    onChange={(e) => setFormData(prev => ({ ...prev, value_chf: parseFloat(e.target.value) || 0 }))}
-                    placeholder="0.00"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="max_redemptions">Max rédactions</Label>
-                  <Input
-                    id="max_redemptions"
-                    type="number"
-                    value={formData.max_redemptions}
-                    onChange={(e) => setFormData(prev => ({ ...prev, max_redemptions: parseInt(e.target.value) || 0 }))}
-                    placeholder="100"
-                  />
-                </div>
-              </div>
-              
-              <div>
-                <Label htmlFor="description">Description</Label>
-                <Textarea
-                  id="description"
-                  value={formData.description}
-                  onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                  placeholder="Description de la récompense"
-                  rows={3}
-                />
-              </div>
+      {/* En-tête avec recherche et bouton d'ajout */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div className="flex-1 max-w-sm">
+          <div className="relative">
+            <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Rechercher une récompense..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-8"
+            />
+          </div>
+        </div>
+        <Button onClick={() => setIsCreating(true)}>
+          <Plus className="mr-2 h-4 w-4" />
+          Nouvelle Récompense
+        </Button>
+      </div>
 
-              <div className="flex items-center space-x-2">
-                <Switch
-                  id="is_active"
-                  checked={formData.is_active}
-                  onCheckedChange={(checked) => setFormData(prev => ({ ...prev, is_active: checked }))}
-                />
-                <Label htmlFor="is_active">Récompense active</Label>
-              </div>
-
-              <div className="flex gap-2">
-                <Button onClick={isCreating ? handleCreateReward : handleUpdateReward}>
-                  {isCreating ? 'Créer' : 'Mettre à jour'}
-                </Button>
-                <Button 
-                  variant="outline" 
-                  onClick={() => {
-                    setIsCreating(false);
-                    setEditingReward(null);
-                    setFormData({
-                      title: '',
-                      description: '',
-                      points_required: 0,
-                      value_chf: 0,
-                      is_active: true,
-                      max_redemptions: 100,
-                      max_redemptions_per_user: 1,
-                      validity_days: 30
-                    });
-                  }}
-                >
-                  Annuler
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Liste des récompenses */}
+      {/* Formulaire de création/édition */}
+      {(isCreating || editingReward) && (
         <Card>
           <CardHeader>
-            <CardTitle>Vos Récompenses ({filteredRewards.length})</CardTitle>
+            <CardTitle>
+              {isCreating ? 'Créer une nouvelle récompense' : 'Modifier la récompense'}
+            </CardTitle>
           </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Récompense</TableHead>
-                  <TableHead>Points</TableHead>
-                  <TableHead>Valeur</TableHead>
-                  <TableHead>Rédactions</TableHead>
-                  <TableHead>Note</TableHead>
-                  <TableHead>Statut</TableHead>
-                  <TableHead>Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredRewards.map((reward) => (
-                  <TableRow key={reward.id}>
-                    <TableCell>
-                      <div>
-                        <div className="font-medium">{reward.title}</div>
-                        <div className="text-sm text-muted-foreground">{reward.description}</div>
-                      </div>
-                    </TableCell>
-                    <TableCell>{reward.points_required}</TableCell>
-                    <TableCell>{formatCurrency(reward.value_chf)}</TableCell>
-                    <TableCell>{reward.total_redemptions}</TableCell>
-                    <TableCell>
-                      <div className="flex items-center">
-                        <Star className="h-4 w-4 fill-yellow-400 text-yellow-400 mr-1" />
-                        {reward.average_rating?.toFixed(1) || 'N/A'}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant={reward.is_active ? 'default' : 'secondary'}>
-                        {reward.is_active ? 'Active' : 'Inactive'}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex gap-2">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => {
-                            setEditingReward(reward);
-                            setFormData({
-                              title: reward.title,
-                              description: reward.description,
-                              points_required: reward.points_required,
-                              value_chf: reward.value_chf,
-                              is_active: reward.is_active,
-                              max_redemptions: reward.max_redemptions,
-                              max_redemptions_per_user: reward.max_redemptions_per_user,
-                              validity_days: reward.validity_days
-                            });
-                          }}
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleDeleteReward(reward.id)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="title">Titre</Label>
+                <Input
+                  id="title"
+                  value={formData.title}
+                  onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
+                  placeholder="Titre de la récompense"
+                />
+              </div>
+              <div>
+                <Label htmlFor="points">Points requis</Label>
+                <Input
+                  id="points"
+                  type="number"
+                  value={formData.points_required}
+                  onChange={(e) => setFormData(prev => ({ ...prev, points_required: parseInt(e.target.value) || 0 }))}
+                  placeholder="0"
+                />
+              </div>
+              <div>
+                <Label htmlFor="value">Valeur (CHF)</Label>
+                <Input
+                  id="value"
+                  type="number"
+                  step="0.01"
+                  value={formData.value_chf}
+                  onChange={(e) => setFormData(prev => ({ ...prev, value_chf: parseFloat(e.target.value) || 0 }))}
+                  placeholder="0.00"
+                />
+              </div>
+              <div>
+                <Label htmlFor="max_redemptions">Max rédactions</Label>
+                <Input
+                  id="max_redemptions"
+                  type="number"
+                  value={formData.max_redemptions}
+                  onChange={(e) => setFormData(prev => ({ ...prev, max_redemptions: parseInt(e.target.value) || 0 }))}
+                  placeholder="100"
+                />
+              </div>
+            </div>
+            
+            <div>
+              <Label htmlFor="description">Description</Label>
+              <Textarea
+                id="description"
+                value={formData.description}
+                onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                placeholder="Description de la récompense"
+                rows={3}
+              />
+            </div>
+
+            <div className="flex items-center space-x-2">
+              <Switch
+                id="is_active"
+                checked={formData.is_active}
+                onCheckedChange={(checked) => setFormData(prev => ({ ...prev, is_active: checked }))}
+              />
+              <Label htmlFor="is_active">Récompense active</Label>
+            </div>
+
+            <div className="flex gap-2">
+              <Button onClick={isCreating ? handleCreateReward : handleUpdateReward}>
+                {isCreating ? 'Créer' : 'Mettre à jour'}
+              </Button>
+              <Button 
+                variant="outline" 
+                onClick={() => {
+                  setIsCreating(false);
+                  setEditingReward(null);
+                  setFormData({
+                    title: '',
+                    description: '',
+                    points_required: 0,
+                    value_chf: 0,
+                    is_active: true,
+                    max_redemptions: 100,
+                    max_redemptions_per_user: 1,
+                    validity_days: 30
+                  });
+                }}
+              >
+                Annuler
+              </Button>
+            </div>
           </CardContent>
         </Card>
-      </div>
-    </PartnerDashboardLayout>
+      )}
+
+      {/* Liste des récompenses */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Vos Récompenses ({filteredRewards.length})</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Récompense</TableHead>
+                <TableHead>Points</TableHead>
+                <TableHead>Valeur</TableHead>
+                <TableHead>Rédactions</TableHead>
+                <TableHead>Note</TableHead>
+                <TableHead>Statut</TableHead>
+                <TableHead>Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredRewards.map((reward) => (
+                <TableRow key={reward.id}>
+                  <TableCell>
+                    <div>
+                      <div className="font-medium">{reward.title}</div>
+                      <div className="text-sm text-muted-foreground">{reward.description}</div>
+                    </div>
+                  </TableCell>
+                  <TableCell>{reward.points_required}</TableCell>
+                  <TableCell>{formatCurrency(reward.value_chf)}</TableCell>
+                  <TableCell>{reward.total_redemptions}</TableCell>
+                  <TableCell>
+                    <div className="flex items-center">
+                      <Star className="h-4 w-4 fill-yellow-400 text-yellow-400 mr-1" />
+                      {reward.average_rating?.toFixed(1) || 'N/A'}
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant={reward.is_active ? 'default' : 'secondary'}>
+                      {reward.is_active ? 'Active' : 'Inactive'}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          setEditingReward(reward);
+                          setFormData({
+                            title: reward.title,
+                            description: reward.description,
+                            points_required: reward.points_required,
+                            value_chf: reward.value_chf,
+                            is_active: reward.is_active,
+                            max_redemptions: reward.max_redemptions,
+                            max_redemptions_per_user: reward.max_redemptions_per_user,
+                            validity_days: reward.validity_days
+                          });
+                        }}
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleDeleteReward(reward.id)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+    </div>
   );
 };
 
