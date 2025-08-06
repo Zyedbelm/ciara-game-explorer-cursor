@@ -13,7 +13,7 @@ interface Country {
 interface City {
   id: string;
   name: string;
-  country_id?: string;
+  country_id: string;
 }
 
 interface Step {
@@ -68,8 +68,7 @@ export const useStepsFilters = (cities: City[], steps: Step[]) => {
     // Filtrer par pays sélectionné
     if (countryFilter !== 'all') {
       filtered = filtered.filter(city => {
-        const country = countries.find(c => c.id === countryFilter);
-        return country && (city as any).country_id === country.id;
+        return city.country_id === countryFilter;
       });
     }
 
@@ -97,7 +96,8 @@ export const useStepsFilters = (cities: City[], steps: Step[]) => {
   // Gérer le changement de pays
   const handleCountryChange = useCallback((value: string) => {
     setCountryFilter(value);
-    setCityFilter('all'); // Reset city filter when country changes
+    // Reset city filter when country changes
+    setCityFilter('all');
   }, []);
 
   // Réinitialiser tous les filtres

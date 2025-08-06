@@ -84,24 +84,10 @@ export function CityProvider({ children }: { children: React.ReactNode }) {
 
   // Helper function to apply colors to CSS variables
   const applyColorsToDOM = (primaryColor: string, secondaryColor: string) => {
-    // Don't apply city colors on homepage - keep default colors
-    if (isOnHomepage()) {
-      console.log('🏠 CityProvider - On homepage, skipping color application');
-      return;
-    }
-
-    const root = document.documentElement;
-    
-    // Convert hex to HSL for CSS variables
-    const primaryHsl = hexToHsl(primaryColor);
-    const secondaryHsl = hexToHsl(secondaryColor);
-    
-    if (primaryHsl) {
-      root.style.setProperty('--primary', primaryHsl);
-    }
-    if (secondaryHsl) {
-      root.style.setProperty('--secondary', secondaryHsl);
-    }
+    // DÉSACTIVÉ : Les couleurs de ville ne sont plus appliquées dynamiquement
+    // pour maintenir une interface cohérente
+    console.log('🎨 CityProvider - Color application disabled for consistent UI');
+    return;
   };
 
   const fetchCity = async (slug: string) => {
@@ -133,10 +119,9 @@ export function CityProvider({ children }: { children: React.ReactNode }) {
       console.log('✅ CityProvider - City fetched successfully:', data.name);
       setCity(data);
       
-      // Apply city colors immediately after setting city data
-      if (data && data.primary_color && data.secondary_color) {
-        applyColorsToDOM(data.primary_color, data.secondary_color);
-      }
+      // DÉSACTIVÉ : Les couleurs de ville ne sont plus appliquées automatiquement
+      // pour maintenir une interface cohérente
+      console.log('🎨 CityProvider - Automatic color application disabled');
     } catch (err) {
       console.error('❌ CityProvider - Error in fetchCity:', err);
       setError(err instanceof Error ? err.message : 'An error occurred');
@@ -147,13 +132,10 @@ export function CityProvider({ children }: { children: React.ReactNode }) {
   };
 
   const setCityColors = (primaryColor: string, secondaryColor: string) => {
-    if (city) {
-      // Apply colors to DOM
-      applyColorsToDOM(primaryColor, secondaryColor);
-      
-      // Update city state with new colors
-      setCity({ ...city, primary_color: primaryColor, secondary_color: secondaryColor });
-    }
+    // DÉSACTIVÉ : Les couleurs de ville ne sont plus modifiables
+    // pour maintenir une interface cohérente
+    console.log('🎨 CityProvider - setCityColors disabled for consistent UI');
+    return;
   };
 
   return (

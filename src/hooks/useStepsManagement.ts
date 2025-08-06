@@ -27,6 +27,7 @@ interface City {
   id: string;
   name: string;
   slug: string;
+  country_id: string;
 }
 
 interface Journey {
@@ -52,6 +53,7 @@ export const useStepsManagement = (cityId?: string) => {
           id, 
           name, 
           slug,
+          country_id,
           countries!inner(id, is_active)
         `)
         .eq('is_archived', false)
