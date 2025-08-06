@@ -33,9 +33,15 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
       'X-Client-Info': 'ciara-web-app',
     },
   },
-  // Désactiver complètement les fonctionnalités realtime pour éviter les erreurs WebSocket
+  // Configuration realtime optimisée pour éviter les erreurs WebSocket
   realtime: {
-    disabled: true,
+    params: {
+      eventsPerSecond: 2, // Réduire la fréquence pour éviter la surcharge
+    },
+    // Configuration pour éviter les erreurs de connexion
+    transport: 'websocket',
+    timeout: 20000, // Timeout plus long
+    heartbeatIntervalMs: 30000, // Heartbeat moins fréquent
   },
 });
 

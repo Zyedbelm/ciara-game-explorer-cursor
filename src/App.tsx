@@ -13,6 +13,7 @@ import ErrorBoundary from "@/components/common/ErrorBoundary";
 import AuthGuard from "@/components/auth/AuthGuard";
 import LoadingSpinner from "@/components/common/LoadingSpinner";
 import { resilientService } from "@/services/supabaseResilientService";
+import { websocketErrorHandler } from "@/services/websocketErrorHandler";
 
 // Lazy load pages for better performance  
 const LandingPage = React.lazy(() => import("./pages/OptimizedLandingPage"));
@@ -71,11 +72,14 @@ const queryClient = new QueryClient({
 });
 
 function App() {
-  // Initialiser les services de résilience (sans WebSocket)
+  // Initialiser les services de résilience avec gestion d'erreurs WebSocket
   useEffect(() => {
     console.log('🚀 Initializing resilient services...');
     
-    // Log des statistiques périodiquement (sans WebSocket)
+    // Activer la gestion silencieuse des erreurs WebSocket
+    websocketErrorHandler.setErrorHandling(true);
+    
+    // Log des statistiques périodiquement
     const statsInterval = setInterval(() => {
       const stats = resilientService.getStats();
       
@@ -90,6 +94,8 @@ function App() {
     
     return () => {
       clearInterval(statsInterval);
+      // Désactiver la gestion d'erreurs au démontage
+      websocketErrorHandler.setErrorHandling(false);
     };
   }, []);
   
