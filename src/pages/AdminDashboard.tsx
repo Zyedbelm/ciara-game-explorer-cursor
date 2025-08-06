@@ -19,6 +19,7 @@ import { SystemHealthMonitor } from '@/components/admin/SystemHealthMonitor';
 import { SecurityConfigDashboard } from '@/components/admin/SecurityConfigDashboard';
 import RewardOffersManagement from '@/components/admin/RewardOffersManagement';
 import PartnersManagement from '@/components/admin/PartnersManagement';
+import PartnersDashboard from '@/components/admin/PartnersDashboard';
 
 import CityAssignment from '@/components/admin/CityAssignment';
 import CityManagement from '@/components/admin/CityManagement';
@@ -437,15 +438,7 @@ const AdminDashboard = () => {
 
               {activeTab === 'partners' && (
                 <div className="space-y-6">
-                  <div className="text-center py-8">
-                    <h3 className="text-lg font-semibold mb-2">Gestion des Partenaires</h3>
-                    <p className="text-muted-foreground mb-4">
-                      Les partenaires ont maintenant accès à leur propre espace dédié.
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      Connectez-vous en tant que partenaire pour accéder au tableau de bord partenaire.
-                    </p>
-                  </div>
+                  <PartnersDashboard />
                 </div>
               )}
 
