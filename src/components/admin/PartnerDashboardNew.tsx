@@ -192,25 +192,22 @@ const PartnerDashboardNew: React.FC = () => {
 
         console.log('✅ Redemptions data found:', redemptionsData);
 
-        // Récupérer les profils utilisateurs séparément
-        const userIds = redemptionsData?.map(r => r.user_id) || [];
-        console.log('🔍 [DEBUG] User IDs from redemptions:', userIds);
+        // Récupérer les profils utilisateurs via la fonction SQL
+        console.log('🔍 [DEBUG] Fetching user names via SQL function for partner:', partnerData.email);
         
-        const { data: profilesData, error: profilesError } = await supabase
-          .from('profiles')
-          .select('user_id, full_name, email')
-          .in('user_id', userIds);
+        const { data: profilesData, error: profilesError } = await (supabase as any)
+          .rpc('get_user_names_for_partner', { partner_email: partnerData.email });
 
         if (profilesError) {
-          console.error('❌ Error fetching profiles:', profilesError);
+          console.error('❌ Error fetching profiles via function:', profilesError);
           throw profilesError;
         }
 
-        console.log('✅ [DEBUG] Profiles data found:', profilesData);
+        console.log('✅ [DEBUG] Profiles data found via function:', profilesData);
 
         // Combiner les données
         const enrichedRedemptions = redemptionsData?.map(redemption => {
-          const profile = profilesData?.find(p => p.user_id === redemption.user_id);
+          const profile = (profilesData as any)?.find((p: any) => p.user_id === redemption.user_id);
           console.log('🔍 [DEBUG] Matching profile for user_id:', redemption.user_id, '->', profile);
           return {
             ...redemption,
