@@ -9,6 +9,7 @@ import { UserJourneyProgress } from '@/services/userJourneysService';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useJourneyCards } from '@/contexts/JourneyCardsContext';
 import { Sparkles, Navigation } from 'lucide-react';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface OptimizedJourneyTabsContentProps {
   journeys: {
@@ -60,23 +61,29 @@ const getJourneyVariant = (status: string): 'saved' | 'in-progress' | 'completed
   }
 };
 
-// Grille de cartes optimisée avec contrôles d'expansion
-const JourneyGridWithControls = memo<{ 
-  journeys: UserJourneyProgress[]; 
+interface JourneyGridWithControlsProps {
+  journeys: UserJourneyProgress[];
   onStatusChange: () => void;
   columns?: string;
   title?: string;
-}>(({ journeys, onStatusChange, columns = "grid-cols-1 lg:grid-cols-2 xl:grid-cols-3", title }) => {
+}
+
+// Grille de cartes optimisée avec contrôles d'expansion
+const JourneyGridWithControls: React.FC<JourneyGridWithControlsProps> = memo(({ 
+  journeys, 
+  onStatusChange, 
+  title,
+  columns = "grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+}) => {
   const { expandAllCards, collapseAllCards } = useJourneyCards();
-  
+  const isMobile = useIsMobile();
+
   return (
     <div className="space-y-4">
-      {/* Contrôles d'expansion */}
+      {/* Header avec contrôles */}
       <div className="flex items-center justify-between">
         {title && (
-          <h3 className="text-sm font-medium text-muted-foreground">
-            {title} ({journeys.length})
-          </h3>
+          <h3 className="text-lg font-semibold">{title}</h3>
         )}
         <div className="flex items-center gap-2">
           <Button
@@ -86,7 +93,7 @@ const JourneyGridWithControls = memo<{
             className="text-xs"
           >
             <Navigation className="h-3 w-3 mr-1" />
-            Tout déployer
+            {!isMobile && "Tout déployer"}
           </Button>
           <Button
             variant="outline"
@@ -95,7 +102,7 @@ const JourneyGridWithControls = memo<{
             className="text-xs"
           >
             <Navigation className="h-3 w-3 mr-1 rotate-90" />
-            Tout replier
+            {!isMobile && "Tout replier"}
           </Button>
         </div>
       </div>
@@ -179,6 +186,7 @@ const OptimizedJourneyTabsContent: React.FC<OptimizedJourneyTabsContentProps> = 
           <JourneyGridWithControls 
             journeys={journeys.completed} 
             onStatusChange={handleStatusChange}
+            columns="grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
             title="Parcours terminés"
           />
         )}

@@ -1201,6 +1201,16 @@ export const contactTranslations = {
       en: "This reward can no longer be redeemed (limits reached)",
       de: "Diese Belohnung kann nicht mehr eingelöst werden (Limits erreicht)"
     },
+    used_success: {
+      fr: "Récompense utilisée avec succès !",
+      en: "Reward used successfully!",
+      de: "Belohnung erfolgreich verwendet!"
+    },
+    use_error: {
+      fr: "Impossible d'utiliser la récompense",
+      en: "Unable to use the reward",
+      de: "Belohnung konnte nicht verwendet werden"
+    },
     
     // Voucher specific translations
     voucher: {

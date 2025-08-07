@@ -2,7 +2,7 @@
 import React from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Mountain, ArrowLeft, Menu } from 'lucide-react';
+import { Mountain, ArrowLeft, Menu, MapPin, BookOpen } from 'lucide-react';
 import UserMenu from '@/components/navigation/UserMenu';
 import { LanguageSelector } from '@/components/common/LanguageSelector';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -11,6 +11,12 @@ import { useSimplifiedTranslations } from '@/hooks/useSimplifiedTranslations';
 import { translations } from '@/utils/translations';
 import SimpleMobileNav from '@/components/navigation/SimpleMobileNav';
 import NotificationCenter from '@/components/layout/NotificationCenter';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import {
   NavigationMenu,
   NavigationMenuItem,
@@ -92,14 +98,64 @@ const Header: React.FC<HeaderProps> = ({
     : 'border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50';
 
   return (
-    <nav className={`${baseClass} ${className} w-full`}>
-      <div className="container mx-auto px-2 sm:px-4 py-3 sm:py-4">
-        {/* Mobile layout avec titre */}
-        {isMobile && title ? (
-          <div className="space-y-2">
-            {/* Première ligne : bouton retour + CIARA + contrôles */}
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
+    <TooltipProvider>
+      <nav className={`${baseClass} ${className} w-full`}>
+        <div className="container mx-auto px-2 sm:px-4 py-3 sm:py-4">
+          {/* Mobile layout avec titre */}
+          {isMobile && title ? (
+            <div className="space-y-2">
+              {/* Première ligne : bouton retour + CIARA + contrôles */}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  {showBackButton && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={handleBackClick}
+                      className={`${isTransparent ? 'text-white hover:bg-white/20' : 'hover:bg-muted'} cursor-pointer`}
+                    >
+                      <ArrowLeft className="h-4 w-4" />
+                    </Button>
+                  )}
+                  <Link 
+                    to="/" 
+                    className={`flex items-center gap-2 font-bold text-xl clickable ${
+                      isTransparent ? 'text-white' : 'text-foreground'
+                    }`}
+                  >
+                    <Mountain className="h-5 w-5" />
+                    <span>CIARA</span>
+                  </Link>
+                </div>
+                
+                <div className="flex items-center gap-1.5">
+                  <SimpleMobileNav variant={variant} />
+                  <LanguageSelector variant={isTransparent ? 'transparent' : 'default'} />
+                  <NotificationCenter />
+                  <UserMenu variant={isTransparent ? 'transparent' : 'default'} />
+                </div>
+              </div>
+              
+              {/* Deuxième ligne : titre */}
+              <div className="text-center">
+                <h1 className={`text-lg font-semibold leading-tight ${
+                  isTransparent ? 'text-white' : 'text-foreground'
+                }`}>
+                  {title}
+                </h1>
+                {subtitle && (
+                  <p className={`text-sm leading-tight mt-1 ${
+                    isTransparent ? 'text-white/80' : 'text-muted-foreground'
+                  }`}>
+                    {subtitle}
+                  </p>
+                )}
+              </div>
+            </div>
+          ) : (
+            /* Layout par défaut (desktop ou mobile sans titre) */
+            <div className="flex items-center justify-between flex-wrap">
+              <div className="flex items-center gap-2 sm:gap-4 flex-grow flex-shrink-0">
                 {showBackButton && (
                   <Button
                     variant="ghost"
@@ -116,118 +172,84 @@ const Header: React.FC<HeaderProps> = ({
                     isTransparent ? 'text-white' : 'text-foreground'
                   }`}
                 >
-                  <Mountain className="h-5 w-5" />
-                  <span>CIARA</span>
+                  <Mountain className="h-5 w-5 sm:h-6 sm:w-6" />
+                  <span className="hidden xs:inline">CIARA</span>
                 </Link>
+                {title && !isMobile && (
+                  <div className="ml-2 sm:ml-4 truncate max-w-[150px] sm:max-w-none">
+                    <h1 className={`text-base sm:text-lg font-semibold truncate ${
+                      isTransparent ? 'text-white' : 'text-foreground'
+                    }`}>
+                      {title}
+                    </h1>
+                    {subtitle && (
+                      <p className={`text-xs sm:text-sm truncate ${
+                        isTransparent ? 'text-white/80' : 'text-muted-foreground'
+                      }`}>
+                        {subtitle}
+                      </p>
+                    )}
+                  </div>
+                )}
               </div>
               
-              <div className="flex items-center gap-1">
-                <SimpleMobileNav variant={variant} />
+              {/* Navigation Menu - Desktop Only avec pictogrammes */}
+              {!isMobile && !title && (
+                <NavigationMenu className="hidden md:flex mr-8">
+                  <NavigationMenuList className="gap-6">
+                    <NavigationMenuItem>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <NavigationMenuLink asChild>
+                            <Link 
+                              to="/cities" 
+                              className={`flex items-center gap-2 text-sm font-medium link-hover ${
+                                isTransparent ? 'text-white hover:text-white/80' : 'text-muted-foreground'
+                              }`}
+                            >
+                              <MapPin className="h-4 w-4" />
+                            </Link>
+                          </NavigationMenuLink>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>{translate('our_cities')}</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </NavigationMenuItem>
+                    <NavigationMenuItem>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <NavigationMenuLink asChild>
+                            <Link 
+                              to="/blog" 
+                              className={`flex items-center gap-2 text-sm font-medium transition-colors hover:text-primary ${
+                                isTransparent ? 'text-white hover:text-white/80' : 'text-muted-foreground'
+                              }`}
+                            >
+                              <BookOpen className="h-4 w-4" />
+                            </Link>
+                          </NavigationMenuLink>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>Blog</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </NavigationMenuItem>
+                  </NavigationMenuList>
+                </NavigationMenu>
+              )}
+              
+              <div className="flex items-center gap-1.5 sm:gap-2">
+                {isMobile && !title && <SimpleMobileNav variant={variant} />}
                 <LanguageSelector variant={isTransparent ? 'transparent' : 'default'} />
                 <NotificationCenter />
                 <UserMenu variant={isTransparent ? 'transparent' : 'default'} />
               </div>
             </div>
-            
-            {/* Deuxième ligne : titre */}
-            <div className="text-center">
-              <h1 className={`text-lg font-semibold leading-tight ${
-                isTransparent ? 'text-white' : 'text-foreground'
-              }`}>
-                {title}
-              </h1>
-              {subtitle && (
-                <p className={`text-sm leading-tight mt-1 ${
-                  isTransparent ? 'text-white/80' : 'text-muted-foreground'
-                }`}>
-                  {subtitle}
-                </p>
-              )}
-            </div>
-          </div>
-        ) : (
-          /* Layout par défaut (desktop ou mobile sans titre) */
-          <div className="flex items-center justify-between flex-wrap">
-            <div className="flex items-center gap-2 sm:gap-4 flex-grow flex-shrink-0">
-              {showBackButton && (
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={handleBackClick}
-                  className={`${isTransparent ? 'text-white hover:bg-white/20' : 'hover:bg-muted'} cursor-pointer`}
-                >
-                  <ArrowLeft className="h-4 w-4" />
-                </Button>
-              )}
-              <Link 
-                to="/" 
-                className={`flex items-center gap-2 font-bold text-xl clickable ${
-                  isTransparent ? 'text-white' : 'text-foreground'
-                }`}
-              >
-                <Mountain className="h-5 w-5 sm:h-6 sm:w-6" />
-                <span className="hidden xs:inline">CIARA</span>
-              </Link>
-              {title && !isMobile && (
-                <div className="ml-2 sm:ml-4 truncate max-w-[150px] sm:max-w-none">
-                  <h1 className={`text-base sm:text-lg font-semibold truncate ${
-                    isTransparent ? 'text-white' : 'text-foreground'
-                  }`}>
-                    {title}
-                  </h1>
-                  {subtitle && (
-                    <p className={`text-xs sm:text-sm truncate ${
-                      isTransparent ? 'text-white/80' : 'text-muted-foreground'
-                    }`}>
-                      {subtitle}
-                    </p>
-                  )}
-                </div>
-              )}
-            </div>
-            
-            {/* Navigation Menu - Desktop Only */}
-            {!isMobile && !title && (
-              <NavigationMenu className="hidden md:flex mr-8">
-                <NavigationMenuList className="gap-6">
-                  <NavigationMenuItem>
-                    <NavigationMenuLink asChild>
-                      <Link 
-                        to="/cities" 
-                        className={`text-sm font-medium link-hover ${
-                          isTransparent ? 'text-white hover:text-white/80' : 'text-muted-foreground'
-                        }`}
-                      >
-                        {translate('our_cities')}
-                      </Link>
-                    </NavigationMenuLink>
-                  </NavigationMenuItem>
-                  <NavigationMenuItem>
-                    <NavigationMenuLink asChild>
-                      <Link 
-                        to="/blog" 
-                        className={`text-sm font-medium transition-colors hover:text-primary ${
-                          isTransparent ? 'text-white hover:text-white/80' : 'text-muted-foreground'
-                        }`}
-                      >
-                        Blog
-                      </Link>
-                    </NavigationMenuLink>
-                  </NavigationMenuItem>
-                </NavigationMenuList>
-              </NavigationMenu>
-            )}
-            
-            <div className="flex items-center gap-1 sm:gap-2">
-              {isMobile && !title && <SimpleMobileNav variant={variant} />}
-              <LanguageSelector variant={isTransparent ? 'transparent' : 'default'} />
-              <NotificationCenter />
-              <UserMenu variant={isTransparent ? 'transparent' : 'default'} />
-            </div>
-          </div>
-        )}
-      </div>
-    </nav>
+          )}
+        </div>
+      </nav>
+    </TooltipProvider>
   );
 };
 

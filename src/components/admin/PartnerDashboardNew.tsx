@@ -95,23 +95,51 @@ const PartnerDashboardNew: React.FC = () => {
   // Récupérer les données du partenaire
   useEffect(() => {
     const fetchPartnerData = async () => {
-      if (!profile || !(profile as any).partner_id) return;
+      if (!profile) return;
 
       try {
         setLoading(true);
+        console.log('🔍 Fetching partner data for profile:', profile);
 
-        // Récupérer les informations du partenaire
+        // Vérifier si le profil a un partner_id
+        if (!(profile as any).partner_id) {
+          console.log('⚠️ No partner_id in profile');
+          toast({
+            title: 'Partenaire non lié',
+            description: 'Votre compte n\'est pas lié à un partenaire. Veuillez contacter l\'administrateur.',
+            variant: 'destructive',
+          });
+          return;
+        }
+
+        // Récupérer les informations du partenaire via partner_id
         const { data: partnerData, error: partnerError } = await supabase
           .from('partners')
           .select(`
             id,
             name,
+            email,
             cities(name)
           `)
           .eq('id', (profile as any).partner_id)
           .single();
 
-        if (partnerError) throw partnerError;
+        if (partnerError) {
+          console.error('❌ Error fetching partner data:', partnerError);
+          throw partnerError;
+        }
+
+        if (!partnerData) {
+          console.log('⚠️ No partner found with partner_id:', (profile as any).partner_id);
+          toast({
+            title: 'Partenaire non trouvé',
+            description: `Aucun partenaire trouvé avec l'ID ${(profile as any).partner_id}. Veuillez contacter l'administrateur.`,
+            variant: 'destructive',
+          });
+          return;
+        }
+
+        console.log('✅ Partner data found:', partnerData);
 
         // Récupérer les offres du partenaire
         const { data: offersData, error: offersError } = await supabase
@@ -128,47 +156,68 @@ const PartnerDashboardNew: React.FC = () => {
             max_redemptions,
             terms_conditions
           `)
-          .eq('partner_id', (profile as any).partner_id);
+          .eq('partner_id', partnerData.id);
 
-        if (offersError) throw offersError;
+        if (offersError) {
+          console.error('❌ Error fetching offers:', offersError);
+          throw offersError;
+        }
 
-        // Récupérer TOUTES les récompenses
-        const { data: allRedemptionsData, error: redemptionsError } = await supabase
+        console.log('✅ Offers data found:', offersData);
+
+        // Récupérer les récompenses avec les données utilisateur
+        const { data: redemptionsData, error: redemptionsError } = await supabase
           .from('reward_redemptions')
-          .select('*')
+          .select(`
+            id,
+            redeemed_at,
+            points_spent,
+            status,
+            reward_id,
+            user_id,
+            rewards!inner(
+              id,
+              title,
+              value_chf,
+              partner_id
+            )
+          `)
+          .eq('rewards.partner_id', partnerData.id)
           .order('redeemed_at', { ascending: false });
 
-        console.log('All redemptions data:', allRedemptionsData);
-        console.log('Redemptions error:', redemptionsError);
+        if (redemptionsError) {
+          console.error('❌ Error fetching redemptions:', redemptionsError);
+          throw redemptionsError;
+        }
 
-        if (redemptionsError) throw redemptionsError;
+        console.log('✅ Redemptions data found:', redemptionsData);
 
-        // Récupérer TOUTES les récompenses du partenaire
-        const { data: allRewardsData, error: allRewardsError } = await supabase
-          .from('rewards')
-          .select('id, title, value_chf, partner_id')
-          .eq('partner_id', (profile as any).partner_id);
+        // Récupérer les profils utilisateurs séparément
+        const userIds = redemptionsData?.map(r => r.user_id) || [];
+        console.log('🔍 [DEBUG] User IDs from redemptions:', userIds);
+        
+        const { data: profilesData, error: profilesError } = await supabase
+          .from('profiles')
+          .select('user_id, full_name, email')
+          .in('user_id', userIds);
 
-        if (allRewardsError) throw allRewardsError;
+        if (profilesError) {
+          console.error('❌ Error fetching profiles:', profilesError);
+          throw profilesError;
+        }
 
-        console.log('All rewards for partner:', allRewardsData);
-
-        // Filtrer les récompenses qui correspondent aux récompenses du partenaire
-        const partnerRewardIds = allRewardsData?.map(r => r.id) || [];
-        const partnerRedemptions = allRedemptionsData?.filter(r => 
-          partnerRewardIds.includes(r.reward_id)
-        ) || [];
-
-        console.log('Partner reward IDs:', partnerRewardIds);
-        console.log('Filtered redemptions for partner:', partnerRedemptions);
+        console.log('✅ [DEBUG] Profiles data found:', profilesData);
 
         // Combiner les données
-        const enrichedRedemptions = partnerRedemptions?.map(redemption => {
-          const reward = allRewardsData?.find(r => r.id === redemption.reward_id);
+        const enrichedRedemptions = redemptionsData?.map(redemption => {
+          const profile = profilesData?.find(p => p.user_id === redemption.user_id);
+          console.log('🔍 [DEBUG] Matching profile for user_id:', redemption.user_id, '->', profile);
           return {
             ...redemption,
-            rewards: reward || { title: 'Offre supprimée', value_chf: 0, partner_id: '' },
-            profiles: { full_name: 'Utilisateur', email: 'user@example.com' }
+            profiles: {
+              full_name: profile?.full_name || 'Utilisateur inconnu',
+              email: profile?.email || 'email@inconnu.com'
+            }
           };
         }) || [];
 
@@ -200,26 +249,12 @@ const PartnerDashboardNew: React.FC = () => {
         setOffers(offersWithStats || []);
         setRedemptions(enrichedRedemptions || []);
 
-        // Debug pour voir les données
-        console.log('Partner Data:', {
-          partnerId: (profile as any).partner_id,
-          partnerData,
-          offersData: offersData?.length,
-          redemptionsData: enrichedRedemptions?.length,
-          enrichedRedemptions: enrichedRedemptions,
-          stats: {
-            totalOffers,
-            activeOffers,
-            totalRedemptions,
-            totalRevenue
-          }
-        });
-
       } catch (error) {
+        console.error('🚨 Error in fetchPartnerData:', error);
         toast({
-          title: "Erreur",
-          description: "Impossible de charger les données du partenaire",
-          variant: "destructive",
+          title: 'Erreur de chargement',
+          description: 'Impossible de charger les données du partenaire. Veuillez réessayer.',
+          variant: 'destructive',
         });
       } finally {
         setLoading(false);
@@ -227,7 +262,7 @@ const PartnerDashboardNew: React.FC = () => {
     };
 
     fetchPartnerData();
-  }, [(profile as any)?.partner_id, toast]);
+  }, [profile, toast]);
 
   // Données pour les graphiques - VRAIES DONNÉES
   const hourlyData = useMemo(() => {
@@ -690,7 +725,7 @@ const PartnerDashboardNew: React.FC = () => {
                           <TableCell>
                             {new Date(redemption.redeemed_at).toLocaleDateString('fr-FR')}
                           </TableCell>
-                          <TableCell>{redemption.profiles?.full_name || 'Anonyme'}</TableCell>
+                          <TableCell>{redemption.profiles?.full_name || 'Utilisateur inconnu'}</TableCell>
                           <TableCell>{redemption.rewards?.title || 'Offre supprimée'}</TableCell>
                           <TableCell>{redemption.points_spent}</TableCell>
                           <TableCell>{formatCurrency(redemption.rewards?.value_chf || 0)}</TableCell>

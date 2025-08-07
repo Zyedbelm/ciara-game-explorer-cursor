@@ -23,6 +23,7 @@ import PartnersOffersManagement from './PartnersOffersManagement';
 import PartnersRewardsAnalytics from './PartnersRewardsAnalytics';
 import PartnersAdvancedAnalytics from './PartnersAdvancedAnalytics';
 import PartnersManagement from './PartnersManagement';
+import PartnersRewardsHistory from './PartnersRewardsHistory';
 
 interface PartnerData {
   id: string;
@@ -582,9 +583,10 @@ const PartnersDashboard = () => {
         <TabsContent value="overview" className="space-y-6">
           {/* Sous-onglets */}
           <Tabs value={activeSubTab} onValueChange={setActiveSubTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-3">
+            <TabsList className="grid w-full grid-cols-4">
               <TabsTrigger value="overview">Vue d'ensemble</TabsTrigger>
               <TabsTrigger value="rewards">Récompenses</TabsTrigger>
+              <TabsTrigger value="history">Historique</TabsTrigger>
               <TabsTrigger value="analytics">Analytics</TabsTrigger>
             </TabsList>
 
@@ -719,6 +721,15 @@ const PartnersDashboard = () => {
                 dailyStats={dailyStats}
                 hourlyStats={hourlyStats}
                 topOffers={topOffers}
+              />
+            </TabsContent>
+
+            <TabsContent value="history" className="space-y-6">
+              <PartnersRewardsHistory 
+                selectedCountry={selectedCountry}
+                selectedCity={selectedCity}
+                selectedPartner={selectedPartner}
+                userRole={isSuperAdmin ? 'super_admin' : 'tenant_admin'}
               />
             </TabsContent>
 

@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -22,7 +23,12 @@ import {
   Ticket,
   QrCode,
   Sparkles,
-  Navigation
+  Navigation,
+  Calendar,
+  CheckCircle,
+  ExternalLink,
+  TrendingUp,
+  AlertCircle
 } from 'lucide-react';
 
 interface Reward {
@@ -50,6 +56,7 @@ interface Reward {
     latitude?: number;
     longitude?: number;
     city_id?: string;
+    email?: string;
     city?: {
       id: string;
       name: string;
@@ -86,8 +93,9 @@ interface RewardRedemption {
   points_spent: number;
   created_at: string;
   expires_at?: string;
-  status: 'pending' | 'validated' | 'expired';
+  status: 'pending' | 'used' | 'expired';
   reward: Reward;
+  used_at?: string; // Added for validated redemptions
 }
 
 const RewardsPage = () => {
@@ -102,6 +110,7 @@ const RewardsPage = () => {
   const [selectedCountry, setSelectedCountry] = useState('all');
   const [selectedCity, setSelectedCity] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
+  const [activeTab, setActiveTab] = useState('store');
   const { user, profile, loading: authLoading, isAuthenticated, hasRole, signOut } = useAuth();
   const { toast } = useToast();
   const { t, currentLanguage } = useLanguage();
@@ -155,6 +164,56 @@ const RewardsPage = () => {
       setPendingRewardsCount(0);
     }
   };
+
+  // Fetch redemptions by status
+  const fetchRedemptionsByStatus = async (status: 'pending' | 'validated' | 'expired') => {
+    if (!profile) return [];
+
+    try {
+      const { data, error } = await supabase
+        .from('reward_redemptions')
+        .select(`
+          *,
+          reward:rewards(
+            *,
+            partner:partners(
+              id, 
+              name, 
+              category, 
+              email, 
+              city_id,
+              logo_url,
+              address,
+              latitude,
+              longitude,
+              cities(id, name, country_id)
+            )
+          )
+        `)
+        .eq('user_id', profile.user_id)
+        .eq('status', status)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      return data || [];
+    } catch (error) {
+      console.error('Error fetching redemptions by status:', error);
+      return [];
+    }
+  };
+
+  // Get redemptions for each status
+  const pendingRedemptions = useMemo(() => 
+    redemptions.filter(r => r.status === 'pending'), [redemptions]
+  );
+  
+  const usedRedemptions = useMemo(() => 
+    redemptions.filter(r => r.status === 'used'), [redemptions]
+  );
+  
+  const expiredRedemptions = useMemo(() => 
+    redemptions.filter(r => r.status === 'expired'), [redemptions]
+  );
 
   useEffect(() => {
     const loadData = async () => {
@@ -314,80 +373,73 @@ const RewardsPage = () => {
     }
 
     try {
-      // Step 1: Get redemptions first with simpler query
+      console.log('🔍 Fetching redemptions for user:', profile.user_id);
+      
+      // Récupérer TOUS les redemptions de l'utilisateur avec les données complètes
       const { data: redemptionsData, error: redemptionsError } = await supabase
         .from('reward_redemptions')
-        .select('*')
+        .select(`
+          *,
+          reward:rewards(
+            *,
+            partner:partners(
+              id, 
+              name, 
+              category, 
+              email, 
+              city_id,
+              logo_url,
+              address,
+              latitude,
+              longitude,
+              cities(id, name, country_id)
+            )
+          )
+        `)
         .eq('user_id', profile.user_id)
         .order('created_at', { ascending: false });
 
       if (redemptionsError) {
+        console.error('❌ Error fetching redemptions:', redemptionsError);
         throw redemptionsError;
       }
 
+      console.log('📊 Found redemptions:', redemptionsData?.length || 0);
+
       if (!redemptionsData || redemptionsData.length === 0) {
+        console.log('📭 No redemptions found');
         setRedemptions([]);
         return;
       }
 
-      // Step 2: Get related rewards and partners data separately
-      const rewardIds = [...new Set(redemptionsData.map(r => r.reward_id))];
-      const { data: rewardsData, error: rewardsError } = await supabase
-        .from('rewards')
-        .select(`
-          *,
-          partners (
-            id, 
-            name, 
-            category, 
-            email, 
-            city_id,
-            logo_url,
-            address,
-            latitude,
-            longitude
-          )
-        `)
-        .in('id', rewardIds);
-
-      if (rewardsError) {
-        throw rewardsError;
-      }
-
-      // Step 3: Create a map for efficient lookup
-      const rewardsMap = new Map();
-      (rewardsData || []).forEach(reward => {
-        rewardsMap.set(reward.id, {
-          ...reward,
-          partner: reward.partners
-        });
-      });
-
-      // Step 4: Transform redemptions with complete reward data
+      // Transformer les données pour correspondre à l'interface
       const transformedRedemptions = redemptionsData.map(redemption => {
-        const rewardData = rewardsMap.get(redemption.reward_id);
-        
-        if (!rewardData) {
-        }
+        const rewardData = redemption.reward ? {
+          ...redemption.reward,
+          partner: {
+            ...redemption.reward.partner,
+            city: redemption.reward.partner.cities
+          }
+        } : null;
         
         return {
           ...redemption,
-          status: (redemption.status as 'pending' | 'validated' | 'expired') || 'pending',
-          reward: rewardData || null
+          status: (redemption.status as 'pending' | 'used' | 'expired') || 'pending',
+          reward: rewardData
         };
-      }).filter(redemption => redemption.reward !== null); // Filter out redemptions without reward data
+      }).filter(redemption => redemption.reward !== null); // Garder seulement ceux avec des données de reward
 
-      // Filter out redemptions without reward data
-      
+      console.log('✅ Transformed redemptions:', transformedRedemptions.length);
+      console.log('📋 Redemptions by status:', {
+        pending: transformedRedemptions.filter(r => r.status === 'pending').length,
+        used: transformedRedemptions.filter(r => r.status === 'used').length,
+        expired: transformedRedemptions.filter(r => r.status === 'expired').length
+      });
+
       setRedemptions(transformedRedemptions);
       
     } catch (error) {
-      console.error('🚨 Error details:', {
-        message: error.message,
-        code: error.code,
-        details: error.details,
-        hint: error.hint
-      });
+      console.error('🚨 Error in fetchRedemptions:', error);
       
       // Set empty array and show user-friendly error
       setRedemptions([]);
@@ -515,6 +567,107 @@ const RewardsPage = () => {
     }
   };
 
+  const handleUseReward = async (redemption: RewardRedemption) => {
+    if (!profile) {
+      toast({
+        title: t('toast.error.title'),
+        description: getRewardTranslation('login_required'),
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setRedeeming(redemption.id);
+
+    try {
+      console.log('🎯 Using reward:', redemption.id);
+
+      // 1. Mettre à jour le statut du voucher à 'used'
+      const { error: useRedemptionError } = await supabase
+        .from('reward_redemptions')
+        .update({ 
+          status: 'used', 
+          used_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', redemption.id);
+
+      if (useRedemptionError) {
+        console.error('❌ Error updating redemption status:', useRedemptionError);
+        throw useRedemptionError;
+      }
+
+      console.log('✅ Redemption status updated to used');
+
+      // 2. Envoyer l'email de confirmation au partenaire
+      try {
+        const { error: emailError } = await supabase.functions.invoke('send-reward-redemption', {
+          body: {
+            voucherId: redemption.id,
+            redemptionCode: redemption.redemption_code,
+            partnerEmail: redemption.reward.partner.email,
+            partnerName: redemption.reward.partner.name,
+            partnerAddress: redemption.reward.partner.address,
+            rewardTitle: redemption.reward.title,
+            rewardDescription: redemption.reward.description,
+            pointsSpent: redemption.points_spent,
+            userEmail: profile.email,
+            language: currentLanguage
+          }
+        });
+
+        if (emailError) {
+          console.error('⚠️ Email error (non-blocking):', emailError);
+          // Ne pas bloquer le processus si l'email échoue
+        } else {
+          console.log('✅ Confirmation email sent to partner');
+        }
+      } catch (emailError) {
+        console.error('⚠️ Email error (non-blocking):', emailError);
+        // Ne pas bloquer le processus si l'email échoue
+      }
+
+      // 3. Remettre les points à l'utilisateur (optionnel selon la logique métier)
+      // const newTotalPoints = profile.total_points + redemption.points_spent;
+      // const { error: pointsError } = await supabase
+      //   .from('profiles')
+      //   .update({ 
+      //     total_points: newTotalPoints 
+      //   })
+      //   .eq('user_id', profile.user_id);
+
+      // if (pointsError) throw pointsError;
+
+      // Update profile locally immediately (before real-time update kicks in)
+      // const updatedProfile = { ...profile, total_points: newTotalPoints };
+      // setTimeout(() => {
+      //   window.dispatchEvent(new CustomEvent('profile-updated', { 
+      //     detail: updatedProfile 
+      //   }));
+      // }, 100);
+
+      toast({
+        title: t('toast.success.title'),
+        description: t('rewards.used_success'),
+      });
+
+      console.log('✅ Reward used successfully');
+
+      // 4. Rafraîchir toutes les données
+      await refreshDataAfterRedemption();
+
+    } catch (error) {
+      console.error('🚨 Error using reward:', error);
+      toast({
+        title: t('toast.error.title'),
+        description: t('rewards.use_error'),
+        variant: 'destructive',
+      });
+    } finally {
+      setRedeeming(null);
+    }
+  };
+
   const getRewardIcon = (type: string, category: string) => {
     switch (type) {
       case 'discount':
@@ -607,7 +760,7 @@ const RewardsPage = () => {
       showBackButton={true}
       containerClassName="space-y-8"
     >
-      {/* Header */}
+      {/* Header avec points */}
       <div className="text-center">
         <h1 className="text-4xl font-bold mb-4">{t('rewards.title')}</h1>
         <p className="text-xl text-muted-foreground mb-6">
@@ -624,227 +777,445 @@ const RewardsPage = () => {
                 </div>
               </CardContent>
             </Card>
-              
-            {/* Bouton pour voir ses récompenses avec notification badge */}
-            <div className="flex justify-center">
-              <Button 
-                asChild 
-                variant={pendingRewardsCount > 0 ? "default" : "outline"}
-                className={`w-fit relative ${pendingRewardsCount > 0 ? 'bg-blue-600 hover:bg-blue-700' : ''}`}
-              >
-                <Link to="/my-rewards">
-                  <QrCode className="h-4 w-4 mr-2" />
-                  {t('common.my_rewards')}
-                  {pendingRewardsCount > 0 && (
-                    <Badge 
-                      variant="destructive" 
-                      className="absolute -top-2 -right-2 h-5 w-5 p-0 flex items-center justify-center text-xs min-w-[1.25rem] bg-red-600"
-                    >
-                      {pendingRewardsCount}
-                    </Badge>
-                  )}
-                </Link>
-              </Button>
-            </div>
           </div>
         )}
       </div>
 
-      {/* Geographical Filters */}
-      <GeographicalFilters
-        countries={countries}
-        cities={cities}
-        selectedCountry={selectedCountry}
-        selectedCity={selectedCity}
-        searchTerm={searchTerm}
-        onCountryChange={setSelectedCountry}
-        onCityChange={setSelectedCity}
-        onSearchChange={setSearchTerm}
-        onClearFilters={handleClearFilters}
-        language={currentLanguage}
-        className="mb-8"
-      />
+      {/* Onglets */}
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+        <TabsList className="grid w-full max-w-md grid-cols-2">
+          <TabsTrigger value="store">
+            {currentLanguage === 'en' ? 'Rewards Store' : currentLanguage === 'de' ? 'Belohnungsshop' : 'Boutique de Récompenses'}
+          </TabsTrigger>
+          <TabsTrigger value="earned">
+            {currentLanguage === 'en' ? 'My Earned Rewards' : currentLanguage === 'de' ? 'Meine Verdienten Belohnungen' : 'Mes Récompenses Gagnées'}
+          </TabsTrigger>
+        </TabsList>
 
-      {/* Rewards Grid */}
-      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredRewards.map((reward) => {
-          const isAvailable = canRedeem(reward);
-          const hasGPSLocation = reward.partner.latitude && reward.partner.longitude;
-          
-          const openGoogleMaps = () => {
-            if (reward.partner.latitude && reward.partner.longitude) {
-              // Use GPS coordinates if available
-              const url = `https://www.google.com/maps/dir/?api=1&destination=${reward.partner.latitude},${reward.partner.longitude}&travelmode=walking`;
-              window.open(url, '_blank');
-            } else if (reward.partner.address) {
-              // Fallback to address
-              const url = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(reward.partner.address)}&travelmode=walking`;
-              window.open(url, '_blank');
-            } else {
-              toast({
-                title: t('toast.error.title'),
-                description: t('partner.location_unavailable'),
-                variant: 'destructive',
-              });
-            }
-          };
-          
-          return (
-            <Card key={reward.id} className={`overflow-hidden ${
-              isAvailable ? 'hover:shadow-lg transition-shadow' : 'opacity-60'
-            }`}>
-              <CardHeader className="space-y-4">
-                <div className="flex items-start justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center">
-                      {getRewardIcon(reward.type, reward.partner.category)}
-                    </div>
-                    <div>
-                      <h3 className="font-semibold">{reward.title}</h3>
-                      <p className="text-sm text-muted-foreground">{reward.partner.name}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Badge variant={isAvailable ? 'default' : 'secondary'}>
-                      {getTypeLabel(reward.type)}
-                    </Badge>
-                    {/* Bouton localiser remonté ici */}
-                    {hasGPSLocation && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={openGoogleMaps}
-                        className="flex items-center gap-1 px-2"
-                      >
-                        <Navigation className="h-3 w-3" />
-                      </Button>
-                    )}
-                  </div>
-                </div>
-                
-                <p className="text-sm">{reward.description}</p>
-                
-                {/* Address and City Tag */}
-                <div className="space-y-2">
-                  {reward.partner.address && (
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground truncate">
-                      <MapPin className="h-3 w-3 flex-shrink-0" />
-                      <span className="truncate">{reward.partner.address}</span>
-                    </div>
-                  )}
-                  {reward.partner.city && (
-                    <div className="flex items-center gap-2">
-                      <Badge 
-                        variant="outline" 
-                        className={`text-xs font-medium ${getCityBadgeColor(reward.partner.city.name)}`}
-                      >
-                        {reward.partner.city.name}
-                      </Badge>
-                    </div>
-                  )}
-                </div>
-                
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Trophy className="h-4 w-4 text-primary" />
-                    <span className="font-semibold">{reward.points_required} points</span>
-                  </div>
-                  {reward.value_chf && (
-                    <span className="text-green-600 font-medium">
-                      {reward.value_chf} CHF
-                    </span>
-                  )}
-                </div>
+        {/* Onglet Rewards Store */}
+        <TabsContent value="store" className="space-y-6">
+          {/* Geographical Filters */}
+          <GeographicalFilters
+            countries={countries}
+            cities={cities}
+            selectedCountry={selectedCountry}
+            selectedCity={selectedCity}
+            searchTerm={searchTerm}
+            onCountryChange={setSelectedCountry}
+            onCityChange={setSelectedCity}
+            onSearchChange={setSearchTerm}
+            onClearFilters={handleClearFilters}
+            language={currentLanguage}
+            className="mb-8"
+          />
 
-                 {/* Validity Period */}
-                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                   <Clock className="h-4 w-4" />
-                   <span>{getRewardTranslation('valid_days', { days: reward.validity_days || 30 })}</span>
-                 </div>
-
-                 {/* Personal Redemption Limit Only - UPDATED SECTION */}
-                 {(() => {
-                   const stats = rewardStats.get(reward.id);
-                   // Always show personal limit info if it exists
-                   if (reward.max_redemptions_per_user) {
-                     const used = stats?.user_redemptions || 0;
-                     const total = reward.max_redemptions_per_user;
-                     
-                     return (
-                       <div className="text-sm text-muted-foreground">
-                         {getRewardTranslation('usage_count', { used, total })}
-                       </div>
-                     );
-                   }
-                   
-                   return null;
-                 })()}
-
-              </CardHeader>
-
-              <CardContent>
-                <Button
-                  onClick={() => redeemReward(reward)}
-                  disabled={!isAvailable || redeeming === reward.id}
-                  className="w-full"
-                  variant={isAvailable ? 'default' : 'secondary'}
-                >
-                  {redeeming === reward.id ? (
-                    t('rewards.exchanging')
-                  ) : isAvailable ? (
-                    t('rewards.exchange')
-                   ) : profile && reward.points_required && (profile.total_points || 0) < reward.points_required ? (
-                     t('rewards.points_missing', { missing: reward.points_required - (profile.total_points || 0) })
-                  ) : (
-                    t('rewards.not_available')
-                  )}
-                </Button>
-              </CardContent>
-            </Card>
-          );
-        })}
-      </div>
-
-      {/* Redemptions History */}
-      {redemptions.length > 0 && (
-        <div className="space-y-4">
-          <h2 className="text-2xl font-bold">{t('rewards.my_exchanges')}</h2>
-          <div className="grid gap-4">
-            {redemptions.map((redemption) => (
-              <Card key={redemption.id}>
-                <CardContent className="flex items-center justify-between p-6">
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 bg-muted rounded-full flex items-center justify-center">
-                      <QrCode className="h-6 w-6" />
+          {/* Rewards Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredRewards.map((reward) => {
+              const isAvailable = canRedeem(reward);
+              const hasGPSLocation = reward.partner.latitude && reward.partner.longitude;
+              
+              const openGoogleMaps = () => {
+                if (reward.partner.latitude && reward.partner.longitude) {
+                  // Use GPS coordinates if available
+                  const url = `https://www.google.com/maps/dir/?api=1&destination=${reward.partner.latitude},${reward.partner.longitude}&travelmode=walking`;
+                  window.open(url, '_blank');
+                } else if (reward.partner.address) {
+                  // Fallback to address
+                  const url = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(reward.partner.address)}&travelmode=walking`;
+                  window.open(url, '_blank');
+                } else {
+                  toast({
+                    title: t('toast.error.title'),
+                    description: t('partner.location_unavailable'),
+                    variant: 'destructive',
+                  });
+                }
+              };
+              
+              return (
+                <Card key={reward.id} className={`overflow-hidden max-w-sm ${
+                  !isAvailable ? 'opacity-60' : 'hover:shadow-lg'
+                } transition-all duration-200`}>
+                  <CardContent className="p-6">
+                    {/* Partner Info */}
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-12 h-12 bg-muted rounded-full flex items-center justify-center">
+                          {reward.partner.logo_url ? (
+                            <img 
+                              src={reward.partner.logo_url} 
+                              alt={reward.partner.name}
+                              className="w-8 h-8 object-contain"
+                            />
+                          ) : (
+                            <ShoppingBag className="h-6 w-6 text-muted-foreground" />
+                          )}
+                        </div>
+                        <div>
+                          <h3 className="font-semibold">{reward.partner.name}</h3>
+                          <p className="text-sm text-muted-foreground">{reward.partner.category}</p>
+                        </div>
+                      </div>
+                      {hasGPSLocation && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={openGoogleMaps}
+                          className="text-xs"
+                        >
+                          <Navigation className="h-3 w-3" />
+                        </Button>
+                      )}
                     </div>
-                    <div>
-                      <h3 className="font-semibold">{redemption.reward.title}</h3>
-                      <p className="text-sm text-muted-foreground">
-                        {t('rewards.code', { code: redemption.redemption_code })}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {new Date(redemption.created_at).toLocaleDateString(currentLanguage)}
-                      </p>
+                    
+                    <p className="text-sm">{reward.description}</p>
+                    
+                    {/* Address and City Tag */}
+                    <div className="space-y-2">
+                      {reward.partner.address && (
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground truncate">
+                          <MapPin className="h-3 w-3 flex-shrink-0" />
+                          <span className="truncate">{reward.partner.address}</span>
+                        </div>
+                      )}
+                      {reward.partner.city && (
+                        <div className="flex items-center gap-2">
+                          <Badge 
+                            variant="outline" 
+                            className={`text-xs font-medium ${getCityBadgeColor(reward.partner.city.name)}`}
+                          >
+                            {reward.partner.city.name}
+                          </Badge>
+                        </div>
+                      )}
                     </div>
-                  </div>
-                  
-                  <div className="text-right">
-                    <Badge variant={
-                      redemption.status === 'validated' ? 'default' :
-                      redemption.status === 'expired' ? 'destructive' : 'secondary'
-                    }>
-                      {t(`rewards.status.${redemption.status}`)}
-                    </Badge>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      {t('rewards.points_spent', { points: redemption.points_spent })}
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+                    
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Trophy className="h-4 w-4 text-primary" />
+                        <span className="font-semibold">{reward.points_required} points</span>
+                      </div>
+                      {reward.value_chf && (
+                        <span className="text-green-600 font-medium">
+                          {reward.value_chf} CHF
+                        </span>
+                      )}
+                    </div>
+                    
+                                         <Button
+                       className="w-full mt-4"
+                       disabled={!isAvailable || redeeming === reward.id}
+                       onClick={() => redeemReward(reward)}
+                     >
+                      {redeeming === reward.id ? (
+                        t('rewards.exchanging')
+                      ) : isAvailable ? (
+                        t('rewards.exchange')
+                      ) : profile && reward.points_required && (profile.total_points || 0) < reward.points_required ? (
+                        t('rewards.points_missing', { missing: reward.points_required - (profile.total_points || 0) })
+                      ) : (
+                        t('rewards.not_available')
+                      )}
+                    </Button>
+                  </CardContent>
+                </Card>
+              );
+            })}
           </div>
-        </div>
-      )}
+        </TabsContent>
+
+        {/* Onglet My Earned Rewards */}
+        <TabsContent value="earned" className="space-y-6">
+          {/* Sous-onglets pour My Earned Rewards */}
+          <Tabs defaultValue="to-validate" className="space-y-4">
+            <TabsList className="grid w-full max-w-md grid-cols-2">
+              <TabsTrigger value="to-validate">
+                {currentLanguage === 'en' ? 'To Validate' : currentLanguage === 'de' ? 'Zu Validieren' : 'À valider'}
+              </TabsTrigger>
+              <TabsTrigger value="transformed">
+                {currentLanguage === 'en' ? 'Transformed' : currentLanguage === 'de' ? 'Transformiert' : 'Transformés'}
+              </TabsTrigger>
+            </TabsList>
+
+            {/* Sous-onglet 1: À valider (vouchers à utiliser) */}
+            <TabsContent value="to-validate" className="space-y-4">
+              {pendingRedemptions.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {pendingRedemptions.map((redemption) => (
+                    <Card key={redemption.id} className="border-blue-200 bg-blue-50/30 max-w-sm">
+                      <CardContent className="p-6">
+                        <div className="flex items-center justify-between mb-4">
+                          <div className="flex items-center gap-3">
+                            <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+                              <Gift className="h-6 w-6 text-blue-600" />
+                            </div>
+                            <div>
+                              <h3 className="font-semibold text-sm">{redemption.reward.title}</h3>
+                              <p className="text-xs text-muted-foreground">{redemption.reward.partner.name}</p>
+                            </div>
+                          </div>
+                          <Badge variant="secondary" className="bg-blue-100 text-blue-800 text-xs">
+                            <Clock className="h-3 w-3 mr-1" />
+                            {currentLanguage === 'en' ? 'Pending' : currentLanguage === 'de' ? 'Ausstehend' : 'En attente'}
+                          </Badge>
+                        </div>
+                        
+                        <div className="grid grid-cols-2 gap-3 mb-4">
+                          <div>
+                            <p className="text-xs text-muted-foreground">
+                              {currentLanguage === 'en' ? 'Type' : currentLanguage === 'de' ? 'Typ' : 'Type'}
+                            </p>
+                            <p className="text-sm font-medium">{getRewardTranslation(`type_${redemption.reward.type || 'default'}`)}</p>
+                          </div>
+                          <div>
+                            <p className="text-xs text-muted-foreground">
+                              {currentLanguage === 'en' ? 'Value' : currentLanguage === 'de' ? 'Wert' : 'Valeur'}
+                            </p>
+                            <p className="text-sm font-medium text-green-600">{redemption.reward.value_chf} CHF</p>
+                          </div>
+                          <div>
+                            <p className="text-xs text-muted-foreground">
+                              {currentLanguage === 'en' ? 'Points spent' : currentLanguage === 'de' ? 'Punkte ausgegeben' : 'Points dépensés'}
+                            </p>
+                            <p className="text-sm font-medium text-red-600">-{redemption.points_spent} pts</p>
+                          </div>
+                          <div>
+                            <p className="text-xs text-muted-foreground">
+                              {currentLanguage === 'en' ? 'Code' : currentLanguage === 'de' ? 'Code' : 'Code'}
+                            </p>
+                            <div className="bg-gray-100 px-2 py-1 rounded text-xs font-mono">
+                              {redemption.redemption_code}
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <div className="space-y-2 text-xs text-muted-foreground mb-4">
+                          <div className="flex items-center gap-2">
+                            <Clock className="h-3 w-3" />
+                            <span>
+                              {currentLanguage === 'en' ? 'Expires on' : currentLanguage === 'de' ? 'Läuft ab am' : 'Expire le'}: {redemption.expires_at ? new Date(redemption.expires_at).toLocaleDateString(currentLanguage) : 'N/A'}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Calendar className="h-3 w-3" />
+                            <span>
+                              {currentLanguage === 'en' ? 'Redeemed on' : currentLanguage === 'de' ? 'Eingelöst am' : 'Échangé le'}: {new Date(redemption.created_at).toLocaleDateString(currentLanguage)}
+                            </span>
+                          </div>
+                        </div>
+                        
+                        <Button 
+                          className="w-full bg-red-600 hover:bg-red-700 text-sm"
+                          onClick={() => handleUseReward(redemption)}
+                        >
+                          <ExternalLink className="h-4 w-4 mr-2" />
+                          {currentLanguage === 'en' ? 'Use now' : currentLanguage === 'de' ? 'Jetzt verwenden' : 'Utiliser maintenant'}
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              ) : (
+                <Card>
+                  <CardContent className="p-8 text-center">
+                    <Gift className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+                    <h3 className="text-lg font-semibold mb-2">
+                      {currentLanguage === 'en' ? 'No rewards to validate yet' : currentLanguage === 'de' ? 'Noch keine Belohnungen zu validieren' : 'Aucune récompense à valider'}
+                    </h3>
+                    <p className="text-muted-foreground mb-4">
+                      {currentLanguage === 'en' ? 'Exchange rewards from the store to see them here!' : currentLanguage === 'de' ? 'Tauschen Sie Belohnungen aus dem Shop ein, um sie hier zu sehen!' : 'Échangez des récompenses depuis la boutique pour les voir ici !'}
+                    </p>
+                    <Button onClick={() => setActiveTab('store')}>
+                      {currentLanguage === 'en' ? 'Browse Rewards Store' : currentLanguage === 'de' ? 'Belohnungsshop durchsuchen' : 'Parcourir la boutique'}
+                    </Button>
+                  </CardContent>
+                </Card>
+              )}
+            </TabsContent>
+
+                          {/* Sous-onglet 2: Transformés (historique) */}
+              <TabsContent value="transformed" className="space-y-4">
+                {(usedRedemptions.length > 0 || expiredRedemptions.length > 0) ? (
+                <div className="space-y-4">
+                  <h2 className="text-2xl font-bold">{t('rewards.my_exchanges')}</h2>
+                  
+                                      {/* Récompenses utilisées */}
+                    {usedRedemptions.length > 0 && (
+                      <div className="space-y-4">
+                        <h3 className="text-lg font-semibold text-green-700">
+                          {currentLanguage === 'en' ? 'Used Rewards' : currentLanguage === 'de' ? 'Verwendete Belohnungen' : 'Récompenses utilisées'}
+                        </h3>
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                          {usedRedemptions.map((redemption) => (
+                          <Card key={redemption.id} className="border-green-200 bg-green-50/30 max-w-sm">
+                            <CardContent className="p-6">
+                              <div className="flex items-center justify-between mb-4">
+                                <div className="flex items-center gap-3">
+                                  <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+                                    <CheckCircle className="h-6 w-6 text-green-600" />
+                                  </div>
+                                  <div>
+                                    <h3 className="font-semibold text-sm">{redemption.reward.title}</h3>
+                                    <p className="text-xs text-muted-foreground">{redemption.reward.partner.name}</p>
+                                  </div>
+                                </div>
+                                <Badge variant="default" className="bg-green-100 text-green-800 text-xs">
+                                  <CheckCircle className="h-3 w-3 mr-1" />
+                                  {currentLanguage === 'en' ? 'Used' : currentLanguage === 'de' ? 'Verwendet' : 'Utilisé'}
+                                </Badge>
+                              </div>
+                              
+                              <div className="grid grid-cols-2 gap-3 mb-4">
+                                <div>
+                                  <p className="text-xs text-muted-foreground">
+                                    {currentLanguage === 'en' ? 'Type' : currentLanguage === 'de' ? 'Typ' : 'Type'}
+                                  </p>
+                                  <p className="text-sm font-medium">{getRewardTranslation(`type_${redemption.reward.type || 'default'}`)}</p>
+                                </div>
+                                <div>
+                                  <p className="text-xs text-muted-foreground">
+                                    {currentLanguage === 'en' ? 'Value' : currentLanguage === 'de' ? 'Wert' : 'Valeur'}
+                                  </p>
+                                  <p className="text-sm font-medium text-green-600">{redemption.reward.value_chf} CHF</p>
+                                </div>
+                                <div>
+                                  <p className="text-xs text-muted-foreground">
+                                    {currentLanguage === 'en' ? 'Points spent' : currentLanguage === 'de' ? 'Punkte ausgegeben' : 'Points dépensés'}
+                                  </p>
+                                  <p className="text-sm font-medium text-red-600">-{redemption.points_spent} pts</p>
+                                </div>
+                                <div>
+                                  <p className="text-xs text-muted-foreground">
+                                    {currentLanguage === 'en' ? 'Code' : currentLanguage === 'de' ? 'Code' : 'Code'}
+                                  </p>
+                                  <div className="bg-gray-100 px-2 py-1 rounded text-xs font-mono">
+                                    {redemption.redemption_code}
+                                  </div>
+                                </div>
+                              </div>
+                              
+                              <div className="space-y-2 text-xs text-muted-foreground">
+                                <div className="flex items-center gap-2">
+                                  <Clock className="h-3 w-3" />
+                                  <span>
+                                    {currentLanguage === 'en' ? 'Expires on' : currentLanguage === 'de' ? 'Läuft ab am' : 'Expire le'}: {redemption.expires_at ? new Date(redemption.expires_at).toLocaleDateString(currentLanguage) : 'N/A'}
+                                  </span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <TrendingUp className="h-3 w-3" />
+                                  <span>
+                                    {currentLanguage === 'en' ? 'Used 1/1 times' : currentLanguage === 'de' ? '1/1 mal verwendet' : 'Utilisé 1/1 fois'}
+                                  </span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <Calendar className="h-3 w-3" />
+                                  <span>
+                                    {currentLanguage === 'en' ? 'Redeemed on' : currentLanguage === 'de' ? 'Eingelöst am' : 'Échangé le'}: {new Date(redemption.created_at).toLocaleDateString(currentLanguage)}
+                                  </span>
+                                </div>
+                                {redemption.used_at && (
+                                  <div className="flex items-center gap-2">
+                                    <CheckCircle className="h-3 w-3" />
+                                    <span>
+                                      {currentLanguage === 'en' ? 'Used on' : currentLanguage === 'de' ? 'Verwendet am' : 'Utilisé le'}: {new Date(redemption.used_at).toLocaleDateString(currentLanguage)}
+                                    </span>
+                                  </div>
+                                )}
+                              </div>
+                            </CardContent>
+                          </Card>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Récompenses expirées */}
+                  {expiredRedemptions.length > 0 && (
+                    <div className="space-y-4">
+                      <h3 className="text-lg font-semibold text-red-700">
+                        {currentLanguage === 'en' ? 'Expired Rewards' : currentLanguage === 'de' ? 'Abgelaufene Belohnungen' : 'Récompenses expirées'}
+                      </h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {expiredRedemptions.map((redemption) => (
+                          <Card key={redemption.id} className="border-red-200 bg-red-50/30 max-w-sm">
+                            <CardContent className="p-6">
+                              <div className="flex items-center justify-between mb-4">
+                                <div className="flex items-center gap-3">
+                                  <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
+                                    <AlertCircle className="h-6 w-6 text-red-600" />
+                                  </div>
+                                  <div>
+                                    <h3 className="font-semibold text-sm">{redemption.reward.title}</h3>
+                                    <p className="text-xs text-muted-foreground">{redemption.reward.partner.name}</p>
+                                  </div>
+                                </div>
+                                <Badge variant="destructive" className="text-xs">
+                                  {t(`rewards.status.${redemption.status}`)}
+                                </Badge>
+                              </div>
+                              
+                              <div className="grid grid-cols-2 gap-3 mb-4">
+                                <div>
+                                  <p className="text-xs text-muted-foreground">
+                                    {currentLanguage === 'en' ? 'Type' : currentLanguage === 'de' ? 'Typ' : 'Type'}
+                                  </p>
+                                  <p className="text-sm font-medium">{getRewardTranslation(`type_${redemption.reward.type || 'default'}`)}</p>
+                                </div>
+                                <div>
+                                  <p className="text-xs text-muted-foreground">
+                                    {currentLanguage === 'en' ? 'Value' : currentLanguage === 'de' ? 'Wert' : 'Valeur'}
+                                  </p>
+                                  <p className="text-sm font-medium text-green-600">{redemption.reward.value_chf} CHF</p>
+                                </div>
+                                <div>
+                                  <p className="text-xs text-muted-foreground">
+                                    {currentLanguage === 'en' ? 'Points spent' : currentLanguage === 'de' ? 'Punkte ausgegeben' : 'Points dépensés'}
+                                  </p>
+                                  <p className="text-sm font-medium text-red-600">-{redemption.points_spent} pts</p>
+                                </div>
+                                <div>
+                                  <p className="text-xs text-muted-foreground">
+                                    {currentLanguage === 'en' ? 'Code' : currentLanguage === 'de' ? 'Code' : 'Code'}
+                                  </p>
+                                  <div className="bg-gray-100 px-2 py-1 rounded text-xs font-mono">
+                                    {redemption.redemption_code}
+                                  </div>
+                                </div>
+                              </div>
+                              
+                              <div className="space-y-2 text-xs text-muted-foreground">
+                                <div className="flex items-center gap-2">
+                                  <Calendar className="h-3 w-3" />
+                                  <span>
+                                    {currentLanguage === 'en' ? 'Redeemed on' : currentLanguage === 'de' ? 'Eingelöst am' : 'Échangé le'}: {new Date(redemption.created_at).toLocaleDateString(currentLanguage)}
+                                  </span>
+                                </div>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <Card>
+                  <CardContent className="p-8 text-center">
+                    <QrCode className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+                    <h3 className="text-lg font-semibold mb-2">
+                      {currentLanguage === 'en' ? 'No transformed rewards yet' : currentLanguage === 'de' ? 'Noch keine transformierten Belohnungen' : 'Aucune récompense transformée'}
+                    </h3>
+                    <p className="text-muted-foreground mb-4">
+                      {currentLanguage === 'en' ? 'Your used and validated rewards will appear here!' : currentLanguage === 'de' ? 'Ihre verwendeten und validierten Belohnungen werden hier angezeigt!' : 'Vos récompenses utilisées et validées apparaîtront ici !'}
+                    </p>
+                  </CardContent>
+                </Card>
+              )}
+            </TabsContent>
+          </Tabs>
+        </TabsContent>
+      </Tabs>
     </StandardPageLayout>
   );
 };
