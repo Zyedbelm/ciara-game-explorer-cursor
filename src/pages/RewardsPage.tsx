@@ -783,14 +783,30 @@ const RewardsPage = () => {
 
       {/* Onglets */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full max-w-md grid-cols-2">
-          <TabsTrigger value="store">
-            {currentLanguage === 'en' ? 'Rewards Store' : currentLanguage === 'de' ? 'Belohnungsshop' : 'Boutique de Récompenses'}
-          </TabsTrigger>
-          <TabsTrigger value="earned">
-            {currentLanguage === 'en' ? 'My Earned Rewards' : currentLanguage === 'de' ? 'Meine Verdienten Belohnungen' : 'Mes Récompenses Gagnées'}
-          </TabsTrigger>
-        </TabsList>
+        <div className="flex flex-col space-y-2">
+          <TabsList className="grid w-full max-w-md grid-cols-2 h-20">
+            <TabsTrigger 
+              value="store" 
+              className="flex flex-col items-center justify-center p-2 space-y-1 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+              style={{ flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}
+            >
+              <ShoppingBag className="h-5 w-5 mb-1" />
+              <span className="text-xs font-medium">
+                {currentLanguage === 'en' ? 'Rewards Store' : currentLanguage === 'de' ? 'Belohnungsshop' : 'Boutique de Récompenses'}
+              </span>
+            </TabsTrigger>
+            <TabsTrigger 
+              value="earned" 
+              className="flex flex-col items-center justify-center p-2 space-y-1 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+              style={{ flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}
+            >
+              <Trophy className="h-5 w-5 mb-1" />
+              <span className="text-xs font-medium">
+                {currentLanguage === 'en' ? 'My Earned Rewards' : currentLanguage === 'de' ? 'Meine Verdienten Belohnungen' : 'Mes Récompenses Gagnées'}
+              </span>
+            </TabsTrigger>
+          </TabsList>
+        </div>
 
         {/* Onglet Rewards Store */}
         <TabsContent value="store" className="space-y-6">
@@ -929,14 +945,30 @@ const RewardsPage = () => {
         <TabsContent value="earned" className="space-y-6">
           {/* Sous-onglets pour My Earned Rewards */}
           <Tabs defaultValue="to-validate" className="space-y-4">
-            <TabsList className="grid w-full max-w-md grid-cols-2">
-              <TabsTrigger value="to-validate">
-                {currentLanguage === 'en' ? 'To Validate' : currentLanguage === 'de' ? 'Zu Validieren' : 'À valider'}
-              </TabsTrigger>
-              <TabsTrigger value="transformed">
-                {currentLanguage === 'en' ? 'Transformed' : currentLanguage === 'de' ? 'Transformiert' : 'Transformés'}
-              </TabsTrigger>
-            </TabsList>
+            <div className="flex flex-col space-y-2">
+              <TabsList className="grid w-full max-w-md grid-cols-2 h-20">
+                <TabsTrigger 
+                  value="to-validate" 
+                  className="flex flex-col items-center justify-center p-2 space-y-1 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+                  style={{ flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}
+                >
+                  <Clock className="h-5 w-5 mb-1" />
+                  <span className="text-xs font-medium">
+                    {currentLanguage === 'en' ? 'To Validate' : currentLanguage === 'de' ? 'Zu Validieren' : 'À valider'}
+                  </span>
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="transformed" 
+                  className="flex flex-col items-center justify-center p-2 space-y-1 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+                  style={{ flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}
+                >
+                  <CheckCircle className="h-5 w-5 mb-1" />
+                  <span className="text-xs font-medium">
+                    {currentLanguage === 'en' ? 'Transformed' : currentLanguage === 'de' ? 'Transformiert' : 'Transformés'}
+                  </span>
+                </TabsTrigger>
+              </TabsList>
+            </div>
 
             {/* Sous-onglet 1: À valider (vouchers à utiliser) */}
             <TabsContent value="to-validate" className="space-y-4">

@@ -22,7 +22,9 @@ import {
   Mail,
   ChevronDown,
   ChevronRight,
-  Link
+  Link,
+  Briefcase,
+  FolderOpen
 } from 'lucide-react';
 
 interface AdminSidebarProps {
@@ -34,7 +36,7 @@ interface AdminSidebarProps {
   isSuperAdmin: () => boolean;
   isTenantAdmin: () => boolean;
   isPartner: () => boolean;
-  cityName?: string | null;
+  cityName?: string;
 }
 
 interface NavItem {
@@ -56,7 +58,7 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({
   isPartner,
   cityName
 }) => {
-  const [openGroups, setOpenGroups] = React.useState<Set<string>>(new Set(['main', 'management']));
+  const [openGroups, setOpenGroups] = React.useState<Set<string>>(new Set(['administration', 'lieux', 'partenaires', 'contenus', 'analytics', 'system']));
 
   const toggleGroup = (groupId: string) => {
     const newOpenGroups = new Set(openGroups);
@@ -70,8 +72,8 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({
 
   const navigationGroups = [
     {
-      id: 'main',
-      label: 'Navigation',
+      id: 'administration',
+      label: 'ADMINISTRATION GÉNÉRALE',
       items: [
         {
           id: 'overview',
@@ -83,26 +85,27 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({
           label: 'Utilisateurs',
           icon: Users,
         }] : []),
+      ].filter(Boolean)
+    },
+    {
+      id: 'lieux',
+      label: 'GESTION DES LIEUX',
+      items: [
         ...(typeof isSuperAdmin === 'function' && isSuperAdmin() ? [
           { id: 'cities', label: 'Gestion des villes', icon: Building },
           { id: 'countries', label: 'Gestion des pays', icon: Globe },
           { id: 'homepage', label: 'Visibilité homepage', icon: Eye }
         ] : []),
-        ...(typeof canManageContent === 'function' && canManageContent() ? [{
-          id: 'content',
-          label: 'Parcours & Étapes',
-          icon: FileText,
-        }] : []),
-        ...(typeof canManageContent === 'function' && canManageContent() ? [{
-          id: 'articles',
-          label: 'Articles de blog',
-          icon: FileText,
-        }] : []),
-
+      ].filter(Boolean)
+    },
+    {
+      id: 'partenaires',
+      label: 'PARTENAIRES',
+      items: [
         ...(typeof isPartner === 'function' && isPartner() ? [] : [{
           id: 'partners',
           label: 'Gestion des Partenaires',
-          icon: Building,
+          icon: Briefcase,
         }]),
         ...(typeof isSuperAdmin === 'function' && isSuperAdmin() ? [{
           id: 'partner-links',
@@ -112,9 +115,25 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({
         }] : []),
       ].filter(Boolean)
     },
+    {
+      id: 'contenus',
+      label: 'CONTENUS',
+      items: [
+        ...(typeof canManageContent === 'function' && canManageContent() ? [{
+          id: 'content',
+          label: 'Parcours & Étapes',
+          icon: FileText,
+        }] : []),
+        ...(typeof canManageContent === 'function' && canManageContent() ? [{
+          id: 'articles',
+          label: 'Articles de blog',
+          icon: FolderOpen,
+        }] : []),
+      ].filter(Boolean)
+    },
     ...(typeof canViewAnalytics === 'function' && canViewAnalytics() ? [{
       id: 'analytics',
-      label: 'Analytics & Rapports',
+      label: 'ANALYTICS & RAPPORTS',
       items: [
         {
           id: 'analytics',
@@ -131,7 +150,7 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({
     }] : []),
     ...(typeof isSuperAdmin === 'function' && isSuperAdmin() ? [{
       id: 'system',
-      label: 'Système & Sécurité',
+      label: 'SYSTÈME & SÉCURITÉ',
       items: [
         {
           id: 'system',
@@ -257,7 +276,7 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({
         </div>
         
         {typeof isTenantAdmin === 'function' && isTenantAdmin() && cityName && (
-          <div className="mt-3 p-2 rounded-lg bg-accent/50">
+          <div className="mt-3 pt-3 border-t border-border">
             <div className="flex items-center gap-2">
               <MapPin className="h-3 w-3 text-primary" />
               <span className="text-xs font-medium text-primary truncate">{cityName}</span>

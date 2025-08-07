@@ -1,8 +1,18 @@
 // Créer le profil utilisateur manquant
 import { createClient } from '@supabase/supabase-js';
+import { config } from 'dotenv';
 
-const supabaseUrl = 'https://pohqkspsdvvbqrgzfayl.supabase.co';
-const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBvaHFrc3BzZHZ2YnFyZ3pmYXlsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTIyMzY0NDQsImV4cCI6MjA2NzgxMjQ0NH0.r1AXZ_w5ifbjj7AOyEtSWpGFSuyYji8saicIcoLNShk';
+// Charger les variables d'environnement
+config();
+
+// Utiliser les variables d'environnement sécurisées
+const supabaseUrl = process.env.VITE_SUPABASE_URL || 'https://pohqkspsdvvbqrgzfayl.supabase.co';
+const supabaseKey = process.env.VITE_SUPABASE_ANON_KEY;
+
+if (!supabaseKey) {
+  console.error('❌ ERREUR: VITE_SUPABASE_ANON_KEY non définie dans les variables d\'environnement');
+  process.exit(1);
+}
 
 const supabase = createClient(supabaseUrl, supabaseKey);
 

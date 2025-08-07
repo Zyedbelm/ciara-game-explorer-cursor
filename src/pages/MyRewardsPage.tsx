@@ -360,117 +360,119 @@ const MyRewardsPage = () => {
           />
 
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-          <div className="flex flex-col space-y-2">
-            <TabsList className="grid w-full max-w-xs grid-cols-3 h-12">
-              <TabsTrigger value="active" className="flex items-center justify-center p-2">
-                <Clock className="h-5 w-5" />
-              </TabsTrigger>
-              <TabsTrigger value="used" className="flex items-center justify-center p-2">
-                <CheckCircle className="h-5 w-5" />
-              </TabsTrigger>
-              <TabsTrigger value="expired" className="flex items-center justify-center p-2">
-                <Archive className="h-5 w-5" />
-              </TabsTrigger>
-            </TabsList>
-            
-            {/* Titres sous les onglets */}
-            <div className="grid grid-cols-3 max-w-xs text-center">
-              <div className={`text-xs px-2 transition-colors ${activeTab === 'active' ? 'text-primary font-medium' : 'text-muted-foreground'}`}>
-                {t('rewards.tabs.active')} ({activeVouchers.length})
-              </div>
-              <div className={`text-xs px-2 transition-colors ${activeTab === 'used' ? 'text-primary font-medium' : 'text-muted-foreground'}`}>
-                {t('rewards.tabs.used')} ({usedVouchers.length})
-              </div>
-              <div className={`text-xs px-2 transition-colors ${activeTab === 'expired' ? 'text-primary font-medium' : 'text-muted-foreground'}`}>
-                {t('rewards.tabs.expired')} ({expiredVouchers.length})
-              </div>
+            <div className="flex flex-col space-y-2">
+              <TabsList className="grid w-full max-w-xs grid-cols-3 h-20">
+                <TabsTrigger 
+                  value="active" 
+                  className="flex flex-col items-center justify-center p-2 space-y-1 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+                  style={{ flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}
+                >
+                  <Gift className="h-5 w-5 mb-1" />
+                  <span className="text-xs font-medium">{t('rewards.tabs.active')}</span>
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="used" 
+                  className="flex flex-col items-center justify-center p-2 space-y-1 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+                  style={{ flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}
+                >
+                  <CheckCircle className="h-5 w-5 mb-1" />
+                  <span className="text-xs font-medium">{t('rewards.tabs.used')}</span>
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="expired" 
+                  className="flex flex-col items-center justify-center p-2 space-y-1 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+                  style={{ flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}
+                >
+                  <Archive className="h-5 w-5 mb-1" />
+                  <span className="text-xs font-medium">{t('rewards.tabs.expired')}</span>
+                </TabsTrigger>
+              </TabsList>
             </div>
-          </div>
 
-          <TabsContent value="active">
-            {activeVouchers.length === 0 ? (
-              <Card>
-                <CardContent className="flex items-center justify-center p-12">
-                  <div className="text-center">
-                    <Package className="h-16 w-16 mx-auto mb-4 text-muted-foreground opacity-50" />
-                    <h3 className="text-lg font-medium mb-2">{t('rewards.empty.active_title')}</h3>
-                    <p className="text-muted-foreground mb-4">
-                      {t('rewards.empty.active_description')}
-                    </p>
-                    <Button asChild>
-                      <a href="/rewards">
-                        <Gift className="h-4 w-4 mr-2" />
-                        {t('common.discover_rewards')}
-                      </a>
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {activeVouchers.map((voucher) => (
-                  <RewardVoucherCard
-                    key={voucher.id}
-                    voucher={voucher}
-                    onStatusChange={handleVoucherStatusChange}
-                  />
-                ))}
-              </div>
-            )}
-          </TabsContent>
+            <TabsContent value="active">
+              {activeVouchers.length === 0 ? (
+                <Card>
+                  <CardContent className="flex items-center justify-center p-12">
+                    <div className="text-center">
+                      <Package className="h-16 w-16 mx-auto mb-4 text-muted-foreground opacity-50" />
+                      <h3 className="text-lg font-medium mb-2">{t('rewards.empty.active_title')}</h3>
+                      <p className="text-muted-foreground mb-4">
+                        {t('rewards.empty.active_description')}
+                      </p>
+                      <Button asChild>
+                        <a href="/rewards">
+                          <Gift className="h-4 w-4 mr-2" />
+                          {t('common.discover_rewards')}
+                        </a>
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {activeVouchers.map((voucher) => (
+                    <RewardVoucherCard
+                      key={voucher.id}
+                      voucher={voucher}
+                      onStatusChange={handleVoucherStatusChange}
+                    />
+                  ))}
+                </div>
+              )}
+            </TabsContent>
 
-          <TabsContent value="used">
-            {usedVouchers.length === 0 ? (
-              <Card>
-                <CardContent className="flex items-center justify-center p-12">
-                  <div className="text-center">
-                    <CheckCircle className="h-16 w-16 mx-auto mb-4 text-muted-foreground opacity-50" />
-                    <h3 className="text-lg font-medium mb-2">{t('rewards.empty.used_title')}</h3>
-                    <p className="text-muted-foreground">
-                      {t('rewards.empty.used_description')}
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {usedVouchers.map((voucher) => (
-                  <RewardVoucherCard
-                    key={voucher.id}
-                    voucher={voucher}
-                    onStatusChange={handleVoucherStatusChange}
-                  />
-                ))}
-              </div>
-            )}
-          </TabsContent>
+            <TabsContent value="used">
+              {usedVouchers.length === 0 ? (
+                <Card>
+                  <CardContent className="flex items-center justify-center p-12">
+                    <div className="text-center">
+                      <CheckCircle className="h-16 w-16 mx-auto mb-4 text-muted-foreground opacity-50" />
+                      <h3 className="text-lg font-medium mb-2">{t('rewards.empty.used_title')}</h3>
+                      <p className="text-muted-foreground">
+                        {t('rewards.empty.used_description')}
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {usedVouchers.map((voucher) => (
+                    <RewardVoucherCard
+                      key={voucher.id}
+                      voucher={voucher}
+                      onStatusChange={handleVoucherStatusChange}
+                    />
+                  ))}
+                </div>
+              )}
+            </TabsContent>
 
-          <TabsContent value="expired">
-            {expiredVouchers.length === 0 ? (
-              <Card>
-                <CardContent className="flex items-center justify-center p-12">
-                  <div className="text-center">
-                    <Archive className="h-16 w-16 mx-auto mb-4 text-muted-foreground opacity-50" />
-                    <h3 className="text-lg font-medium mb-2">{t('rewards.empty.expired_title')}</h3>
-                    <p className="text-muted-foreground">
-                      {t('rewards.empty.expired_description')}
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {expiredVouchers.map((voucher) => (
-                  <RewardVoucherCard
-                    key={voucher.id}
-                    voucher={{...voucher, status: 'expired'}}
-                    onStatusChange={handleVoucherStatusChange}
-                  />
-                ))}
-              </div>
-            )}
-          </TabsContent>
-        </Tabs>
+            <TabsContent value="expired">
+              {expiredVouchers.length === 0 ? (
+                <Card>
+                  <CardContent className="flex items-center justify-center p-12">
+                    <div className="text-center">
+                      <Archive className="h-16 w-16 mx-auto mb-4 text-muted-foreground opacity-50" />
+                      <h3 className="text-lg font-medium mb-2">{t('rewards.empty.expired_title')}</h3>
+                      <p className="text-muted-foreground">
+                        {t('rewards.empty.expired_description')}
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {expiredVouchers.map((voucher) => (
+                    <RewardVoucherCard
+                      key={voucher.id}
+                      voucher={{...voucher, status: 'expired'}}
+                      onStatusChange={handleVoucherStatusChange}
+                    />
+                  ))}
+                </div>
+              )}
+            </TabsContent>
+          </Tabs>
         </>
       )}
     </StandardPageLayout>

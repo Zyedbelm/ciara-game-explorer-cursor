@@ -98,30 +98,32 @@ const MyJourneysPage = () => {
       {/* Journey tabs optimisés */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
         <div className="flex flex-col space-y-2">
-          <TabsList className="grid w-full max-w-xs grid-cols-3 h-12">
-              <TabsTrigger value="saved" className="flex items-center justify-center p-2">
-                <Sparkles className="h-5 w-5" />
-              </TabsTrigger>
-            <TabsTrigger value="in-progress" className="flex items-center justify-center p-2">
-              <Play className="h-5 w-5" />
+          <TabsList className="grid w-full max-w-xs grid-cols-3 h-20">
+            <TabsTrigger 
+              value="saved" 
+              className="flex flex-col items-center justify-center p-2 space-y-1 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+              style={{ flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}
+            >
+              <Sparkles className="h-5 w-5 mb-1" />
+              <span className="text-xs font-medium">{t('ai_generated_routes')}</span>
             </TabsTrigger>
-            <TabsTrigger value="completed" className="flex items-center justify-center p-2">
-              <Trophy className="h-5 w-5" />
+            <TabsTrigger 
+              value="in-progress" 
+              className="flex flex-col items-center justify-center p-2 space-y-1 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+              style={{ flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}
+            >
+              <Play className="h-5 w-5 mb-1" />
+              <span className="text-xs font-medium">{t('my_journeys.tabs.in_progress')}</span>
+            </TabsTrigger>
+            <TabsTrigger 
+              value="completed" 
+              className="flex flex-col items-center justify-center p-2 space-y-1 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+              style={{ flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}
+            >
+              <Trophy className="h-5 w-5 mb-1" />
+              <span className="text-xs font-medium">{t('my_journeys.tabs.completed')}</span>
             </TabsTrigger>
           </TabsList>
-          
-          {/* Titres sous les onglets */}
-          <div className="grid grid-cols-3 max-w-xs text-center">
-            <div className={`text-xs px-2 transition-colors ${activeTab === 'saved' ? 'text-primary font-medium' : 'text-muted-foreground'}`}>
-              {t('ai_generated_routes')}
-            </div>
-            <div className={`text-xs px-2 transition-colors ${activeTab === 'in-progress' ? 'text-primary font-medium' : 'text-muted-foreground'}`}>
-              {t('my_journeys.tabs.in_progress')}
-            </div>
-            <div className={`text-xs px-2 transition-colors ${activeTab === 'completed' ? 'text-primary font-medium' : 'text-muted-foreground'}`}>
-              {t('my_journeys.tabs.completed')}
-            </div>
-          </div>
         </div>
 
         {/* Contenu des onglets optimisé */}

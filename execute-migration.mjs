@@ -1,8 +1,18 @@
 // Exécuter la migration pour créer le profil
 import { createClient } from '@supabase/supabase-js';
+import { config } from 'dotenv';
 
-const supabaseUrl = 'https://pohqkspsdvvbqrgzfayl.supabase.co';
-const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBvaHFrc3BzZHZ2YnFyZ3pmYXlsIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1MjIzNjQ0NCwiZXhwIjoyMDY3ODEyNDQ0fQ.Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8';
+// Charger les variables d'environnement
+config();
+
+// Utiliser les variables d'environnement sécurisées
+const supabaseUrl = process.env.VITE_SUPABASE_URL || 'https://pohqkspsdvvbqrgzfayl.supabase.co';
+const supabaseKey = process.env.VITE_SUPABASE_ANON_KEY;
+
+if (!supabaseKey) {
+  console.error('❌ ERREUR: VITE_SUPABASE_ANON_KEY non définie dans les variables d\'environnement');
+  process.exit(1);
+}
 
 const supabase = createClient(supabaseUrl, supabaseKey);
 
