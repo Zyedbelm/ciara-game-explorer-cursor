@@ -2,22 +2,23 @@
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types';
 
+// Variables d'environnement avec fallbacks
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || 'https://pohqkspsdvvbqrgzfayl.supabase.co';
+const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBvaHFrc3BzZHZ2YnFyZ3pmYXlsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTIyMzY0NDQsImV4cCI6MjA2NzgxMjQ0NH0.r1AXZ_w5ifbjj7AOyEtSWpGFSuyYji8saicIcoLNShk';
+
 // Validation des variables d'environnement critiques
 const validateEnvironment = () => {
-  const requiredVars = ['VITE_SUPABASE_URL', 'VITE_SUPABASE_ANON_KEY'];
-  const missing = requiredVars.filter(varName => !import.meta.env[varName]);
-  
-  if (missing.length > 0) {
+  if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) {
+    console.error('❌ Variables d\'environnement Supabase manquantes');
+    console.error('URL:', SUPABASE_URL ? '✅' : '❌');
+    console.error('KEY:', SUPABASE_PUBLISHABLE_KEY ? '✅' : '❌');
   }
 };
 
-// Validation en développement uniquement (sans erreur fatale)
+// Validation en développement uniquement
 if (import.meta.env.DEV) {
   validateEnvironment();
 }
-
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
-const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
 // Configuration sécurisée du client
 export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
