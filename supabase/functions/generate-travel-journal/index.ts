@@ -42,11 +42,11 @@ function createJourneyReportHTML(data: {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>${data.title}</title>
+    <title>${data.journeyName} - CIARA</title>
     <style>
         @page {
             size: A4;
-            margin: 2cm;
+            margin: 1.5cm;
         }
         
         * {
@@ -56,105 +56,133 @@ function createJourneyReportHTML(data: {
         }
         
         body {
-            font-family: 'Arial', 'Helvetica', sans-serif;
+            font-family: 'Segoe UI', 'Arial', sans-serif;
             font-size: 11pt;
-            line-height: 1.5;
-            color: #2d3748;
-            background: white;
-            -webkit-print-color-adjust: exact;
-            print-color-adjust: exact;
+            line-height: 1.6;
+            color: #1a202c;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
         }
         
+        .page-container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+            margin: 20px;
+        }
         
         .container {
             width: 100%;
             max-width: 100%;
-            padding: 30px;
+            padding: 40px;
         }
         
         .header {
             text-align: center;
-            margin-bottom: 30px;
-            padding-bottom: 20px;
-            border-bottom: 2px solid #667eea;
-            page-break-after: avoid;
+            margin-bottom: 40px;
+            padding-bottom: 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 12px;
+            padding: 30px;
+            margin: -40px -40px 40px -40px;
         }
         
         .logo {
-            font-size: 24pt;
+            font-size: 32pt;
             font-weight: bold;
-            color: #667eea;
-            margin-bottom: 8px;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
         }
         
         .subtitle {
-            font-size: 10pt;
-            color: #666;
-            margin-bottom: 15px;
+            font-size: 12pt;
+            opacity: 0.9;
+            margin-bottom: 20px;
+            font-weight: 300;
         }
         
         .journey-title {
-            font-size: 18pt;
+            font-size: 24pt;
             font-weight: bold;
-            color: #2d3748;
             margin-bottom: 15px;
-            word-wrap: break-word;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
         }
         
         .meta-info {
-            display: flex;
-            justify-content: space-around;
-            flex-wrap: wrap;
-            background: #f8f9fa;
-            padding: 15px;
-            border-radius: 6px;
-            margin-bottom: 25px;
-            gap: 10px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 20px;
+            background: #f8fafc;
+            padding: 25px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            border: 1px solid #e2e8f0;
         }
         
         .meta-item {
             text-align: center;
-            min-width: 120px;
+            padding: 15px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            border: 1px solid #e2e8f0;
+        }
+        
+        .meta-icon {
+            font-size: 24pt;
+            margin-bottom: 8px;
+            display: block;
         }
         
         .meta-label {
-            font-size: 8pt;
-            color: #666;
+            font-size: 9pt;
+            color: #64748b;
             text-transform: uppercase;
-            font-weight: bold;
-            margin-bottom: 3px;
+            font-weight: 600;
+            margin-bottom: 5px;
+            letter-spacing: 0.5px;
         }
         
         .meta-value {
-            font-size: 10pt;
+            font-size: 12pt;
             font-weight: bold;
-            color: #2d3748;
+            color: #1e293b;
         }
         
         .stars {
-            color: #ffd700;
-            font-size: 12pt;
+            color: #fbbf24;
+            font-size: 16pt;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
         }
         
         .content-section {
-            margin-bottom: 25px;
+            margin-bottom: 35px;
             page-break-inside: avoid;
         }
         
         .section-title {
-            font-size: 14pt;
+            font-size: 18pt;
             font-weight: bold;
             color: #667eea;
-            margin-bottom: 12px;
-            border-bottom: 1px solid #e2e8f0;
-            padding-bottom: 6px;
+            margin-bottom: 20px;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 10px;
             page-break-after: avoid;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .section-icon {
+            font-size: 20pt;
         }
         
         .journal-content {
             font-size: 11pt;
-            line-height: 1.6;
-            color: #2d3748;
+            line-height: 1.7;
+            color: #374151;
             text-align: justify;
             hyphens: auto;
             white-space: pre-line;
@@ -162,13 +190,20 @@ function createJourneyReportHTML(data: {
         }
         
         .comment-box {
-            background: #f0f9ff;
-            border-left: 3px solid #0ea5e9;
-            padding: 12px;
-            margin: 15px 0;
-            border-radius: 3px;
+            background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+            border-left: 4px solid #3b82f6;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
             font-style: italic;
             page-break-inside: avoid;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
+        
+        .comment-quote {
+            font-size: 14pt;
+            color: #1e40af;
+            margin-bottom: 10px;
         }
         
         .steps-list {
@@ -177,81 +212,94 @@ function createJourneyReportHTML(data: {
         }
         
         .step-item {
-            background: #f8fafc;
-            margin-bottom: 8px;
-            padding: 10px;
-            border-radius: 4px;
-            border-left: 2px solid #667eea;
+            background: #ffffff;
+            margin-bottom: 15px;
+            padding: 20px;
+            border-radius: 12px;
+            border-left: 4px solid #667eea;
             page-break-inside: avoid;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            border: 1px solid #e2e8f0;
         }
         
         .step-name {
             font-weight: bold;
-            color: #2d3748;
-            margin-bottom: 3px;
-            font-size: 10pt;
+            color: #1e293b;
+            margin-bottom: 8px;
+            font-size: 14pt;
         }
         
         .step-description {
-            color: #666;
-            font-size: 9pt;
-            line-height: 1.4;
+            color: #64748b;
+            font-size: 11pt;
+            line-height: 1.6;
         }
         
         .overview-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
-            margin-bottom: 20px;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 25px;
         }
         
         .overview-item {
             display: flex;
             justify-content: space-between;
-            padding: 8px;
+            padding: 15px;
             background: #f8fafc;
-            border-radius: 4px;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
         }
         
         .overview-label {
-            font-weight: bold;
+            font-weight: 600;
             color: #475569;
         }
         
         .overview-value {
             color: #1e293b;
+            font-weight: bold;
         }
         
         .description-box {
-            background: #f0f9ff;
-            padding: 15px;
-            border-radius: 6px;
-            border-left: 3px solid #0ea5e9;
-            margin-top: 15px;
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+            padding: 25px;
+            border-radius: 12px;
+            border-left: 4px solid #0ea5e9;
+            margin-top: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
         }
         
         .description-box h3 {
-            margin: 0 0 8px 0;
+            margin: 0 0 15px 0;
             color: #0c4a6e;
-            font-size: 12pt;
+            font-size: 16pt;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
         
         .map-container {
             text-align: center;
-            margin: 20px 0;
+            margin: 30px 0;
+            background: #f8fafc;
+            padding: 25px;
+            border-radius: 12px;
+            border: 1px solid #e2e8f0;
         }
         
         .journey-map {
             max-width: 100%;
             height: auto;
-            border: 2px solid #e2e8f0;
-            border-radius: 8px;
-            margin-bottom: 8px;
+            border: 3px solid #e2e8f0;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
         }
         
         .map-caption {
-            font-size: 9pt;
-            color: #666;
+            font-size: 10pt;
+            color: #64748b;
             font-style: italic;
             margin: 0;
         }
@@ -259,233 +307,351 @@ function createJourneyReportHTML(data: {
         .steps-detailed {
             display: flex;
             flex-direction: column;
-            gap: 15px;
+            gap: 20px;
         }
         
         .step-detail-card {
             background: #ffffff;
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
-            padding: 15px;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 25px;
             page-break-inside: avoid;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            transition: transform 0.2s ease;
+        }
+        
+        .step-detail-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
         }
         
         .step-header {
             display: flex;
             align-items: center;
-            margin-bottom: 10px;
+            margin-bottom: 15px;
         }
         
         .step-number {
-            background: #667eea;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
-            width: 24px;
-            height: 24px;
+            width: 32px;
+            height: 32px;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 10pt;
+            font-size: 14pt;
             font-weight: bold;
-            margin-right: 12px;
+            margin-right: 15px;
+            box-shadow: 0 4px 8px rgba(102, 126, 234, 0.3);
         }
         
         .step-stats {
             display: flex;
             flex-wrap: wrap;
-            gap: 10px;
-            margin-top: 10px;
+            gap: 12px;
+            margin-top: 15px;
         }
         
         .step-stat {
             display: flex;
             align-items: center;
-            gap: 5px;
+            gap: 6px;
             background: #f1f5f9;
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 9pt;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 10pt;
+            border: 1px solid #e2e8f0;
         }
         
         .stat-icon {
-            font-size: 10pt;
+            font-size: 12pt;
         }
         
         .stat-text {
             color: #475569;
+            font-weight: 500;
         }
 
         .quiz-section {
-            background: #fef3e4;
-            border: 1px solid #fbbf24;
-            border-radius: 8px;
-            padding: 15px;
-            margin-bottom: 15px;
+            background: linear-gradient(135deg, #fef3e4 0%, #fed7aa 100%);
+            border: 2px solid #fbbf24;
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 20px;
             page-break-inside: avoid;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
         }
         
         .quiz-title {
-            font-size: 12pt;
+            font-size: 16pt;
             font-weight: bold;
             color: #92400e;
-            margin-bottom: 8px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
         
         .quiz-question {
-            font-size: 10pt;
+            font-size: 12pt;
             font-weight: bold;
             color: #1f2937;
-            margin-bottom: 6px;
+            margin-bottom: 10px;
         }
         
         .quiz-options {
             list-style: none;
             padding: 0;
-            margin: 0 0 8px 15px;
+            margin: 0 0 12px 20px;
         }
         
         .quiz-option {
-            font-size: 9pt;
+            font-size: 10pt;
             color: #374151;
-            margin-bottom: 2px;
+            margin-bottom: 4px;
+            padding: 4px 0;
         }
         
         .correct-answer {
             background: #d1fae5;
             color: #065f46;
-            padding: 2px 4px;
-            border-radius: 3px;
+            padding: 4px 8px;
+            border-radius: 6px;
             font-weight: bold;
+            border: 1px solid #10b981;
         }
         
         .quiz-explanation {
-            font-size: 9pt;
+            font-size: 10pt;
             color: #6b7280;
             font-style: italic;
-            margin-top: 4px;
+            margin-top: 8px;
+            padding: 8px;
+            background: #f9fafb;
+            border-radius: 6px;
         }
 
         .footer {
-            margin-top: 30px;
-            padding-top: 15px;
-            border-top: 1px solid #e2e8f0;
+            margin-top: 40px;
+            padding-top: 25px;
+            border-top: 2px solid #e2e8f0;
             text-align: center;
-            color: #666;
-            font-size: 9pt;
+            color: #64748b;
+            font-size: 10pt;
             page-break-inside: avoid;
+            background: #f8fafc;
+            padding: 20px;
+            border-radius: 8px;
+        }
+        
+        .achievement-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 10pt;
+            font-weight: bold;
+            margin: 5px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .stats-highlight {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            margin: 20px 0;
+            box-shadow: 0 4px 8px rgba(16, 185, 129, 0.3);
+        }
+        
+        .stats-highlight h3 {
+            margin: 0 0 10px 0;
+            font-size: 14pt;
+        }
+        
+        .stats-highlight .value {
+            font-size: 24pt;
+            font-weight: bold;
+            margin-bottom: 5px;
         }
         
     </style>
 </head>
 <body>
     
-    <div class="container">
-        <div class="header">
-            <div class="logo">CIARA</div>
-            <div class="subtitle">
-                ${isEnglish ? 'Personal Travel Journal' : isFrench ? 'Carnet de Voyage Personnel' : 'Persönliches Reisetagebuch'}
+    <div class="page-container">
+        <div class="container">
+            <div class="header">
+                <div class="logo">🌟 CIARA</div>
+                <div class="subtitle">
+                    ${isEnglish ? 'Personal Travel Journal' : isFrench ? 'Carnet de Voyage Personnel' : 'Persönliches Reisetagebuch'}
+                </div>
+                <h1 class="journey-title">${data.journeyName}</h1>
             </div>
-            <h1 class="journey-title">${data.journeyName}</h1>
-        </div>
-        
-        <div class="meta-info">
-            <div class="meta-item">
-                <div class="meta-label">${isEnglish ? 'City' : isFrench ? 'Ville' : 'Stadt'}</div>
-                <div class="meta-value">${data.cityName}</div>
-            </div>
-            <div class="meta-item">
-                <div class="meta-label">${isEnglish ? 'Rating' : isFrench ? 'Note' : 'Bewertung'}</div>
-                <div class="meta-value">
-                    <span class="stars">${'★'.repeat(data.rating)}${'☆'.repeat(5-data.rating)}</span>
+            
+            <div class="meta-info">
+                <div class="meta-item">
+                    <span class="meta-icon">🏙️</span>
+                    <div class="meta-label">${isEnglish ? 'City' : isFrench ? 'Ville' : 'Stadt'}</div>
+                    <div class="meta-value">${data.cityName}</div>
+                </div>
+                <div class="meta-item">
+                    <span class="meta-icon">⭐</span>
+                    <div class="meta-label">${isEnglish ? 'Rating' : isFrench ? 'Note' : 'Bewertung'}</div>
+                    <div class="meta-value">
+                        <span class="stars">${'★'.repeat(data.rating)}${'☆'.repeat(5-data.rating)}</span>
+                    </div>
+                </div>
+                <div class="meta-item">
+                    <span class="meta-icon">📅</span>
+                    <div class="meta-label">${isEnglish ? 'Date' : isFrench ? 'Date' : 'Datum'}</div>
+                    <div class="meta-value">${data.completionDate}</div>
+                </div>
+                ${data.duration ? `
+                <div class="meta-item">
+                    <span class="meta-icon">⏱️</span>
+                    <div class="meta-label">${isEnglish ? 'Duration' : isFrench ? 'Durée' : 'Dauer'}</div>
+                    <div class="meta-value">${data.duration}</div>
+                </div>
+                ` : ''}
+                ${data.distance ? `
+                <div class="meta-item">
+                    <span class="meta-icon">📏</span>
+                    <div class="meta-label">${isEnglish ? 'Distance' : isFrench ? 'Distance' : 'Entfernung'}</div>
+                    <div class="meta-value">${data.distance} km</div>
+                </div>
+                ` : ''}
+                <div class="meta-item">
+                    <span class="meta-icon">🏆</span>
+                    <div class="meta-label">${isEnglish ? 'Points' : isFrench ? 'Points' : 'Punkte'}</div>
+                    <div class="meta-value">${data.totalPoints}</div>
                 </div>
             </div>
-            <div class="meta-item">
-                <div class="meta-label">${isEnglish ? 'Date' : isFrench ? 'Date' : 'Datum'}</div>
-                <div class="meta-value">${data.completionDate}</div>
-            </div>
-            ${data.duration ? `
-            <div class="meta-item">
-                <div class="meta-label">${isEnglish ? 'Duration' : isFrench ? 'Durée' : 'Dauer'}</div>
-                <div class="meta-value">${data.duration}</div>
-            </div>
-            ` : ''}
-            ${data.distance ? `
-            <div class="meta-item">
-                <div class="meta-label">${isEnglish ? 'Distance' : isFrench ? 'Distance' : 'Entfernung'}</div>
-                <div class="meta-value">${data.distance} km</div>
+            
+            ${data.comment && data.comment.trim() !== '' && data.comment !== 'knpbj' ? `
+            <div class="content-section">
+                <h2 class="section-title">
+                    <span class="section-icon">💭</span>
+                    ${isEnglish ? 'Your Comment' : isFrench ? 'Votre Commentaire' : 'Ihr Kommentar'}
+                </h2>
+                <div class="comment-box">
+                    <div class="comment-quote">"</div>
+                    ${data.comment}
+                </div>
             </div>
             ` : ''}
-            <div class="meta-item">
-                <div class="meta-label">${isEnglish ? 'Points' : isFrench ? 'Points' : 'Punkte'}</div>
-                <div class="meta-value">${data.totalPoints}</div>
+            
+            ${data.journeyDescription ? `
+            <div class="content-section">
+                <h2 class="section-title">
+                    <span class="section-icon">📖</span>
+                    ${isEnglish ? 'Journey Description' : isFrench ? 'Description du Parcours' : 'Reisebeschreibung'}
+                </h2>
+                <div class="description-box">
+                    <h3>📚 ${isEnglish ? 'About this journey' : isFrench ? 'À propos de ce parcours' : 'Über diese Reise'}</h3>
+                    <div class="journal-content">${data.journeyDescription}</div>
+                </div>
             </div>
-        </div>
-        
-        ${data.comment ? `
-        <div class="content-section">
-            <h2 class="section-title">${isEnglish ? 'Your Comment' : isFrench ? 'Votre Commentaire' : 'Ihr Kommentar'}</h2>
-            <div class="comment-box">
-                "${data.comment}"
+            ` : ''}
+            
+            ${data.mapImageUrl ? `
+            <div class="content-section">
+                <h2 class="section-title">
+                    <span class="section-icon">🗺️</span>
+                    ${isEnglish ? 'Journey Map' : isFrench ? 'Carte du Parcours' : 'Reisekarte'}
+                </h2>
+                <div class="map-container">
+                    <img src="${data.mapImageUrl}" alt="Journey Map" class="journey-map" />
+                    <p class="map-caption">${isEnglish ? 'Your journey route with completed steps marked' : isFrench ? 'Votre parcours avec les étapes complétées marquées' : 'Ihre Reiseroute mit markierten abgeschlossenen Schritten'}</p>
+                </div>
             </div>
-        </div>
-        ` : ''}
-        
-        ${data.journeyDescription ? `
-        <div class="content-section">
-            <h2 class="section-title">${isEnglish ? 'Journey Description' : isFrench ? 'Description du Parcours' : 'Reisebeschreibung'}</h2>
-            <div class="description-box">
-                <h3>${isEnglish ? 'About this journey' : isFrench ? 'À propos de ce parcours' : 'Über diese Reise'}</h3>
-                <div class="journal-content">${data.journeyDescription}</div>
-            </div>
-        </div>
-        ` : ''}
-        
-        ${data.mapImageUrl ? `
-        <div class="content-section">
-            <h2 class="section-title">${isEnglish ? 'Journey Map' : isFrench ? 'Carte du Parcours' : 'Reisekarte'}</h2>
-            <div class="map-container">
-                <img src="${data.mapImageUrl}" alt="Journey Map" class="journey-map" />
-                <p class="map-caption">${isEnglish ? 'Your journey route with completed steps marked' : isFrench ? 'Votre parcours avec les étapes complétées marquées' : 'Ihre Reiseroute mit markierten abgeschlossenen Schritten'}</p>
-            </div>
-        </div>
-        ` : ''}
-        
-        ${data.stepDetails && data.stepDetails.length > 0 ? `
-        <div class="content-section">
-            <h2 class="section-title">${isEnglish ? 'Completed Steps' : isFrench ? 'Étapes Complétées' : 'Abgeschlossene Schritte'}</h2>
-            <div class="steps-detailed">
-                ${data.stepDetails.map((step, index) => `
-                <div class="step-detail-card">
-                    <div class="step-header">
-                        <div class="step-number">${index + 1}</div>
-                        <div>
-                            <div class="step-name">${step.name}</div>
-                            <div class="step-description">${step.description}</div>
+            ` : ''}
+            
+            ${data.stepDetails && data.stepDetails.length > 0 ? `
+            <div class="content-section">
+                <h2 class="section-title">
+                    <span class="section-icon">🎯</span>
+                    ${isEnglish ? 'Completed Steps' : isFrench ? 'Étapes Complétées' : 'Abgeschlossene Schritte'}
+                </h2>
+                <div class="steps-detailed">
+                    ${data.stepDetails.map((step, index) => `
+                    <div class="step-detail-card">
+                        <div class="step-header">
+                            <div class="step-number">${index + 1}</div>
+                            <div>
+                                <div class="step-name">${step.name}</div>
+                                <div class="step-description">${step.description}</div>
+                            </div>
+                        </div>
+                        <div class="step-stats">
+                            <div class="step-stat">
+                                <span class="stat-icon">📍</span>
+                                <span class="stat-text">${step.type}</span>
+                            </div>
+                            <div class="step-stat">
+                                <span class="stat-icon">⭐</span>
+                                <span class="stat-text">${step.points_earned} ${isEnglish ? 'points' : isFrench ? 'points' : 'Punkte'}</span>
+                            </div>
+                            <div class="step-stat">
+                                <span class="stat-icon">📅</span>
+                                <span class="stat-text">${new Date(step.completed_at).toLocaleDateString(data.language)}</span>
+                            </div>
                         </div>
                     </div>
-                    <div class="step-stats">
-                        <div class="step-stat">
-                            <span class="stat-icon">📍</span>
-                            <span class="stat-text">${step.type}</span>
-                        </div>
-                        <div class="step-stat">
-                            <span class="stat-icon">⭐</span>
-                            <span class="stat-text">${step.points_earned} ${isEnglish ? 'points' : isFrench ? 'points' : 'Punkte'}</span>
-                        </div>
-                        <div class="step-stat">
-                            <span class="stat-icon">📅</span>
-                            <span class="stat-text">${new Date(step.completed_at).toLocaleDateString(data.language)}</span>
+                    `).join('')}
+                </div>
+            </div>
+            ` : ''}
+            
+            ${data.quizData && data.quizData.length > 0 ? `
+            <div class="content-section">
+                <h2 class="section-title">
+                    <span class="section-icon">🧠</span>
+                    ${isEnglish ? 'Knowledge Quiz' : isFrench ? 'Quiz de Connaissances' : 'Wissensquiz'}
+                </h2>
+                ${data.quizData.map((quiz, index) => `
+                <div class="quiz-section">
+                    <div class="quiz-title">
+                        <span class="section-icon">📝</span>
+                        ${isEnglish ? 'Step' : isFrench ? 'Étape' : 'Schritt'} ${index + 1}: ${quiz.stepName}
+                    </div>
+                    ${quiz.questions.map((q, qIndex) => `
+                    <div style="margin-bottom: 15px;">
+                        <div class="quiz-question">${qIndex + 1}. ${q.question}</div>
+                        <ul class="quiz-options">
+                            ${q.options.map((option, oIndex) => `
+                            <li class="quiz-option">
+                                ${String.fromCharCode(65 + oIndex)}. ${option}
+                                ${option === q.correct_answer ? '<span class="correct-answer">✓ Correct</span>' : ''}
+                            </li>
+                            `).join('')}
+                        </ul>
+                        <div class="quiz-explanation">
+                            <strong>${isEnglish ? 'Explanation' : isFrench ? 'Explication' : 'Erklärung'}:</strong> ${q.explanation}
                         </div>
                     </div>
+                    `).join('')}
                 </div>
                 `).join('')}
             </div>
-        </div>
-        ` : ''}
-        
-        <div class="footer">
-            <p>${isEnglish ? 'Generated by CIARA - City Interactive Assistant for Regional Adventures' : isFrench ? 'Généré par CIARA - Assistant Interactif de Ville pour les Aventures Régionales' : 'Generiert von CIARA - Interaktiver Stadtassistent für regionale Abenteuer'}</p>
-            <p>www.ciara.city | info@ciara.city</p>
+            ` : ''}
+            
+            <div class="stats-highlight">
+                <h3>${isEnglish ? 'Journey Achievement' : isFrench ? 'Réussite du Parcours' : 'Reiseerfolg'}</h3>
+                <div class="value">${data.stepDetails ? data.stepDetails.length : 0}/${data.stepDetails ? data.stepDetails.length : 0}</div>
+                <div>${isEnglish ? 'Steps Completed' : isFrench ? 'Étapes Complétées' : 'Schritte Abgeschlossen'}</div>
+                <div style="margin-top: 10px;">
+                    <span class="achievement-badge">🏆 ${isEnglish ? 'Perfect Score' : isFrench ? 'Score Parfait' : 'Perfekte Punktzahl'}</span>
+                </div>
+            </div>
+            
+            <div class="footer">
+                <p><strong>${isEnglish ? 'Generated by CIARA - City Interactive Assistant for Regional Adventures' : isFrench ? 'Généré par CIARA - Assistant Interactif de Ville pour les Aventures Régionales' : 'Generiert von CIARA - Interaktiver Stadtassistent für regionale Abenteuer'}</strong></p>
+                <p>🌐 www.ciara.city | 📧 info@ciara.city</p>
+            </div>
         </div>
     </div>
 </body>
