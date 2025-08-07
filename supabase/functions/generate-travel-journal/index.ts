@@ -41,6 +41,7 @@ function generateModernHTMLDocument(data: {
 <html lang="${data.language}">
 <head>
     <meta charset="UTF-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>${data.journeyName} - CIARA Travel Journal</title>
     <style>
@@ -756,8 +757,8 @@ const handler = async (req: Request): Promise<Response> => {
       quizData
     });
 
-    // Convert HTML to base64 for transmission
-    const htmlBase64 = btoa(String.fromCharCode(...new TextEncoder().encode(htmlContent)));
+    // Convert HTML to base64 for transmission with proper UTF-8 encoding
+    const htmlBase64 = btoa(unescape(encodeURIComponent(htmlContent)));
 
     try {
       await supabaseClient

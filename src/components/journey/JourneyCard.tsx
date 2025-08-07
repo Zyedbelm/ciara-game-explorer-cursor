@@ -203,8 +203,8 @@ const JourneyCard: React.FC<JourneyCardProps> = ({ journey, variant, onStatusCha
 
       // Handle HTML download if available
       if (data?.htmlData && data?.fileName) {
-        // Decode the HTML content
-        const htmlContent = atob(data.htmlData);
+        // Decode the HTML content with proper UTF-8 encoding
+        const htmlContent = decodeURIComponent(escape(atob(data.htmlData)));
         
         // Create a blob with the HTML content
         const blob = new Blob([htmlContent], { type: 'text/html' });
