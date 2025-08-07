@@ -1,8 +1,8 @@
 
 import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
-import { useAuth } from '@/hooks/useAuth';
 import { Loader2 } from 'lucide-react';
+import { useOptimizedAuth } from '@/hooks/useOptimizedAuth';
 
 interface AuthGuardProps {
   children: React.ReactNode;
@@ -17,7 +17,7 @@ const AuthGuard: React.FC<AuthGuardProps> = ({
   requiredRole = [],
   fallbackPath = '/auth'
 }) => {
-  const { isAuthenticated, profile, loading: authLoading } = useAuth();
+  const { isAuthenticated, profile, loading: authLoading } = useOptimizedAuth();
   const location = useLocation();
 
   // Show loading while authentication state is being determined
@@ -44,6 +44,7 @@ const AuthGuard: React.FC<AuthGuardProps> = ({
   
   // Debug logging for partner dashboard access
   if (location.pathname === '/partner-dashboard') {
+    console.log('Partner dashboard access:', { isAuthenticated, profileRole: profile?.role });
   }
 
   // If user is authenticated but trying to access auth pages, redirect to home
@@ -57,6 +58,7 @@ const AuthGuard: React.FC<AuthGuardProps> = ({
     return <>{children}</>;
   }
 
+  // All checks passed, render children
   return <>{children}</>;
 };
 

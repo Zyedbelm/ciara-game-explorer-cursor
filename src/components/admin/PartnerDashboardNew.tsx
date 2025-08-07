@@ -14,6 +14,8 @@ import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell } from 'recharts';
+import { ArrowLeft } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 interface PartnerStats {
   totalOffers: number;
@@ -61,6 +63,7 @@ interface OfferData {
 const PartnerDashboardNew: React.FC = () => {
   const { profile } = useAuth();
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [stats, setStats] = useState<PartnerStats>({
     totalOffers: 0,
     activeOffers: 0,
@@ -518,10 +521,22 @@ const PartnerDashboardNew: React.FC = () => {
     <div className="space-y-6">
       {/* En-tête avec nom du partenaire */}
       <div className="border-b pb-4">
-        <h1 className="text-2xl font-bold">Tableau de Bord Partenaire</h1>
-        <p className="text-muted-foreground">
-          {stats.partnerName} - {stats.partnerCity}
-        </p>
+        <div className="flex items-center gap-3">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => navigate(-1)}
+            className="p-2 h-auto"
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
+          <div>
+            <h1 className="text-2xl font-bold">Tableau de Bord Partenaire</h1>
+            <p className="text-muted-foreground">
+              {stats.partnerName} - {stats.partnerCity}
+            </p>
+          </div>
+        </div>
       </div>
 
       {/* Navigation par onglets principaux */}
