@@ -201,8 +201,35 @@ const JourneyCard: React.FC<JourneyCardProps> = ({ journey, variant, onStatusCha
         throw error;
       }
 
-      // Handle PDF download if available
-      if (data?.pdfData && data?.fileName) {
+      // Handle HTML download if available
+      if (data?.htmlData && data?.fileName) {
+        // Decode the HTML content
+        const htmlContent = atob(data.htmlData);
+        
+        // Create a blob with the HTML content
+        const blob = new Blob([htmlContent], { type: 'text/html' });
+        const url = URL.createObjectURL(blob);
+        
+        // Open in new tab for preview and print
+        const newWindow = window.open(url, '_blank');
+        
+        // Also offer download
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = data.fileName;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        // Clean up
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+        
+        toast({
+          title: "Carnet de voyage HTML généré !",
+          description: "Votre carnet de voyage a été ouvert dans un nouvel onglet. Utilisez Ctrl+P pour imprimer en PDF.",
+        });
+      } else if (data?.pdfData && data?.fileName) {
+        // Fallback for old PDF format
         const blob = new Blob([Uint8Array.from(atob(data.pdfData), c => c.charCodeAt(0))], 
           { type: 'application/pdf' });
         const url = URL.createObjectURL(blob);
@@ -213,54 +240,6 @@ const JourneyCard: React.FC<JourneyCardProps> = ({ journey, variant, onStatusCha
         link.click();
         document.body.removeChild(link);
         URL.revokeObjectURL(url);
-        
-        toast({
-          title: "Carnet de voyage PDF généré !",
-          description: "Votre carnet de voyage PDF a été téléchargé avec succès.",
-        });
-      } else if (data?.format === 'html' || data?.content) {
-        // Fallback: Generate PDF locally using the HTML content
-        // Create journal data from the response with rich information
-        const journalData = {
-          city: data.metadata?.cityName || 'Ville inconnue',
-          journey: journey.title,
-          date: new Date().toLocaleDateString(currentLanguage),
-          completedSteps: data.metadata?.stepCount || 0,
-          totalSteps: journey.totalSteps,
-          totalPoints: data.metadata?.totalPoints || journey.pointsEarned,
-          steps: steps.map((stepData, index) => {
-            const stepDetail = stepData.step_detail;
-            
-            return {
-              name: stepDetail?.name || `Étape ${index + 1}`,
-              description: stepDetail?.description || 'Aucune description disponible',
-              completedAt: new Date().toLocaleDateString(currentLanguage),
-              points: stepDetail?.points_awarded || 10,
-              imageUrl: stepDetail?.images?.[0] || undefined,
-              address: stepDetail?.address || 'Adresse non disponible',
-              latitude: stepDetail?.latitude,
-              longitude: stepDetail?.longitude
-            };
-          }),
-          userInfo: {
-            name: user.user_metadata?.full_name || 'Explorateur',
-            email: user.email || ''
-          },
-          rating: journey.rating,
-          comment: journey.userComment,
-          duration: journey.duration,
-          distance: undefined, // Distance non disponible dans UserJourneyProgress - pourrait être ajoutée dans le futur
-          journeyImage: journey.imageUrl || undefined,
-          insights: {
-            bestTime: 'Après-midi (14h-18h)',
-            averageRating: 4.2,
-            popularSteps: steps.slice(0, 3).map(s => s.steps.name),
-            completionRate: ((data.metadata?.stepCount || 0) / journey.totalSteps) * 100
-          }
-        };
-
-        // Generate PDF locally
-        await generateTravelJournalPDF(journalData);
         
         toast({
           title: "Carnet de voyage PDF généré !",
