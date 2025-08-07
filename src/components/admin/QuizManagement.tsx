@@ -362,12 +362,12 @@ const QuizManagement: React.FC<QuizManagementProps> = ({ cityId }) => {
               Nouveau quiz
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>
+              <DialogTitle className="text-wrap break-words">
                 {editingQuiz ? 'Modifier le Quiz' : 'Créer un Nouveau Quiz'}
               </DialogTitle>
-              <DialogDescription>
+              <DialogDescription className="text-wrap">
                 {editingQuiz ? 'Modifiez les détails de ce quiz' : 'Ajoutez un nouveau quiz à une étape'}
               </DialogDescription>
             </DialogHeader>
@@ -389,7 +389,7 @@ const QuizManagement: React.FC<QuizManagementProps> = ({ cityId }) => {
                           <SelectContent>
                             {steps.map((step) => (
                               <SelectItem key={step.id} value={step.id}>
-                                {step.name} - {step.type}
+                                <span className="text-wrap break-words">{step.name} - {step.type}</span>
                               </SelectItem>
                             ))}
                           </SelectContent>
@@ -408,7 +408,7 @@ const QuizManagement: React.FC<QuizManagementProps> = ({ cityId }) => {
                         <FormControl>
                           <Textarea 
                             placeholder="Posez votre question..."
-                            className="min-h-20"
+                            className="min-h-20 text-wrap break-words"
                             {...field} 
                           />
                         </FormControl>
@@ -449,11 +449,11 @@ const QuizManagement: React.FC<QuizManagementProps> = ({ cityId }) => {
                             placeholder={`Option ${index + 1}`}
                             value={option}
                             onChange={(e) => {
-                              const currentOptions = form.getValues('options') || [];
-                              const newOptions = [...currentOptions];
+                              const newOptions = [...form.watch('options')];
                               newOptions[index] = e.target.value;
                               form.setValue('options', newOptions);
                             }}
+                            className="text-wrap break-words"
                           />
                           {(form.watch('options')?.length || 0) > 2 && (
                             <Button
@@ -656,7 +656,14 @@ const QuizManagement: React.FC<QuizManagementProps> = ({ cityId }) => {
                 filteredQuizzes.map((quiz) => (
                   <TableRow key={quiz.id}>
                     <TableCell className="max-w-xs">
-                      <p className="truncate">{quiz.question}</p>
+                      <div className="space-y-1">
+                        <p className="text-sm font-medium text-wrap break-words line-clamp-2">{quiz.question}</p>
+                        {quiz.question.length > 100 && (
+                          <p className="text-xs text-muted-foreground">
+                            {quiz.question.length} caractères
+                          </p>
+                        )}
+                      </div>
                     </TableCell>
                     <TableCell>
                       <Badge className={getTypeColor(quiz.question_type)}>
@@ -665,7 +672,7 @@ const QuizManagement: React.FC<QuizManagementProps> = ({ cityId }) => {
                     </TableCell>
                     <TableCell>
                       <div>
-                        <p className="font-medium">{quiz.step?.name}</p>
+                        <p className="font-medium text-wrap break-words">{quiz.step?.name}</p>
                         <p className="text-sm text-muted-foreground">{quiz.step?.type}</p>
                       </div>
                     </TableCell>

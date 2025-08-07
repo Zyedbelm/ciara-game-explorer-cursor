@@ -268,13 +268,13 @@ const QuizModal: React.FC<QuizModalProps> = ({
           </Button>
         )}
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[600px] md:max-w-[700px] lg:max-w-[800px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <MessageCircle className="h-5 w-5" />
-            Quiz - {stepName}
+          <DialogTitle className="flex items-center gap-2 text-wrap">
+            <MessageCircle className="h-5 w-5 flex-shrink-0" />
+            <span className="break-words">Quiz - {stepName}</span>
           </DialogTitle>
-          <DialogDescription>
+          <DialogDescription className="text-wrap">
             {isCompleted 
               ? "Revoyez vos réponses et les explications (aucun point ne sera attribué)"
               : "Répondez aux questions pour gagner des points bonus !"
@@ -295,7 +295,7 @@ const QuizModal: React.FC<QuizModalProps> = ({
           <div className="space-y-6">
             {/* Progress */}
             <div className="space-y-2">
-              <div className="flex justify-between text-sm">
+              <div className="flex justify-between text-sm flex-wrap gap-2">
                 <span>Question {currentQuestionIndex + 1} sur {questions.length}</span>
                 <span className="flex items-center gap-1">
                   <Trophy className="h-4 w-4" />
@@ -318,38 +318,38 @@ const QuizModal: React.FC<QuizModalProps> = ({
             {/* Question */}
             {currentQuestion && (
               <Card>
-                <CardContent className="p-6">
-                  <h3 className="text-lg font-semibold mb-4">{currentQuestion.question}</h3>
+                <CardContent className="p-4 sm:p-6">
+                  <h3 className="text-base sm:text-lg font-semibold mb-4 text-wrap break-words">{currentQuestion.question}</h3>
                   
                   {showResult ? (
                     <div className="space-y-4">
                       {/* Barre d'en-tête avec timer et bouton fermer */}
-                      <div className="flex justify-between items-center p-3 bg-muted/20 rounded-lg">
+                      <div className="flex justify-between items-center p-3 bg-muted/20 rounded-lg flex-wrap gap-2">
                         <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                          <Clock className="h-4 w-4" />
-                          <span>Fermeture automatique dans {resultTimeLeft}s</span>
+                          <Clock className="h-4 w-4 flex-shrink-0" />
+                          <span className="text-wrap">Fermeture automatique dans {resultTimeLeft}s</span>
                         </div>
                         <Button
                           variant="ghost"
                           size="sm"
                           onClick={handleCloseResult}
-                          className="h-8 w-8 p-0 hover:bg-muted"
+                          className="h-8 w-8 p-0 hover:bg-muted flex-shrink-0"
                         >
                           <X className="h-4 w-4" />
                         </Button>
                       </div>
 
-                      <div className={`flex items-center gap-2 p-4 rounded-lg ${
+                      <div className={`flex items-start gap-2 p-4 rounded-lg ${
                         selectedAnswer === currentQuestion.correct_answer
                           ? 'bg-green-100 text-green-800'
                           : 'bg-red-100 text-red-800'
                       }`}>
                         {selectedAnswer === currentQuestion.correct_answer ? (
-                          <CheckCircle className="h-5 w-5" />
+                          <CheckCircle className="h-5 w-5 flex-shrink-0 mt-0.5" />
                         ) : (
-                          <XCircle className="h-5 w-5" />
+                          <XCircle className="h-5 w-5 flex-shrink-0 mt-0.5" />
                         )}
-                        <span className="font-medium">
+                        <span className="font-medium text-wrap break-words">
                           {selectedAnswer === currentQuestion.correct_answer 
                             ? `Correct ! +${currentQuestion.points_awarded} points`
                             : `Incorrect. La bonne réponse était : ${currentQuestion.correct_answer}`
@@ -359,7 +359,7 @@ const QuizModal: React.FC<QuizModalProps> = ({
                       
                       {currentQuestion.explanation && (
                         <div className="p-4 bg-blue-50 rounded-lg">
-                          <p className="text-sm text-blue-800">{currentQuestion.explanation}</p>
+                          <p className="text-sm text-blue-800 text-wrap break-words">{currentQuestion.explanation}</p>
                         </div>
                       )}
 
@@ -379,7 +379,7 @@ const QuizModal: React.FC<QuizModalProps> = ({
                         <Button
                           key={index}
                           variant={selectedAnswer === option ? "default" : "outline"}
-                          className={`w-full text-left justify-start h-auto p-4 ${
+                          className={`w-full text-left justify-start h-auto p-3 sm:p-4 text-wrap break-words ${
                             isCompleted || isReviewMode 
                               ? (option === currentQuestion.correct_answer 
                                   ? 'bg-green-100 border-green-300 text-green-800' 
@@ -389,9 +389,9 @@ const QuizModal: React.FC<QuizModalProps> = ({
                           onClick={() => !isCompleted && !isReviewMode && handleAnswerSelect(option)}
                           disabled={isCompleted || isReviewMode}
                         >
-                          {option}
+                          <span className="text-wrap break-words">{option}</span>
                           {(isCompleted || isReviewMode) && option === currentQuestion.correct_answer && (
-                            <CheckCircle className="ml-2 h-4 w-4 text-green-600" />
+                            <CheckCircle className="ml-2 h-4 w-4 text-green-600 flex-shrink-0" />
                           )}
                         </Button>
                       ))}
@@ -400,7 +400,7 @@ const QuizModal: React.FC<QuizModalProps> = ({
                         <div className="space-y-3">
                           {currentQuestion.explanation && (
                             <div className="p-4 bg-blue-50 rounded-lg">
-                              <p className="text-sm text-blue-800">{currentQuestion.explanation}</p>
+                              <p className="text-sm text-blue-800 text-wrap break-words">{currentQuestion.explanation}</p>
                             </div>
                           )}
                           <Button 
