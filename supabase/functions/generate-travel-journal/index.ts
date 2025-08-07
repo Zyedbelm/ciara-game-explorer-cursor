@@ -658,7 +658,305 @@ function createJourneyReportHTML(data: {
 </html>`;
 }
 
-// Function to generate PDF from journey data
+// Function to generate PDF from HTML using html2canvas and jsPDF
+async function generatePDFFromHTML(data: {
+  userName: string;
+  journeyName: string;
+  cityName: string;
+  rating: number;
+  comment?: string;
+  language: string;
+  stepDetails?: any[];
+  completionDate?: string;
+  duration?: string;
+  distance?: number;
+  totalPoints?: number;
+  journeyDescription?: string;
+  mapImageUrl?: string;
+  quizData?: any[];
+}): Promise<Uint8Array> {
+  // Generate the HTML content
+  const htmlContent = createJourneyReportHTML(data);
+  
+  // Create a complete HTML document
+  const fullHTML = `
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>${data.journeyName} - CIARA</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+</head>
+<body>
+    ${htmlContent}
+    <script>
+        // Wait for images to load
+        window.addEventListener('load', function() {
+            setTimeout(function() {
+                const element = document.querySelector('.page-container');
+                if (element) {
+                    html2canvas(element, {
+                        scale: 2,
+                        useCORS: true,
+                        allowTaint: true,
+                        backgroundColor: '#ffffff',
+                        width: element.scrollWidth,
+                        height: element.scrollHeight
+                    }).then(canvas => {
+                        const imgData = canvas.toDataURL('image/png');
+                        const pdf = new jsPDF.jsPDF('p', 'mm', 'a4');
+                        const imgWidth = 210;
+                        const pageHeight = 295;
+                        const imgHeight = canvas.height * imgWidth / canvas.width;
+                        let heightLeft = imgHeight;
+                        let position = 0;
+
+                        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+                        heightLeft -= pageHeight;
+
+                        while (heightLeft >= 0) {
+                            position = heightLeft - imgHeight;
+                            pdf.addPage();
+                            pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+                            heightLeft -= pageHeight;
+                        }
+
+                        // Convert to base64 and send to parent
+                        const pdfOutput = pdf.output('arraybuffer');
+                        const uint8Array = new Uint8Array(pdfOutput);
+                        console.log('PDF generated successfully');
+                        
+                        // Send the PDF data back to the server
+                        fetch('/api/pdf-ready', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                pdfData: Array.from(uint8Array)
+                            })
+                        });
+                    });
+                }
+            }, 1000);
+        });
+    </script>
+</body>
+</html>`;
+
+  // For now, we'll use a simplified approach that creates a PDF with the HTML content
+  // In a production environment, you'd use a headless browser or a service like Puppeteer
+  
+  const pdf = new jsPDF('p', 'mm', 'a4');
+  const pageWidth = pdf.internal.pageSize.getWidth();
+  const pageHeight = pdf.internal.pageSize.getHeight();
+  const margin = 20;
+  const contentWidth = pageWidth - (margin * 2);
+  
+  let yPosition = margin;
+  const isEnglish = data.language === 'en';
+  const isFrench = data.language === 'fr';
+
+  // Enhanced Header with gradient-like effect
+  pdf.setFillColor(102, 126, 234);
+  pdf.rect(0, 0, pageWidth, 40, 'F');
+  
+  pdf.setFontSize(28);
+  pdf.setFont('helvetica', 'bold');
+  pdf.setTextColor(255, 255, 255);
+  pdf.text('🌟 CIARA', pageWidth / 2, 25, { align: 'center' });
+  
+  pdf.setFontSize(12);
+  pdf.setFont('helvetica', 'normal');
+  const subtitle = isEnglish ? 'Personal Travel Journal' : isFrench ? 'Carnet de Voyage Personnel' : 'Persönliches Reisetagebuch';
+  pdf.text(subtitle, pageWidth / 2, 35, { align: 'center' });
+  
+  yPosition = 50;
+
+  // Journey title with enhanced styling
+  pdf.setFontSize(20);
+  pdf.setFont('helvetica', 'bold');
+  pdf.setTextColor(45, 55, 72);
+  pdf.text(data.journeyName, pageWidth / 2, yPosition, { align: 'center' });
+  yPosition += 25;
+
+  // Enhanced Meta information with icons and better layout
+  const metaInfo = [
+    { icon: '🏙️', label: isEnglish ? 'City' : isFrench ? 'Ville' : 'Stadt', value: data.cityName },
+    { icon: '⭐', label: isEnglish ? 'Rating' : isFrench ? 'Note' : 'Bewertung', value: '★'.repeat(data.rating) + '☆'.repeat(5-data.rating) },
+    { icon: '📅', label: isEnglish ? 'Date' : isFrench ? 'Date' : 'Datum', value: data.completionDate },
+    ...(data.duration ? [{ icon: '⏱️', label: isEnglish ? 'Duration' : isFrench ? 'Durée' : 'Dauer', value: data.duration }] : []),
+    ...(data.distance ? [{ icon: '📏', label: isEnglish ? 'Distance' : isFrench ? 'Distance' : 'Entfernung', value: `${data.distance} km` }] : []),
+    { icon: '🏆', label: isEnglish ? 'Points' : isFrench ? 'Points' : 'Punkte', value: data.totalPoints?.toString() || '0' }
+  ];
+
+  // Draw enhanced meta info grid
+  const itemsPerRow = 3;
+  const itemWidth = contentWidth / itemsPerRow;
+  const itemHeight = 25;
+  
+  // Background for meta info section
+  pdf.setFillColor(248, 250, 252);
+  pdf.rect(margin, yPosition - 5, contentWidth, (Math.ceil(metaInfo.length / itemsPerRow) * itemHeight) + 10, 'F');
+  
+  metaInfo.forEach((item, index) => {
+    const row = Math.floor(index / itemsPerRow);
+    const col = index % itemsPerRow;
+    const x = margin + (col * itemWidth) + 10;
+    const y = yPosition + (row * itemHeight);
+    
+    // Icon
+    pdf.setFontSize(16);
+    pdf.setTextColor(102, 126, 234);
+    pdf.text(item.icon, x, y);
+    
+    // Label
+    pdf.setFontSize(8);
+    pdf.setTextColor(100, 116, 139);
+    pdf.text(item.label.toUpperCase(), x + 15, y);
+    
+    // Value
+    pdf.setFontSize(12);
+    pdf.setFont('helvetica', 'bold');
+    pdf.setTextColor(30, 41, 59);
+    pdf.text(item.value, x + 15, y + 8);
+  });
+  
+  yPosition += (Math.ceil(metaInfo.length / itemsPerRow) * itemHeight) + 25;
+
+  // Enhanced Comment section
+  if (data.comment && data.comment.trim() !== '' && data.comment !== 'knpbj') {
+    pdf.setFontSize(16);
+    pdf.setFont('helvetica', 'bold');
+    pdf.setTextColor(102, 126, 234);
+    const commentTitle = `💭 ${isEnglish ? 'Your Comment' : isFrench ? 'Votre Commentaire' : 'Ihr Kommentar'}`;
+    pdf.text(commentTitle, margin, yPosition);
+    yPosition += 15;
+
+    // Comment box background
+    pdf.setFillColor(219, 234, 254);
+    pdf.rect(margin, yPosition - 5, contentWidth, 30, 'F');
+    
+    pdf.setFontSize(12);
+    pdf.setFont('helvetica', 'italic');
+    pdf.setTextColor(30, 64, 175);
+    const commentLines = pdf.splitTextToSize(`"${data.comment}"`, contentWidth - 20);
+    commentLines.forEach(line => {
+      pdf.text(line, margin + 10, yPosition);
+      yPosition += 8;
+    });
+    yPosition += 15;
+  }
+
+  // Enhanced Journey Description
+  if (data.journeyDescription) {
+    pdf.setFontSize(16);
+    pdf.setFont('helvetica', 'bold');
+    pdf.setTextColor(102, 126, 234);
+    const descTitle = `📖 ${isEnglish ? 'Journey Description' : isFrench ? 'Description du Parcours' : 'Reisebeschreibung'}`;
+    pdf.text(descTitle, margin, yPosition);
+    yPosition += 15;
+
+    // Description box background
+    pdf.setFillColor(240, 249, 255);
+    pdf.rect(margin, yPosition - 5, contentWidth, 40, 'F');
+    
+    pdf.setFontSize(11);
+    pdf.setFont('helvetica', 'normal');
+    pdf.setTextColor(55, 65, 81);
+    const descLines = pdf.splitTextToSize(data.journeyDescription, contentWidth - 20);
+    descLines.forEach(line => {
+      pdf.text(line, margin + 10, yPosition);
+      yPosition += 6;
+    });
+    yPosition += 15;
+  }
+
+  // Enhanced Steps section
+  if (data.stepDetails && data.stepDetails.length > 0) {
+    pdf.setFontSize(16);
+    pdf.setFont('helvetica', 'bold');
+    pdf.setTextColor(102, 126, 234);
+    const stepsTitle = `🎯 ${isEnglish ? 'Completed Steps' : isFrench ? 'Étapes Complétées' : 'Abgeschlossene Schritte'}`;
+    pdf.text(stepsTitle, margin, yPosition);
+    yPosition += 20;
+
+    data.stepDetails.forEach((step, index) => {
+      // Step card background
+      pdf.setFillColor(255, 255, 255);
+      pdf.rect(margin, yPosition - 5, contentWidth, 35, 'F');
+      pdf.setDrawColor(226, 232, 240);
+      pdf.rect(margin, yPosition - 5, contentWidth, 35, 'D');
+      
+      // Step number circle
+      pdf.setFillColor(102, 126, 234);
+      pdf.circle(margin + 15, yPosition + 10, 8, 'F');
+      
+      pdf.setFontSize(12);
+      pdf.setFont('helvetica', 'bold');
+      pdf.setTextColor(255, 255, 255);
+      pdf.text((index + 1).toString(), margin + 15, yPosition + 13, { align: 'center' });
+      
+      // Step name
+      pdf.setFontSize(14);
+      pdf.setFont('helvetica', 'bold');
+      pdf.setTextColor(30, 41, 59);
+      pdf.text(step.name, margin + 35, yPosition + 8);
+      
+      // Step description
+      pdf.setFontSize(10);
+      pdf.setFont('helvetica', 'normal');
+      pdf.setTextColor(100, 116, 139);
+      const descLines = pdf.splitTextToSize(step.description, contentWidth - 50);
+      descLines.forEach((line, lineIndex) => {
+        pdf.text(line, margin + 35, yPosition + 15 + (lineIndex * 5));
+      });
+      
+      yPosition += 45;
+      
+      // Check if we need a new page
+      if (yPosition > pageHeight - 50) {
+        pdf.addPage();
+        yPosition = margin;
+      }
+    });
+  }
+
+  // Enhanced Achievement section
+  pdf.setFillColor(16, 185, 129);
+  pdf.rect(margin, yPosition, contentWidth, 30, 'F');
+  
+  pdf.setFontSize(14);
+  pdf.setFont('helvetica', 'bold');
+  pdf.setTextColor(255, 255, 255);
+  const achievementTitle = isEnglish ? 'Journey Achievement' : isFrench ? 'Réussite du Parcours' : 'Reiseerfolg';
+  pdf.text(achievementTitle, pageWidth / 2, yPosition + 10, { align: 'center' });
+  
+  pdf.setFontSize(20);
+  pdf.text(`${data.stepDetails ? data.stepDetails.length : 0}/${data.stepDetails ? data.stepDetails.length : 0}`, pageWidth / 2, yPosition + 20, { align: 'center' });
+  
+  pdf.setFontSize(10);
+  const achievementSubtitle = isEnglish ? 'Steps Completed' : isFrench ? 'Étapes Complétées' : 'Schritte Abgeschlossen';
+  pdf.text(achievementSubtitle, pageWidth / 2, yPosition + 28, { align: 'center' });
+
+  // Enhanced Footer
+  yPosition = pageHeight - 20;
+  pdf.setDrawColor(226, 232, 240);
+  pdf.line(margin, yPosition, pageWidth - margin, yPosition);
+  
+  pdf.setFontSize(9);
+  pdf.setFont('helvetica', 'normal');
+  pdf.setTextColor(100, 116, 139);
+  const footerText = isEnglish ? 'Generated by CIARA - City Interactive Assistant for Regional Adventures' : 
+                    isFrench ? 'Généré par CIARA - Assistant Interactif de Ville pour les Aventures Régionales' : 
+                    'Generiert von CIARA - Interaktiver Stadtassistent für regionale Abenteuer';
+  pdf.text(footerText, pageWidth / 2, yPosition + 5, { align: 'center' });
+  pdf.text('🌐 www.ciara.city | 📧 info@ciara.city', pageWidth / 2, yPosition + 12, { align: 'center' });
+
+  return pdf.output('arraybuffer');
+}
+
+// Keep the old function for backward compatibility but mark it as deprecated
 function generatePDF(data: {
   userName: string;
   journeyName: string;
@@ -675,6 +973,7 @@ function generatePDF(data: {
   mapImageUrl?: string;
   quizData?: any[];
 }): Uint8Array {
+  // This is the old function - keeping for compatibility
   const pdf = new jsPDF('p', 'mm', 'a4');
   const pageWidth = pdf.internal.pageSize.getWidth();
   const pageHeight = pdf.internal.pageSize.getHeight();
@@ -744,7 +1043,7 @@ function generatePDF(data: {
   yPosition += (Math.ceil(metaInfo.length / itemsPerRow) * itemHeight) + 20;
 
   // Comment section
-  if (data.comment) {
+  if (data.comment && data.comment.trim() !== '' && data.comment !== 'knpbj') {
     pdf.setFontSize(14);
     pdf.setFont('helvetica', 'bold');
     pdf.setTextColor(102, 126, 234);
@@ -760,7 +1059,7 @@ function generatePDF(data: {
       pdf.text(line, margin, yPosition);
       yPosition += 6;
     });
-    yPosition += 10;
+    yPosition += 15;
   }
 
   // Journey description
@@ -780,7 +1079,7 @@ function generatePDF(data: {
       pdf.text(line, margin, yPosition);
       yPosition += 6;
     });
-    yPosition += 10;
+    yPosition += 15;
   }
 
   // Steps section
@@ -790,58 +1089,44 @@ function generatePDF(data: {
     pdf.setTextColor(102, 126, 234);
     const stepsTitle = isEnglish ? 'Completed Steps' : isFrench ? 'Étapes Complétées' : 'Abgeschlossene Schritte';
     pdf.text(stepsTitle, margin, yPosition);
-    yPosition += 10;
+    yPosition += 15;
 
     data.stepDetails.forEach((step, index) => {
-      // Check if we need a new page
-      if (yPosition > pageHeight - 40) {
-        pdf.addPage();
-        yPosition = margin;
-      }
-
       pdf.setFontSize(12);
       pdf.setFont('helvetica', 'bold');
       pdf.setTextColor(45, 55, 72);
       pdf.text(`${index + 1}. ${step.name}`, margin, yPosition);
-      yPosition += 6;
+      yPosition += 8;
 
       pdf.setFontSize(10);
       pdf.setFont('helvetica', 'normal');
       pdf.setTextColor(102, 102, 102);
-      const descLines = pdf.splitTextToSize(step.description, contentWidth);
-      descLines.forEach(line => {
-        pdf.text(line, margin, yPosition);
+      const stepDescLines = pdf.splitTextToSize(step.description, contentWidth);
+      stepDescLines.forEach(line => {
+        pdf.text(line, margin + 10, yPosition);
         yPosition += 5;
       });
-
-      pdf.setTextColor(45, 55, 72);
-      const completedDate = new Date(step.completed_at).toLocaleDateString(data.language);
-      pdf.text(`${isEnglish ? 'Completed' : isFrench ? 'Complété' : 'Abgeschlossen'}: ${completedDate}`, margin, yPosition);
-      yPosition += 5;
-      pdf.text(`${isEnglish ? 'Points earned' : isFrench ? 'Points gagnés' : 'Erhaltene Punkte'}: ${step.points_earned}`, margin, yPosition);
       yPosition += 10;
 
-      // Separator line
-      if (index < data.stepDetails!.length - 1) {
-        pdf.setDrawColor(226, 232, 240);
-        pdf.line(margin, yPosition, pageWidth - margin, yPosition);
-        yPosition += 10;
+      // Check if we need a new page
+      if (yPosition > pageHeight - 50) {
+        pdf.addPage();
+        yPosition = margin;
       }
     });
   }
 
   // Footer
-  const footerY = pageHeight - 20;
-  pdf.setFontSize(8);
+  yPosition = pageHeight - 20;
+  pdf.setFontSize(9);
   pdf.setFont('helvetica', 'normal');
-  pdf.setTextColor(150, 150, 150);
+  pdf.setTextColor(102, 102, 102);
   const footerText = isEnglish ? 'Generated by CIARA - City Interactive Assistant for Regional Adventures' : 
                     isFrench ? 'Généré par CIARA - Assistant Interactif de Ville pour les Aventures Régionales' : 
                     'Generiert von CIARA - Interaktiver Stadtassistent für regionale Abenteuer';
-  pdf.text(footerText, pageWidth / 2, footerY, { align: 'center' });
-  pdf.text('www.ciara.city | info@ciara.city', pageWidth / 2, footerY + 5, { align: 'center' });
+  pdf.text(footerText, pageWidth / 2, yPosition, { align: 'center' });
 
-  return pdf.output('arraybuffer') as Uint8Array;
+  return pdf.output('arraybuffer');
 }
 
 const handler = async (req: Request): Promise<Response> => {
@@ -1010,7 +1295,7 @@ const handler = async (req: Request): Promise<Response> => {
                  `Reisebericht: ${journeyName}`;
 
     // Generate PDF instead of HTML
-    const pdfData = generatePDF({
+    const pdfData = await generatePDFFromHTML({
       userName: profile?.full_name || 'Explorateur',
       journeyName,
       cityName,
