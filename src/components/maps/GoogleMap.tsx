@@ -135,21 +135,37 @@ const GoogleMap: React.FC<MapProps> = ({
 
         // Add user location marker if available
         if (userLocation) {
-          new google.maps.Marker({
-            position: userLocation,
-            map,
-            title: "Votre position",
-            icon: {
-              url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <circle cx="12" cy="12" r="8" fill="#3B82F6" stroke="white" stroke-width="2"/>
-                  <circle cx="12" cy="12" r="3" fill="white"/>
-                </svg>
-              `),
-              scaledSize: new google.maps.Size(24, 24),
-              anchor: new google.maps.Point(12, 12)
-            }
-          });
+          // Use AdvancedMarkerElement if available, fallback to Marker
+          if (google.maps.marker?.AdvancedMarkerElement) {
+            const { AdvancedMarkerElement } = google.maps.marker;
+            new AdvancedMarkerElement({
+              position: userLocation,
+              map,
+              title: "Votre position",
+              content: new google.maps.marker.PinElement({
+                background: "#3B82F6",
+                borderColor: "white",
+                glyph: "📍"
+              }).element
+            });
+          } else {
+            // Fallback to deprecated Marker
+            new google.maps.Marker({
+              position: userLocation,
+              map,
+              title: "Votre position",
+              icon: {
+                url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="12" cy="12" r="8" fill="#3B82F6" stroke="white" stroke-width="2"/>
+                    <circle cx="12" cy="12" r="3" fill="white"/>
+                  </svg>
+                `),
+                scaledSize: new google.maps.Size(24, 24),
+                anchor: new google.maps.Point(12, 12)
+              }
+            });
+          }
         }
 
         if (mounted) {
@@ -185,24 +201,42 @@ const GoogleMap: React.FC<MapProps> = ({
 
     // Add new markers
     markers.forEach((markerData) => {
-      const marker = new google.maps.Marker({
-        position: markerData.position,
-        map,
-        title: markerData.title,
-        icon: {
-          url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
-            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M12 2C8.13 2 5 5.13 5 9C5 14.25 12 22 12 22S19 14.25 19 9C19 5.13 15.87 2 12 2Z" 
-                    fill="${markerData.completed ? '#10B981' : '#EF4444'}" 
-                    stroke="white" 
-                    stroke-width="2"/>
-              <circle cx="12" cy="9" r="3" fill="white"/>
-            </svg>
-          `),
-          scaledSize: new google.maps.Size(32, 32),
-          anchor: new google.maps.Point(16, 32)
-        }
-      });
+      let marker;
+      
+      // Use AdvancedMarkerElement if available, fallback to Marker
+      if (google.maps.marker?.AdvancedMarkerElement) {
+        const { AdvancedMarkerElement } = google.maps.marker;
+        marker = new AdvancedMarkerElement({
+          position: markerData.position,
+          map,
+          title: markerData.title,
+          content: new google.maps.marker.PinElement({
+            background: markerData.completed ? "#10B981" : "#EF4444",
+            borderColor: "white",
+            glyph: markerData.completed ? "✅" : "📍"
+          }).element
+        });
+      } else {
+        // Fallback to deprecated Marker
+        marker = new google.maps.Marker({
+          position: markerData.position,
+          map,
+          title: markerData.title,
+          icon: {
+            url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 2C8.13 2 5 5.13 5 9C5 14.25 12 22 12 22S19 14.25 19 9C19 5.13 15.87 2 12 2Z" 
+                      fill="${markerData.completed ? '#10B981' : '#EF4444'}" 
+                      stroke="white" 
+                      stroke-width="2"/>
+                <circle cx="12" cy="9" r="3" fill="white"/>
+              </svg>
+            `),
+            scaledSize: new google.maps.Size(32, 32),
+            anchor: new google.maps.Point(16, 32)
+          }
+        });
+      }
 
       if (markerData.description) {
         const infoWindow = new google.maps.InfoWindow({
