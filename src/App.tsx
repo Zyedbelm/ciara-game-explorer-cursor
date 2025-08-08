@@ -4,7 +4,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useNavigate, useLocation } from "react-router-dom";
 import { CityProvider } from "@/contexts/CityContext";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import { CountryProvider } from "@/contexts/CountryContext";
@@ -71,6 +71,38 @@ const queryClient = new QueryClient({
   },
 });
 
+// Composant pour gérer la redirection depuis 404.html
+function RedirectHandler() {
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  useEffect(() => {
+    // Vérifier s'il y a un paramètre redirect dans l'URL
+    const urlParams = new URLSearchParams(location.search);
+    const redirectPath = urlParams.get('redirect');
+    
+    if (redirectPath) {
+      try {
+        // Décoder le chemin
+        const decodedPath = decodeURIComponent(redirectPath);
+        
+        // Nettoyer l'URL en supprimant le paramètre redirect
+        const newSearch = new URLSearchParams(location.search);
+        newSearch.delete('redirect');
+        const cleanSearch = newSearch.toString();
+        
+        // Naviguer vers le chemin décodé
+        const targetPath = decodedPath + (cleanSearch ? '?' + cleanSearch : '') + location.hash;
+        navigate(targetPath, { replace: true });
+      } catch (error) {
+        console.error('Erreur lors de la redirection:', error);
+      }
+    }
+  }, [navigate, location]);
+
+  return null;
+}
+
 function App() {
   // Initialiser les services de résilience avec gestion d'erreurs WebSocket
   useEffect(() => {
@@ -109,6 +141,7 @@ function App() {
             <Sonner />
             <BrowserRouter>
               <Suspense fallback={<LoadingSpinner />}>
+                <RedirectHandler />
                 <Routes>
                   <Route path="/" element={<LandingPage />} />
                   <Route path="/cities" element={<CitySelectionPage />} />
