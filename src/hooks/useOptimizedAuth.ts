@@ -70,18 +70,24 @@ class AuthManager {
   }
 
   private async handleAuthChange(event: string, session: Session | null) {
-    this.session = session;
-    this.user = session?.user ?? null;
+    try {
+      this.session = session;
+      this.user = session?.user ?? null;
 
-    if (session?.user) {
-      // Nettoyer l'ancienne subscription
-      if (this.subscription) {
-        supabase.removeChannel(this.subscription);
-        this.subscription = null;
-      }
+      if (session?.user) {
+        // Nettoyer l'ancienne subscription
+        if (this.subscription) {
+          supabase.removeChannel(this.subscription);
+          this.subscription = null;
+        }
 
-      // Récupérer le profil
-      this.profile = await this.fetchProfile(session.user.id);
+        // Récupérer le profil avec timeout
+        this.profile = await Promise.race([
+          this.fetchProfile(session.user.id),
+          new Promise<null>((_, reject) => 
+            setTimeout(() => reject(new Error('Profile fetch timeout')), 5000)
+          )
+        ]).catch(() => null);
 
       // Configurer la subscription en temps réel (une seule fois)
       if (!this.subscription) {
@@ -120,6 +126,11 @@ class AuthManager {
 
     this.loading = false;
     this.notifyListeners();
+    } catch (error) {
+      console.error('Auth change error:', error);
+      this.loading = false;
+      this.notifyListeners();
+    }
   }
 
   private notifyListeners() {
