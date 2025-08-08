@@ -4,9 +4,9 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Mountain, Lock, ArrowLeft, Loader2, CheckCircle } from 'lucide-react';
+import { Mountain, Lock, ArrowLeft, Loader2, CheckCircle, AlertCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
+import { PasswordResetService } from '@/services/passwordResetService';
 
 const ResetPasswordPage = () => {
   const navigate = useNavigate();
@@ -15,113 +15,62 @@ const ResetPasswordPage = () => {
   
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
-  const [tokenVerified, setTokenVerified] = useState(false);
-  const [tokenHash, setTokenHash] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     password: '',
     confirmPassword: ''
   });
 
-  // Extract parameters from both query string and hash fragment
+  // Extract and validate parameters
   useEffect(() => {
-    const extractParams = async () => {
-      // First, sign out any existing user to ensure clean state
-      const { data: sessionData } = await supabase.auth.getSession();
-      if (sessionData.session) {
-        await supabase.auth.signOut();
-      }
-      
-      // Extract from query parameters (direct link)
-      const type = searchParams.get('type');
-      const token = searchParams.get('token');
-      
-      // Extract from hash fragment (after Supabase redirects)
-      const hash = window.location.hash.substring(1);
-      const hashParams = new URLSearchParams(hash);
-      
-      const hashType = hashParams.get('type');
-      const hashToken = hashParams.get('token');
-      const hashError = hashParams.get('error');
-      const hashErrorDescription = hashParams.get('error_description');
-      const hashAccessToken = hashParams.get('access_token');
-      const hashRefreshToken = hashParams.get('refresh_token');
-      
-      // Check for errors in hash first
-      if (hashError) {
-        let errorMessage = "Une erreur s'est produite lors de la récupération.";
+    const validateResetLink = async () => {
+      try {
+        // Extract parameters from current URL
+        const params = PasswordResetService.extractResetParams(window.location.href);
         
-        if (hashError === 'access_denied' && hashParams.get('error_code') === 'otp_expired') {
-          errorMessage = "Le lien de récupération a expiré. Veuillez demander un nouveau lien.";
-        } else if (hashErrorDescription) {
-          errorMessage = decodeURIComponent(hashErrorDescription);
-        }
-        
-        toast({
-          title: "Lien expiré",
-          description: errorMessage,
-          variant: "destructive"
-        });
-        navigate('/auth', { replace: true });
-        return;
-      }
-      
-      // If we have access_token and refresh_token in hash, this means verification was successful
-      if (hashAccessToken && hashRefreshToken) {
-        try {
-          // Set the session from the tokens
-          const { data, error } = await supabase.auth.setSession({
-            access_token: hashAccessToken,
-            refresh_token: hashRefreshToken
-          });
+        // Check for errors first
+        if (params.error) {
+          let errorMessage = "Le lien de récupération n'est pas valide.";
           
-          if (error) {
-            throw error;
+          if (params.error === 'access_denied') {
+            errorMessage = "Le lien de récupération a expiré. Veuillez demander un nouveau lien.";
+          } else if (params.errorDescription) {
+            errorMessage = decodeURIComponent(params.errorDescription);
           }
           
-          setTokenVerified(true);
-          
-          // Clean up URL hash
-          window.history.replaceState({}, document.title, window.location.pathname);
-          return;
-        } catch (error) {
-          toast({
-            title: "Erreur",
-            description: "Impossible de valider la session",
-            variant: "destructive"
-          });
-          navigate('/auth', { replace: true });
+          setError(errorMessage);
           return;
         }
+        
+        // Check if we have valid tokens
+        if (params.accessToken && params.refreshToken && params.type === 'recovery') {
+          const result = await PasswordResetService.validateResetLink(params.accessToken, params.refreshToken);
+          
+          if (!result.success) {
+            setError(result.error || 'Session invalide');
+            return;
+          }
+          
+          // Clean up URL
+          PasswordResetService.cleanUrl();
+          return;
+        }
+        
+        // Check if user is already authenticated (for direct access)
+        const hasSession = await PasswordResetService.hasValidSession();
+        
+        if (!hasSession) {
+          setError("Lien de récupération invalide ou expiré. Veuillez demander un nouveau lien.");
+          return;
+        }
+        
+      } catch (err: any) {
+        setError(err.message || "Erreur lors de la validation du lien");
       }
-      
-      // Use hash parameters if available, otherwise use query parameters
-      const finalType = hashType || type;
-      const finalToken = hashToken || token;
-      
-      // En mode développement, permettre l'accès sans token pour les tests
-      if (import.meta.env.DEV && !finalToken) {
-        console.log('Mode développement : Accès à la page reset-password sans token (pour les tests)');
-        setTokenVerified(true);
-        return;
-      }
-      
-      if (finalType !== 'recovery' || !finalToken) {
-        toast({
-          title: "Lien invalide",
-          description: "Ce lien de récupération n'est pas valide.",
-          variant: "destructive"
-        });
-        navigate('/auth', { replace: true });
-        return;
-      }
+    };
 
-      // Store the token for later use during password update
-      setTokenHash(finalToken);
-      setTokenVerified(true);
-      };
-
-    extractParams();
-  }, [searchParams, navigate, toast]);
+    validateResetLink();
+  }, [searchParams]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData(prev => ({
@@ -154,43 +103,11 @@ const ResetPasswordPage = () => {
     setLoading(true);
     
     try {
-      // Check if we already have a valid session
-      const { data: currentSession } = await supabase.auth.getSession();
-      
-      if (currentSession.session) {
-        // We already have a valid session, just update the password
-        const { error: updateError } = await supabase.auth.updateUser({
-          password: formData.password
-        });
+      const result = await PasswordResetService.updatePassword(formData.password);
 
-        if (updateError) {
-          throw updateError;
-        }
-      } else if (tokenHash) {
-        // First verify the OTP token and get the session
-        const { data: sessionData, error: verifyError } = await supabase.auth.verifyOtp({
-          token_hash: tokenHash,
-          type: 'recovery'
-        });
-
-        if (verifyError) {
-          throw new Error(verifyError.message || "Token de récupération invalide ou expiré");
-        }
-
-        // Now update the password using the new session
-        const { error: updateError } = await supabase.auth.updateUser({
-          password: formData.password
-        });
-
-        if (updateError) {
-          throw updateError;
-        }
-      } else {
-        throw new Error("Aucune session valide ou token de récupération disponible");
+      if (!result.success) {
+        throw new Error(result.error);
       }
-
-      // Sign out the user after password update
-      await supabase.auth.signOut();
 
       setSuccess(true);
       toast({
@@ -199,20 +116,15 @@ const ResetPasswordPage = () => {
         variant: "default"
       });
 
-      // Redirect after 3 seconds to the appropriate domain
+      // Redirect after 3 seconds
       setTimeout(() => {
-        const currentDomain = window.location.hostname;
-        if (currentDomain.includes('ciara.city')) {
-          window.location.href = 'https://ciara.city/auth';
-        } else {
-          navigate('/auth', { replace: true });
-        }
+        navigate('/auth', { replace: true });
       }, 3000);
 
-    } catch (error: any) {
+    } catch (err: any) {
       toast({
         title: "Erreur",
-        description: error.message || "Impossible de réinitialiser le mot de passe",
+        description: err.message || "Impossible de réinitialiser le mot de passe",
         variant: "destructive"
       });
     } finally {
@@ -220,6 +132,7 @@ const ResetPasswordPage = () => {
     }
   };
 
+  // Success state
   if (success) {
     return (
       <div className="min-h-screen bg-gradient-alpine relative overflow-hidden">
@@ -241,14 +154,7 @@ const ResetPasswordPage = () => {
               </CardHeader>
               <CardContent>
                 <Button
-                  onClick={() => {
-                    const currentDomain = window.location.hostname;
-                    if (currentDomain.includes('ciara.city')) {
-                      window.location.href = 'https://ciara.city/auth';
-                    } else {
-                      navigate('/auth');
-                    }
-                  }}
+                  onClick={() => navigate('/auth')}
                   className="w-full bg-primary hover:bg-primary/90"
                 >
                   Aller à la connexion
@@ -261,24 +167,61 @@ const ResetPasswordPage = () => {
     );
   }
 
+  // Error state
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gradient-alpine relative overflow-hidden">
+        <div className="absolute inset-0 bg-black/20" />
+        
+        <div className="absolute top-6 left-6 z-10">
+          <Button
+            variant="ghost"
+            className="text-white hover:bg-white/10"
+            onClick={() => navigate('/auth')}
+          >
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Retour à la connexion
+          </Button>
+        </div>
+
+        <div className="relative container mx-auto px-4 min-h-screen flex items-center justify-center">
+          <div className="w-full max-w-md">
+            <Card className="border-0 shadow-2xl bg-white/95 backdrop-blur-sm">
+              <CardHeader className="text-center">
+                <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <AlertCircle className="h-8 w-8 text-red-600" />
+                </div>
+                <CardTitle className="text-2xl text-red-700">
+                  Lien invalide
+                </CardTitle>
+                <CardDescription>
+                  {error}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Button
+                  onClick={() => navigate('/auth')}
+                  className="w-full bg-primary hover:bg-primary/90"
+                >
+                  Retour à la connexion
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-alpine relative overflow-hidden">
-      {/* Background with mountain effect */}
       <div className="absolute inset-0 bg-black/20" />
       
-      {/* Back to auth button */}
       <div className="absolute top-6 left-6 z-10">
         <Button
           variant="ghost"
           className="text-white hover:bg-white/10"
-          onClick={() => {
-            const currentDomain = window.location.hostname;
-            if (currentDomain.includes('ciara.city')) {
-              window.location.href = 'https://ciara.city/auth';
-            } else {
-              navigate('/auth');
-            }
-          }}
+          onClick={() => navigate('/auth')}
         >
           <ArrowLeft className="h-4 w-4 mr-2" />
           Retour à la connexion
@@ -287,7 +230,6 @@ const ResetPasswordPage = () => {
 
       <div className="relative container mx-auto px-4 min-h-screen flex items-center justify-center">
         <div className="w-full max-w-md">
-          {/* Logo and title */}
           <div className="text-center mb-8">
             <div className="w-16 h-16 bg-white/10 rounded-full flex items-center justify-center mx-auto mb-4 backdrop-blur-sm">
               <Mountain className="h-8 w-8 text-white" />
@@ -308,13 +250,7 @@ const ResetPasswordPage = () => {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              {!tokenVerified ? (
-                <div className="text-center py-4">
-                  <Loader2 className="h-6 w-6 animate-spin mx-auto mb-2" />
-                  <p className="text-muted-foreground">Vérification du lien...</p>
-                </div>
-              ) : (
-                <form onSubmit={handleSubmit} className="space-y-4">
+              <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="password">Nouveau mot de passe</Label>
                   <div className="relative">
@@ -370,7 +306,6 @@ const ResetPasswordPage = () => {
                   )}
                 </Button>
               </form>
-              )}
             </CardContent>
           </Card>
         </div>

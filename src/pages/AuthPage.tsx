@@ -8,7 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Mountain, Mail, Lock, User, ArrowLeft, Loader2, AlertCircle } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
+import { PasswordResetService } from '@/services/passwordResetService';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import Footer from '@/components/common/Footer';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -92,13 +92,10 @@ const AuthPage = () => {
     setResetLoading(true);
     
     try {
-      // Use Supabase Password Reset (not Magic Link)
-      const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
-        redirectTo: `${window.location.origin}/reset-password`
-      });
+      const result = await PasswordResetService.sendResetEmail(resetEmail);
 
-      if (error) {
-        throw error;
+      if (!result.success) {
+        throw new Error(result.error);
       }
 
       toast({

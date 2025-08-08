@@ -17,9 +17,9 @@
     <meta name="twitter:site" content="@lovable_dev" />
     <meta name="twitter:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
     
-    <!-- GitHub Pages SPA Redirect - Fixed -->
+    <!-- GitHub Pages SPA Redirect - Simple -->
     <script type="text/javascript">
-      // Fixed Single Page Apps for GitHub Pages
+      // Simple Single Page Apps for GitHub Pages
       (function(l) {
         // Handle the standard GitHub Pages redirect (/?/route)
         if (l.search[1] === '/' ) {
@@ -35,42 +35,7 @@
           var finalUrl = l.protocol + '//' + l.hostname + (l.port ? ':' + l.port : '') +
             routePath + (queryParams ? '?' + queryParams : '') + l.hash;
           
-          console.log('SPA redirect - Original:', l.href);
-          console.log('SPA redirect - Decoded route:', routePath);
-          console.log('SPA redirect - Query params:', queryParams);
-          console.log('SPA redirect - Final URL:', finalUrl);
-          
           window.history.replaceState(null, null, finalUrl);
-        }
-        
-        // Handle direct route access (like /reset-password)
-        var path = l.pathname;
-        if (path !== '/' && path !== '/index.html') {
-          console.log('Direct route access detected:', path);
-          
-          // Special handling for reset-password route
-          if (path === '/reset-password' || path.startsWith('/reset-password')) {
-            console.log('Reset password route detected, redirecting...');
-            
-            // Redirect to the SPA format with parameters preserved
-            var newUrl = l.protocol + '//' + l.hostname + (l.port ? ':' + l.port : '') +
-              '/?/' + path.slice(1) +
-              (l.search ? '&' + l.search.slice(1) : '') +
-              l.hash;
-            
-            console.log('Redirecting to:', newUrl);
-            window.location.replace(newUrl);
-            return;
-          }
-          
-          // For other routes, redirect to SPA format
-          var redirectUrl = l.protocol + '//' + l.hostname + (l.port ? ':' + l.port : '') +
-            '/?/' + path.slice(1) +
-            (l.search ? '&' + l.search.slice(1) : '') +
-            l.hash;
-          
-          console.log('Redirecting to:', redirectUrl);
-          window.location.replace(redirectUrl);
         }
       }(window.location))
     </script>
