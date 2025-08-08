@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { useUnifiedAudioChat } from '@/hooks/useUnifiedAudioChat';
+import { useChat } from '@/hooks/useChat';
 import { useAuth } from '@/hooks/useAuth';
 import { useCityOptional } from '@/contexts/CityContext';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -54,20 +54,14 @@ const UnifiedAudioChatWidget: React.FC<UnifiedAudioChatWidgetProps> = ({
   const { currentLanguage, t } = useLanguage();
 
   // Unified chat hook with enhanced context
-  const {
-    messages,
-    isLoading,
-    suggestions,
-    messagesEndRef,
-    sendTextMessage,
-    sendAudioMessage,
-    clearChat
-  } = useUnifiedAudioChat({
+  const { messages, isLoading, suggestions, messagesEndRef, sendTextMessage, sendAudioMessage, clearChat } = useChat({
     cityName: city?.name || 'destination',
     currentJourney,
     currentStep,
     userLocation,
-    isInJourney
+    isInJourney: !!isInJourney,
+    mode: 'auto',
+    persistence: 'session'
   });
 
   // Debug: Log only once on mount to avoid infinite loops
@@ -88,10 +82,8 @@ const UnifiedAudioChatWidget: React.FC<UnifiedAudioChatWidgetProps> = ({
   };
 
   const formatTime = (date: Date) => {
-    return date.toLocaleTimeString(currentLanguage === 'en' ? 'en-US' : currentLanguage === 'de' ? 'de-DE' : 'fr-FR', {
-      hour: '2-digit',
-      minute: '2-digit'
-    });
+    const locale = currentLanguage === 'en' ? 'en-US' : currentLanguage === 'de' ? 'de-DE' : 'fr-FR';
+    return date.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' });
   };
 
   // Auto-collapse sections on mobile when chat opens

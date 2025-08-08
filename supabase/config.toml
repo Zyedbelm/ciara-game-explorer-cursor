@@ -23,6 +23,9 @@ verify_jwt = true
 [functions.send-contact-form]
 verify_jwt = false
 
+[functions.enhanced-ai-chat]
+verify_jwt = false
+
 [functions.send-journey-completion]
 verify_jwt = true
 
@@ -150,7 +153,6 @@ double_confirm_changes = true
 enable_confirmations = true
 # Configuration de sécurité email
 secure_email_change_enabled = true
-enable_confirmations = true
 
 # Configuration OAuth sécurisée (désactivée par défaut)
 [auth.external.apple]

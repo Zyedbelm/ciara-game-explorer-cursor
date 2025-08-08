@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
-import { useAudioChat } from '@/hooks/useAudioChat';
+import { useChat } from '@/hooks/useChat';
 import { AudioRecorder } from '@/components/audio/AudioRecorder';
 import { AudioErrorBoundary } from '@/components/audio/AudioErrorBoundary';
 import { EnhancedAudioPlayer } from '@/components/audio/EnhancedAudioPlayer';
@@ -65,24 +65,14 @@ const AdaptiveChatWidget: React.FC<AdaptiveChatWidgetProps> = ({
   useAudioCleanup();
 
   // Enhanced audio chat hook with voice messaging
-  const {
-    messages,
-    isLoading,
-    suggestions,
-    sendTextMessage,
-    sendAudioMessage,
-    clearChat,
-    messagesEndRef
-  } = useAudioChat({
+  const { messages, isLoading, suggestions, sendTextMessage, sendAudioMessage, clearChat, messagesEndRef } = useChat({
     cityName: city?.name || 'destination',
     currentJourney,
-    currentStep: currentStep ? {
-      name: currentStep.name,
-      description: currentStep.description,
-      points: currentStep.points_awarded
-    } : null,
+    currentStep,
     userLocation,
-    isInJourney
+    isInJourney: true,
+    mode: 'auto',
+    persistence: 'session'
   });
 
   const handleSendMessage = async (messageContent?: string) => {

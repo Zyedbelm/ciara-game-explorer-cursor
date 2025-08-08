@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { useEnhancedChat } from '@/hooks/useEnhancedChat';
+import { useChat } from '@/hooks/useChat';
 import { useAuth } from '@/hooks/useAuth';
 import { useCityOptional } from '@/contexts/CityContext';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -40,23 +40,19 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({
   } = useLanguage();
 
   // Enhanced chat hook with language detection and translation
-  const {
-    messages,
-    isLoading,
-    suggestions,
-    sendMessage,
-    clearChat,
-    messagesEndRef
-  } = useEnhancedChat({
+  const { messages, isLoading, suggestions, sendTextMessage, clearChat, messagesEndRef } = useChat({
     cityName: city?.name || 'destination',
     currentJourney,
-    userLocation
+    userLocation,
+    isInJourney: false,
+    mode: 'text',
+    persistence: 'session'
   });
   const handleSendMessage = async (messageContent?: string) => {
     const messageToSend = messageContent || inputMessage.trim();
     if (!messageToSend) return;
     setInputMessage('');
-    await sendMessage(messageToSend);
+    await sendTextMessage(messageToSend);
   };
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {

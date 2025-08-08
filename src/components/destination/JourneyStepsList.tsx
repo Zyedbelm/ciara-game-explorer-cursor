@@ -79,9 +79,9 @@ const JourneyStepsList: React.FC<JourneyStepsListProps> = ({
                     )}
                   </div>
                   
-                  <div className={`flex items-center gap-1.5 flex-shrink-0 ${isMobile ? 'flex-col' : ''}`}>
+                  <div className="flex items-center gap-2 flex-shrink-0 whitespace-nowrap">
                     {step.has_quiz && (
-                      <Badge variant="secondary" className={`text-xs px-1.5 py-0.5 bg-blue-100 text-blue-700 ${isMobile ? 'mb-1' : ''}`}>
+                      <Badge variant="secondary" className="text-xs px-2 py-0.5 bg-blue-100 text-blue-700">
                         <HelpCircle className="h-2.5 w-2.5 mr-1" />
                         Quiz
                       </Badge>

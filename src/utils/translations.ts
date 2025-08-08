@@ -1757,6 +1757,21 @@ export const translations = {
     en: "Send Reset Link",
     de: "Reset-Link senden"
   },
+  magic_link_option: {
+    fr: "Vous pouvez aussi choisir un lien de connexion automatique Magic Link",
+    en: "You can also choose an automatic connection Magic Link",
+    de: "Sie können auch einen automatischen Verbindungs-Magic-Link wählen"
+  },
+  send_magic_link: {
+    fr: "Envoyer un Magic Link",
+    en: "Send a Magic Link",
+    de: "Magic Link senden"
+  },
+  sending_magic_link: {
+    fr: "Envoi du Magic Link...",
+    en: "Sending Magic Link...",
+    de: "Magic Link wird gesendet..."
+  },
   email_address: {
     fr: "Adresse email",
     en: "Email address",

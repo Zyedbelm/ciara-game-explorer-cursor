@@ -111,7 +111,7 @@ const StepsList: React.FC<StepsListProps> = ({ journey, onStepClick, onForceStep
         <CardTitle className={isMobile ? 'text-lg' : undefined}>{t('journey.steps_list.title')}</CardTitle>
       </CardHeader>
       <CardContent>
-        <div className={`space-y-${isMobile ? '4' : '3'}`}>
+        <div className={`space-y-${isMobile ? '3' : '3'}`}>
           {journey.steps.map((step, index) => {
             const isCompleted = journey.completedSteps?.includes(index) || false;
             const isCurrent = index === journey.currentStepIndex;
@@ -125,68 +125,64 @@ const StepsList: React.FC<StepsListProps> = ({ journey, onStepClick, onForceStep
             return (
               <div
                 key={step.id}
-                className={`flex flex-col gap-3 p-${isMobile ? '4' : '3'} rounded-lg border transition-all duration-200 hover:shadow-md ${
+                className={`flex flex-col gap-3 p-${isMobile ? '3' : '3'} rounded-lg border transition-all duration-200 hover:shadow-md ${
                   isCompleted ? 'border-green-300 bg-green-50/80 opacity-90' : 
                   isCurrent ? 'border-primary bg-primary/5 shadow-sm' : 'border-border'
                 }`}
               >
-                <div className={`flex ${isMobile ? 'flex-col gap-2' : 'items-center gap-3'}`}>
-                  <div className={`flex items-center gap-3 ${isMobile ? 'w-full' : ''}`}>
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
-                      isCompleted ? 'bg-green-500 text-white' : 
-                      isCurrent ? 'bg-primary text-white' : 'bg-muted'
-                    }`}>
-                      {isCompleted ? (
-                        <CheckCircle className="h-4 w-4" />
-                      ) : (
-                        <span className="text-sm font-medium">{index + 1}</span>
-                      )}
-                    </div>
-                    
-                    <div 
-                      className="flex-1 cursor-pointer min-w-0"
-                      onClick={() => handleStepClick(index)}
-                    >
-                      <div className="flex items-center justify-between gap-2">
-                        <h4 className={`font-semibold ${
-                          isCompleted ? 'text-gray-500 line-through decoration-2 decoration-gray-600' : 'text-foreground'
-                        } ${
-                          isMobile ? 'text-base leading-tight line-clamp-2' : 'text-sm line-clamp-1'
-                        }`}>
-                          {step.name}
-                        </h4>
-                        
-                        {/* Points de l'étape à droite du titre */}
-                        <Badge variant={isCompleted ? 'default' : 'outline'} className={`${isMobile ? 'text-xs px-2 py-0.5' : ''} flex-shrink-0`}>
+                <div className="flex items-center gap-3">
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
+                    isCompleted ? 'bg-green-500 text-white' : 
+                    isCurrent ? 'bg-primary text-white' : 'bg-muted'
+                  }`}>
+                    {isCompleted ? (
+                      <CheckCircle className="h-4 w-4" />
+                    ) : (
+                      <span className="text-sm font-medium">{index + 1}</span>
+                    )}
+                  </div>
+                  
+                  <div 
+                    className="flex-1 cursor-pointer min-w-0"
+                    onClick={() => handleStepClick(index)}
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <h4 className={`font-semibold ${
+                        isCompleted ? 'text-gray-500 line-through decoration-2 decoration-gray-600' : 'text-foreground'
+                      } ${
+                        isMobile ? 'text-sm leading-tight line-clamp-1' : 'text-sm line-clamp-1'
+                      }`}>
+                        {step.name}
+                      </h4>
+                      
+                      <div className="flex items-center gap-2 flex-shrink-0">
+                        {/* Points de l'étape */}
+                        <Badge variant={isCompleted ? 'default' : 'outline'} className={`${isMobile ? 'text-xs px-2 py-0.5' : ''}`}>
                           {step.points_awarded} pts
                         </Badge>
+                        
+                        {/* Bouton Quiz - sur la même ligne */}
+                        {step.has_quiz && (
+                          <QuizModal
+                            stepId={step.id}
+                            stepName={step.name}
+                            trigger={
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="group relative overflow-hidden bg-gradient-to-r from-purple-500/10 to-pink-500/10 border-purple-300/50 hover:border-purple-400 hover:shadow-md hover:scale-105 transition-all duration-200 px-2"
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                <div className="absolute inset-0 bg-gradient-to-r from-purple-500/40 to-pink-500/40 opacity-30 group-hover:opacity-60 transition-opacity duration-200"></div>
+                                <Sparkles className={`${isMobile ? 'h-3 w-3' : 'h-3 w-3'} text-pink-500 animate-pulse`} />
+                                <QuizPointsDisplay stepId={step.id} isMobile={isMobile} />
+                              </Button>
+                            }
+                          />
+                        )}
                       </div>
                     </div>
                   </div>
-                  
-                   {/* Bouton Quiz - affiché seulement si l'étape a un quiz */}
-                   <div className={`flex items-center gap-2 ${
-                     isMobile ? 'justify-end ml-11' : 'flex-shrink-0'
-                   }`}>
-                     {step.has_quiz && (
-                       <QuizModal
-                         stepId={step.id}
-                         stepName={step.name}
-                         trigger={
-                           <Button
-                             variant="outline"
-                             size={isMobile ? "sm" : "sm"}
-                             className="group relative overflow-hidden bg-gradient-to-r from-purple-500/10 to-pink-500/10 border-purple-300/50 hover:border-purple-400 hover:shadow-md hover:scale-105 transition-all duration-200"
-                             onClick={(e) => e.stopPropagation()}
-                           >
-                             <div className="absolute inset-0 bg-gradient-to-r from-purple-500/40 to-pink-500/40 opacity-30 group-hover:opacity-60 transition-opacity duration-200"></div>
-                              <Sparkles className={`${isMobile ? 'h-2.5 w-2.5' : 'h-3 w-3'} text-pink-500 animate-pulse`} />
-                              <QuizPointsDisplay stepId={step.id} isMobile={isMobile} />
-                           </Button>
-                         }
-                       />
-                     )}
-                   </div>
                 </div>
 
                 {/* Description avec expand/collapse sur mobile */}

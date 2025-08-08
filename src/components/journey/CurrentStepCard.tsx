@@ -56,19 +56,26 @@ const CurrentStepCard: React.FC<CurrentStepCardProps> = ({
 
   return (
     <Card>
-      <CardHeader>
+      <CardHeader className="pb-3">
         <CardTitle className="flex items-center gap-2">
           {isStepCompleted ? (
             <CheckCircle className="h-5 w-5 text-success" />
           ) : (
             <MapPin className="h-5 w-5 text-primary" />
           )}
-          {currentStep.name}
+          <span className="flex-1 min-w-0 truncate">{currentStep.name}</span>
           {!isStepCompleted && (
-            <Badge className="ml-auto">
-              <Trophy className="h-3 w-3 mr-1" />
-              {currentStep.points_awarded} pts
-            </Badge>
+            <div className="flex items-center gap-2">
+              {currentStep.has_quiz && (
+                <Badge variant="secondary" className="text-xs px-2 py-0.5 bg-blue-100 text-blue-700 hidden sm:inline-flex">
+                  Quiz
+                </Badge>
+              )}
+              <Badge className="">
+                <Trophy className="h-3 w-3 mr-1" />
+                {currentStep.points_awarded} pts
+              </Badge>
+            </div>
           )}
         </CardTitle>
       </CardHeader>
@@ -135,7 +142,7 @@ const CurrentStepCard: React.FC<CurrentStepCardProps> = ({
         {!isStepCompleted && (
           <div className="flex flex-col sm:flex-row gap-2">
             {!location && (
-              <Button onClick={onRequestLocation} variant="outline" className="flex-1">
+              <Button onClick={onRequestLocation} variant="outline" className="sm:flex-1">
                 <Navigation className="mr-2 h-4 w-4" />
                 Activer la géolocalisation
               </Button>
@@ -145,7 +152,7 @@ const CurrentStepCard: React.FC<CurrentStepCardProps> = ({
               <Button 
                 onClick={onValidateStep}
                 disabled={validatingStep}
-                className="flex-1"
+                className="sm:flex-1 sm:px-6 px-4 rounded-full"
               >
                 {validatingStep ? (
                   <>
@@ -155,7 +162,7 @@ const CurrentStepCard: React.FC<CurrentStepCardProps> = ({
                 ) : (
                   <>
                     <Zap className="mr-2 h-4 w-4" />
-                    Je suis arrivé(e)
+                    J'y suis
                   </>
                 )}
               </Button>

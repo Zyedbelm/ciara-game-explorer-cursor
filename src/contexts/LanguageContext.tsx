@@ -1,6 +1,6 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback, useMemo } from 'react';
-import { contactTranslations } from '@/utils/translations';
+import { contactTranslations, translations } from '@/utils/translations';
 import { myJourneysTranslations, rewardsTranslations } from '@/utils/myJourneysTranslations';
 import { adminTranslations } from '@/utils/adminTranslations';
 import { profileTranslations } from '@/utils/profileTranslations';
@@ -180,7 +180,13 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
       return processParams(profileTranslation, params);
     }
 
-    // Priority 4: Check for dotted key paths in static translations
+    // Priority 4: Check main translations object
+    const mainTranslation = translations[key as keyof typeof translations];
+    if (mainTranslation && typeof mainTranslation === 'object') {
+      return (mainTranslation as any)[language] || (mainTranslation as any).fr || key;
+    }
+
+    // Priority 5: Check for dotted key paths in static translations
     const keys = key.split('.');
     let staticValue: any = contactTranslations;
     for (const k of keys) {

@@ -18,29 +18,35 @@ All colors MUST be HSL.
     --popover: 0 0% 100%;
     --popover-foreground: 215 25% 15%;
     
-    /* Primary - Alpine Rose */
-    --primary: 345 82% 55%;
+    /* Primary - Rose #e83052 */
+    --primary: 349 83% 55%;
     --primary-foreground: 0 0% 98%;
-    --primary-light: 345 82% 70%;
-    --primary-dark: 345 82% 40%;
+    --primary-light: 349 83% 70%;
+    --primary-dark: 349 83% 40%;
     
-    /* Secondary - Mountain Gold */
-    --secondary: 43 96% 56%;
-    --secondary-foreground: 30 25% 15%;
-    --secondary-light: 43 96% 70%;
-    --secondary-dark: 43 96% 40%;
+    /* Secondary - Orangé vif */
+    --secondary: 25 95% 53%;
+    --secondary-foreground: 0 0% 98%;
+    --secondary-light: 25 95% 68%;
+    --secondary-dark: 25 95% 38%;
     
-    /* Accent - Sky Blue */
-    --accent: 200 95% 60%;
-    --accent-foreground: 0 0% 98%;
-    --accent-light: 200 95% 75%;
-    --accent-dark: 200 95% 45%;
+    /* Accent - Jaune orangé */
+    --accent: 45 98% 63%;
+    --accent-foreground: 25 25% 15%;
+    --accent-light: 45 98% 78%;
+    --accent-dark: 45 98% 48%;
     
-    /* Nature Green */
-    --nature: 142 76% 36%;
+    /* Nature - Gris foncé */
+    --nature: 215 12% 35%;
     --nature-foreground: 0 0% 98%;
-    --nature-light: 142 76% 50%;
-    --nature-dark: 142 76% 25%;
+    --nature-light: 215 12% 50%;
+    --nature-dark: 215 12% 20%;
+    
+    /* Blue Klein */
+    --blue-klein: 214 100% 20%;
+    --blue-klein-foreground: 0 0% 98%;
+    --blue-klein-light: 214 100% 35%;
+    --blue-klein-dark: 214 100% 15%;
     
     /* Neutral System */
     --muted: 215 15% 96%;
@@ -110,29 +116,35 @@ All colors MUST be HSL.
     --popover: 215 25% 10%;
     --popover-foreground: 0 0% 95%;
     
-    /* Primary - Bright Alpine Rose */
-    --primary: 345 82% 65%;
-    --primary-foreground: 215 30% 8%;
-    --primary-light: 345 82% 75%;
-    --primary-dark: 345 82% 50%;
+    /* Primary - Rose #e83052 (dark) */
+    --primary: 349 83% 65%;
+    --primary-foreground: 0 0% 98%;
+    --primary-light: 349 83% 80%;
+    --primary-dark: 349 83% 50%;
     
-    /* Secondary - Bright Mountain Gold */
-    --secondary: 43 96% 65%;
+    /* Secondary - Orangé vif (dark) */
+    --secondary: 25 95% 63%;
     --secondary-foreground: 215 30% 8%;
-    --secondary-light: 43 96% 75%;
-    --secondary-dark: 43 96% 50%;
+    --secondary-light: 25 95% 73%;
+    --secondary-dark: 25 95% 48%;
     
-    /* Accent - Bright Sky Blue */
-    --accent: 200 95% 70%;
+    /* Accent - Jaune orangé (dark) */
+    --accent: 45 98% 73%;
     --accent-foreground: 215 30% 8%;
-    --accent-light: 200 95% 80%;
-    --accent-dark: 200 95% 55%;
+    --accent-light: 45 98% 83%;
+    --accent-dark: 45 98% 58%;
     
-    /* Nature Green */
-    --nature: 142 76% 45%;
+    /* Nature - Gris foncé (dark) */
+    --nature: 215 12% 55%;
     --nature-foreground: 215 30% 8%;
-    --nature-light: 142 76% 55%;
-    --nature-dark: 142 76% 35%;
+    --nature-light: 215 12% 65%;
+    --nature-dark: 215 12% 40%;
+    
+    /* Blue Klein (dark) */
+    --blue-klein: 214 100% 30%;
+    --blue-klein-foreground: 0 0% 98%;
+    --blue-klein-light: 214 100% 45%;
+    --blue-klein-dark: 214 100% 25%;
     
     /* Neutral System */
     --muted: 215 20% 15%;
@@ -368,4 +380,36 @@ html, body {
     font-size: 1rem;
     line-height: 1.5rem;
   }
+}
+
+/* Classes custom pour les onglets bleu Klein */
+.tab-blue-klein[data-state="active"] {
+  background-color: hsl(214 80% 45%) !important;
+  color: white !important;
+}
+
+.dark .tab-blue-klein[data-state="active"] {
+  background-color: hsl(214 80% 55%) !important;
+  color: white !important;
+}
+
+/* Classes utilitaires pour le bleu Klein */
+.bg-blue-klein {
+  background-color: hsl(214 80% 45%);
+}
+
+.bg-blue-klein-dark {
+  background-color: hsl(214 80% 35%);
+}
+
+.hover\:bg-blue-klein-dark:hover {
+  background-color: hsl(214 80% 35%);
+}
+
+.text-blue-klein {
+  color: hsl(214 100% 20%);
+}
+
+.border-blue-klein {
+  border-color: hsl(214 100% 20%);
 }

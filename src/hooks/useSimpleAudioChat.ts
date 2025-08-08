@@ -89,11 +89,13 @@ export function useSimpleAudioChat(context: ChatContext = {}) {
         currentStep: context.currentStep?.name
       };
 
-      const { data, error } = await supabase.functions.invoke('ai-chat', {
+      const { data, error } = await supabase.functions.invoke('enhanced-ai-chat', {
         body: {
           message: messageContent,
+          sessionKey: `simple_${context.cityName || 'home'}`,
           language: currentLanguage,
-          context: simpleContext
+          context: simpleContext,
+          messageType: 'text'
         }
       });
 

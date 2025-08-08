@@ -1,3 +1,13 @@
+## Basculer la fonction de tchat (fallback rapide)
+
+Pour revenir à l’ancienne fonction Edge sans changer le code, définissez la variable:
+
+```
+VITE_CHAT_FUNCTION_NAME=ai-chat
+```
+
+Par défaut, la nouvelle fonction est `enhanced-ai-chat`.
+
 # Welcome to your Lovable project
 
 ## Project info

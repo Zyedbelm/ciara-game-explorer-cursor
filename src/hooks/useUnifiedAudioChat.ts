@@ -41,6 +41,15 @@ export function useUnifiedAudioChat(context: ChatContext = {}) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const translationCache = useRef<Map<string, Record<string, string>>>(new Map());
 
+  // Generate a stable session key so the Edge Function can persist history
+  const getSessionKey = useCallback(() => {
+    const parts: string[] = ['chat'];
+    if (context.cityName) parts.push(context.cityName);
+    if (context.currentJourney?.id) parts.push(`journey_${context.currentJourney.id}`);
+    if (context.currentStep?.id) parts.push(`step_${context.currentStep.id}`);
+    return parts.join('_');
+  }, [context]);
+
   // Auto-scroll to bottom
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -167,6 +176,7 @@ export function useUnifiedAudioChat(context: ChatContext = {}) {
 
     if (context.currentJourney) {
       enhancedContext.currentJourney = {
+        id: context.currentJourney.id,
         name: context.currentJourney.name,
         description: context.currentJourney.description,
         category: context.currentJourney.category?.name,
@@ -177,6 +187,7 @@ export function useUnifiedAudioChat(context: ChatContext = {}) {
 
     if (context.currentStep) {
       enhancedContext.currentStep = {
+        id: context.currentStep.id,
         name: context.currentStep.name,
         description: context.currentStep.description,
         type: context.currentStep.type,
@@ -214,11 +225,57 @@ export function useUnifiedAudioChat(context: ChatContext = {}) {
       }
     }
 
+    // Homepage/global grounding
+    if (!context.currentJourney && !context.currentStep) {
+      try {
+        const { data: visibleCities } = await supabase
+          .from('cities')
+          .select('id, name, slug')
+          .eq('is_active', true)
+          .eq('is_visible_on_homepage', true)
+          .order('name', { ascending: true });
+
+        if (visibleCities && visibleCities.length > 0) {
+          enhancedContext.availableCities = visibleCities.map((c: any) => ({ id: c.id, name: c.name, slug: c.slug }));
+        }
+
+        if (context.cityName && visibleCities) {
+          const targetCity = visibleCities.find((c: any) => c.name?.toLowerCase() === context.cityName?.toLowerCase());
+          const targetCityId = targetCity?.id;
+          if (targetCityId) {
+            const [{ data: cityJourneys }, { data: cityPartners }] = await Promise.all([
+              supabase
+                .from('journeys')
+                .select('id, name')
+                .eq('city_id', targetCityId)
+                .eq('is_active', true)
+                .order('name', { ascending: true }),
+              supabase
+                .from('partners')
+                .select('id, name')
+                .eq('city_id', targetCityId)
+                .eq('is_active', true)
+                .order('name', { ascending: true })
+            ]);
+
+            if (cityJourneys) {
+              enhancedContext.cityJourneys = cityJourneys.map((j: any) => ({ id: j.id, name: j.name }));
+            }
+            if (cityPartners) {
+              enhancedContext.cityPartners = cityPartners.map((p: any) => ({ id: p.id, name: p.name }));
+            }
+          }
+        }
+      } catch (e) {
+        // silent
+      }
+    }
+
     return enhancedContext;
   }, [context, currentLanguage, profile, fetchStepDocuments, fetchQuizQuestions]);
 
 
-  // Send text message
+  // Send text message (standardized on enhanced-ai-chat)
   const sendTextMessage = useCallback(async (messageContent: string) => {
     if (!messageContent.trim() || isLoading) return;
 
@@ -244,19 +301,15 @@ export function useUnifiedAudioChat(context: ChatContext = {}) {
 
     try {
       const enhancedContext = await buildEnhancedContext();
-      const conversationHistory = messages.slice(-8);
       const detectedLanguage = detectLanguage(messageContent);
 
-      const { data, error } = await supabase.functions.invoke('ai-chat', {
+      const { data, error } = await supabase.functions.invoke('enhanced-ai-chat', {
         body: {
           message: messageContent,
+          sessionKey: getSessionKey(),
           language: detectedLanguage,
           context: enhancedContext,
-          conversationHistory: conversationHistory.map(m => ({
-            role: m.role,
-            content: m.originalContent || m.content,
-            language: m.originalLanguage
-          }))
+          messageType: 'text'
         }
       });
 
@@ -300,7 +353,7 @@ export function useUnifiedAudioChat(context: ChatContext = {}) {
     } finally {
       setIsLoading(false);
     }
-  }, [isLoading, messages, context, currentLanguage, buildEnhancedContext, updateContextualSuggestions, t, toast]);
+  }, [isLoading, context, currentLanguage, buildEnhancedContext, updateContextualSuggestions, t, toast, getSessionKey]);
 
   // Send audio message
   const sendAudioMessage = useCallback(async (audioBlob: Blob, duration: number) => {

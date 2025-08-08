@@ -48,5 +48,6 @@ if (!supabase) {
   throw new Error('Échec de l\'initialisation du client Supabase');
 }
 
-// Export sécurisé
+// Exports sécurisés
+export { createClient };
 export default supabase;

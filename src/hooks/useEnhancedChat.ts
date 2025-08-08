@@ -154,6 +154,7 @@ export function useEnhancedChat(context: ChatContext = {}) {
 
     if (context.currentJourney) {
       enhancedContext.currentJourney = {
+        id: context.currentJourney.id,
         name: context.currentJourney.name,
         description: context.currentJourney.description,
         category: context.currentJourney.category?.name,
@@ -164,6 +165,7 @@ export function useEnhancedChat(context: ChatContext = {}) {
 
     if (context.currentStep) {
       enhancedContext.currentStep = {
+        id: context.currentStep.id,
         name: context.currentStep.name,
         description: context.currentStep.description,
         type: context.currentStep.type,
@@ -196,6 +198,54 @@ export function useEnhancedChat(context: ChatContext = {}) {
           options: q.options,
           points_awarded: q.points_awarded
         }));
+      }
+    }
+
+    // Homepage/global grounding: inject available cities, journeys and partners to avoid hallucinations
+    if (!context.currentJourney && !context.currentStep) {
+      try {
+        // Available cities (visible on homepage)
+        const { data: visibleCities } = await supabase
+          .from('cities')
+          .select('id, name, slug')
+          .eq('is_active', true)
+          .eq('is_visible_on_homepage', true)
+          .order('name', { ascending: true });
+
+        if (visibleCities && visibleCities.length > 0) {
+          enhancedContext.availableCities = visibleCities.map((c: any) => ({ id: c.id, name: c.name, slug: c.slug }));
+        }
+
+        // If a city is explicitly present, enrich with its journeys and partners
+        if (context.cityName && visibleCities) {
+          const targetCity = visibleCities.find((c: any) => c.name?.toLowerCase() === context.cityName?.toLowerCase());
+          const targetCityId = targetCity?.id;
+          if (targetCityId) {
+            const [{ data: cityJourneys }, { data: cityPartners }] = await Promise.all([
+              supabase
+                .from('journeys')
+                .select('id, name')
+                .eq('city_id', targetCityId)
+                .eq('is_active', true)
+                .order('name', { ascending: true }),
+              supabase
+                .from('partners')
+                .select('id, name')
+                .eq('city_id', targetCityId)
+                .eq('is_active', true)
+                .order('name', { ascending: true })
+            ]);
+
+            if (cityJourneys) {
+              enhancedContext.cityJourneys = cityJourneys.map((j: any) => ({ id: j.id, name: j.name }));
+            }
+            if (cityPartners) {
+              enhancedContext.cityPartners = cityPartners.map((p: any) => ({ id: p.id, name: p.name }));
+            }
+          }
+        }
+      } catch (e) {
+        // Fail silently; context grounding is best-effort
       }
     }
 
@@ -317,12 +367,12 @@ export function useEnhancedChat(context: ChatContext = {}) {
 
     try {
       const enhancedContext = await buildEnhancedContext();
-      const conversationHistory = messages.slice(-8); // Last 8 messages for context
+      const sessionKey = `chat_home_${user?.id || 'anon'}_${context.cityName || 'global'}`;
 
       const { data, error } = await supabase.functions.invoke('enhanced-ai-chat', {
         body: {
           message: messageContent,
-          sessionKey: `user_${user?.id || 'anonymous'}_${Date.now()}`,
+          sessionKey,
           language: detectedLanguage, // Use detected language
           context: enhancedContext,
           messageType: 'text'

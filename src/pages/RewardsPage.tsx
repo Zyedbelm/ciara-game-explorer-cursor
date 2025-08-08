@@ -946,23 +946,31 @@ const RewardsPage = () => {
           {/* Sous-onglets pour My Earned Rewards */}
           <Tabs defaultValue="to-validate" className="space-y-4">
             <div className="flex flex-col space-y-2">
-              <TabsList className="grid w-full max-w-md grid-cols-2 h-20">
+              <TabsList className="grid w-full max-w-md grid-cols-2 h-14">
                 <TabsTrigger 
                   value="to-validate" 
-                  className="flex flex-col items-center justify-center p-2 space-y-1 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
-                  style={{ flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}
+                  className="tab-blue-klein flex flex-col items-center justify-center p-2 space-y-1"
+                  style={{ 
+                    flexDirection: 'column', 
+                    alignItems: 'center', 
+                    justifyContent: 'center'
+                  }}
                 >
-                  <Clock className="h-5 w-5 mb-1" />
+                  <Clock className="h-4 w-4 mb-0.5" />
                   <span className="text-xs font-medium">
                     {currentLanguage === 'en' ? 'To Validate' : currentLanguage === 'de' ? 'Zu Validieren' : 'À valider'}
                   </span>
                 </TabsTrigger>
                 <TabsTrigger 
                   value="transformed" 
-                  className="flex flex-col items-center justify-center p-2 space-y-1 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
-                  style={{ flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}
+                  className="tab-blue-klein flex flex-col items-center justify-center p-2 space-y-1"
+                  style={{ 
+                    flexDirection: 'column', 
+                    alignItems: 'center', 
+                    justifyContent: 'center'
+                  }}
                 >
-                  <CheckCircle className="h-5 w-5 mb-1" />
+                  <CheckCircle className="h-4 w-4 mb-0.5" />
                   <span className="text-xs font-medium">
                     {currentLanguage === 'en' ? 'Transformed' : currentLanguage === 'de' ? 'Transformiert' : 'Transformés'}
                   </span>

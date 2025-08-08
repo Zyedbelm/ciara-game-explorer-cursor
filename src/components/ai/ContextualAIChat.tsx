@@ -221,15 +221,13 @@ const ContextualAIChat: React.FC<ContextualAIChatProps> = ({
       const context = await buildContext();
       const conversationHistory = messages.slice(-10); // Last 10 messages for context
 
-      const { data, error } = await supabase.functions.invoke('ai-chat', {
+      const { data, error } = await supabase.functions.invoke('enhanced-ai-chat', {
         body: {
           message: messageText,
+          sessionKey: `contextual_${citySlug || 'home'}`,
           language: currentLanguage,
           context,
-          conversationHistory: conversationHistory.map(m => ({
-            role: m.role,
-            content: m.content
-          }))
+          messageType: 'text'
         },
       });
 

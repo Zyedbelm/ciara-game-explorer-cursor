@@ -12,6 +12,7 @@ import { PasswordResetService } from '@/services/passwordResetService';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import Footer from '@/components/common/Footer';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { supabase } from '@/integrations/supabase/client';
 
 const AuthPage = () => {
   const navigate = useNavigate();
@@ -21,6 +22,7 @@ const AuthPage = () => {
   
   const [loading, setLoading] = useState(false);
   const [resetLoading, setResetLoading] = useState(false);
+  const [magicLinkLoading, setMagicLinkLoading] = useState(false);
   const [resetEmail, setResetEmail] = useState('');
   const [formData, setFormData] = useState({
     email: '',
@@ -116,6 +118,48 @@ const AuthPage = () => {
     }
   };
 
+  const handleMagicLink = async () => {
+    if (!resetEmail) {
+      toast({
+        title: t('email_required'),
+        description: t('enter_email'),
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setMagicLinkLoading(true);
+    
+    try {
+      const { error } = await supabase.auth.signInWithOtp({
+        email: resetEmail,
+        options: {
+          emailRedirectTo: `${window.location.origin}/auth/callback`
+        }
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      toast({
+        title: t('magic_link_sent'),
+        description: t('check_email_magic_link'),
+        variant: "default"
+      });
+      
+      setResetEmail('');
+    } catch (error: any) {
+      toast({
+        title: t('error'),
+        description: error.message || "Impossible d'envoyer le Magic Link",
+        variant: "destructive"
+      });
+    } finally {
+      setMagicLinkLoading(false);
+    }
+  };
+
   if (authLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -164,7 +208,7 @@ const AuthPage = () => {
               <TabsList className="grid w-full grid-cols-2 p-1">
                 <TabsTrigger 
                   value="signin" 
-                  className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground"
+                  className="tab-blue-klein"
                 >
                   {t('sign_in')}
                 </TabsTrigger>
@@ -221,7 +265,7 @@ const AuthPage = () => {
 
                     <Button
                       type="submit"
-                      className="w-full bg-accent hover:bg-accent/90 text-accent-foreground"
+                      className="w-full bg-blue-klein hover:bg-blue-klein-dark text-white"
                       disabled={loading}
                     >
                       {loading ? (
@@ -265,12 +309,39 @@ const AuthPage = () => {
                               onChange={(e) => setResetEmail(e.target.value)}
                               className="mt-2"
                             />
+                            
+                            {/* Magic Link Option */}
+                            <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                              <p className="text-sm text-blue-700 mb-3">
+                                {t('magic_link_option')}
+                              </p>
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={handleMagicLink}
+                                disabled={magicLinkLoading || resetLoading}
+                                className="w-full border-blue-300 text-blue-700 hover:bg-blue-100"
+                              >
+                                {magicLinkLoading ? (
+                                  <>
+                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                    {t('sending_magic_link')}
+                                  </>
+                                ) : (
+                                  <>
+                                    <Mail className="mr-2 h-4 w-4" />
+                                    {t('send_magic_link')}
+                                  </>
+                                )}
+                              </Button>
+                            </div>
                           </div>
                           <AlertDialogFooter>
                             <AlertDialogCancel>{t('cancel')}</AlertDialogCancel>
                             <AlertDialogAction 
                               onClick={handlePasswordReset}
-                              disabled={resetLoading}
+                              disabled={resetLoading || magicLinkLoading}
                             >
                               {resetLoading ? (
                                 <>

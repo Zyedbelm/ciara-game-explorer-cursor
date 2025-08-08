@@ -49,6 +49,8 @@ export const profileTranslations = {
     'profile.interest_categories.art': 'Art',
     'profile.interest_categories.history': 'Histoire',
     'profile.interest_categories.sports': 'Sports',
+    'profile.interest_categories.museums': 'Musées',
+    'profile.interest_categories.architecture': 'Architecture',
     
     // Badges
     'profile.badges.title': 'Mes Badges',
@@ -70,6 +72,11 @@ export const profileTranslations = {
     'profile.monthly_stats.exploration_time': 'Temps d\'exploration',
     'profile.monthly_stats.points_gained': 'Points gagnés',
     'profile.monthly_stats.steps_completed': 'Étapes complétées',
+    
+    // Section titles
+    'profile.level_and_points': 'Niveau et Points',
+    'profile.preferences_title': 'Préférences',
+    'profile.security_title': 'Sécurité',
     
     // Additional translations
     'profile.activity_history': 'Historique d\'activité',
@@ -138,6 +145,8 @@ export const profileTranslations = {
     'profile.interest_categories.art': 'Art',
     'profile.interest_categories.history': 'History',
     'profile.interest_categories.sports': 'Sports',
+    'profile.interest_categories.museums': 'Museums',
+    'profile.interest_categories.architecture': 'Architecture',
     
     // Badges
     'profile.badges.title': 'My Badges',
@@ -159,6 +168,11 @@ export const profileTranslations = {
     'profile.monthly_stats.exploration_time': 'Exploration Time',
     'profile.monthly_stats.points_gained': 'Points Gained',
     'profile.monthly_stats.steps_completed': 'Steps Completed',
+    
+    // Section titles
+    'profile.level_and_points': 'Level and Points',
+    'profile.preferences_title': 'Preferences',
+    'profile.security_title': 'Security',
     
     // Additional translations
     'profile.activity_history': 'Activity History',
@@ -227,6 +241,8 @@ export const profileTranslations = {
     'profile.interest_categories.art': 'Kunst',
     'profile.interest_categories.history': 'Geschichte',
     'profile.interest_categories.sports': 'Sport',
+    'profile.interest_categories.museums': 'Museen',
+    'profile.interest_categories.architecture': 'Architektur',
     
     // Badges
     'profile.badges.title': 'Meine Abzeichen',
@@ -248,6 +264,11 @@ export const profileTranslations = {
     'profile.monthly_stats.exploration_time': 'Erkundungszeit',
     'profile.monthly_stats.points_gained': 'Punkte erhalten',
     'profile.monthly_stats.steps_completed': 'Schritte abgeschlossen',
+    
+    // Section titles
+    'profile.level_and_points': 'Level und Punkte',
+    'profile.preferences_title': 'Einstellungen',
+    'profile.security_title': 'Sicherheit',
     
     // Additional translations
     'profile.activity_history': 'Aktivitätsverlauf',
