@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Redirection...</title>
+    <meta name="robots" content="noindex" />
+    <script>
+      (function () {
+        var l = window.location;
+        // Préserve la query (ex: ?code=...&type=magiclink) et le hash
+        var target = '/' + (l.search || '') + (l.hash || '');
+        // Utilise replace pour ne pas garder la 404 dans l'historique
+        l.replace(target);
+      })();
+    </script>
+  </head>
+  <body>
+    Redirection en cours...
+  </body>
+</html>

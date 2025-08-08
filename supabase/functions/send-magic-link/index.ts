@@ -84,22 +84,10 @@ const MagicLinkEmail = ({ email, magicLinkUrl, name }: MagicLinkRequest) => {
           )
         }),
 
-        React.createElement('div', { style: { margin: '24px 0' } },
-          React.createElement('p', { style: { fontSize: '16px', lineHeight: '1.6', color: '#475569', margin: '0 0 16px 0' } },
-            "Vous pouvez aussi copier-coller ce lien dans votre navigateur :"
-          ),
-          React.createElement('p', { 
-            style: {
-              fontSize: '12px',
-              lineHeight: '1.6',
-              color: '#475569',
-              wordBreak: 'break-all',
-              backgroundColor: '#f5f5f5',
-              padding: '8px',
-              borderRadius: '4px',
-              margin: '0 0 16px 0'
-            }
-          }, magicLinkUrl)
+        React.createElement('div', { style: { margin: '24px 0', textAlign: 'center' } },
+          React.createElement('p', { style: { fontSize: '14px', lineHeight: '1.6', color: '#64748b', margin: '0', fontStyle: 'italic' } },
+            "Le lien est valide pendant 1 heure et ne peut être utilisé qu'une seule fois."
+          )
         ),
 
         React.createElement('div', { style: { margin: '24px 0' } },
@@ -147,22 +135,10 @@ const MagicLinkEmail = ({ email, magicLinkUrl, name }: MagicLinkRequest) => {
           }, "Log in automatically / Se connecter automatiquement")
         ),
         
-        React.createElement('div', { style: { margin: '24px 0' } },
-          React.createElement('p', { style: { fontSize: '16px', lineHeight: '1.6', color: '#475569', margin: '0 0 16px 0' } },
-            "You can also copy and paste this link into your browser:"
-          ),
-          React.createElement('p', { 
-            style: {
-              fontSize: '12px',
-              lineHeight: '1.6',
-              color: '#475569',
-              wordBreak: 'break-all',
-              backgroundColor: '#f5f5f5',
-              padding: '8px',
-              borderRadius: '4px',
-              margin: '0 0 16px 0'
-            }
-          }, magicLinkUrl)
+        React.createElement('div', { style: { margin: '24px 0', textAlign: 'center' } },
+          React.createElement('p', { style: { fontSize: '14px', lineHeight: '1.6', color: '#64748b', margin: '0', fontStyle: 'italic' } },
+            "This link is valid for 1 hour and can only be used once."
+          )
         ),
 
         React.createElement('div', { style: { margin: '24px 0' } },
