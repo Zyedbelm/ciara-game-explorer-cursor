@@ -17,18 +17,30 @@
     <meta name="twitter:site" content="@lovable_dev" />
     <meta name="twitter:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
     
-    <!-- GitHub Pages SPA Redirect - Robust -->
+    <!-- GitHub Pages SPA Redirect - Fixed -->
     <script type="text/javascript">
-      // Robust Single Page Apps for GitHub Pages
+      // Fixed Single Page Apps for GitHub Pages
       (function(l) {
-        // Handle the standard GitHub Pages redirect
+        // Handle the standard GitHub Pages redirect (/?/route)
         if (l.search[1] === '/' ) {
           var decoded = l.search.slice(1).split('&').map(function(s) { 
             return s.replace(/~and~/g, '&')
           }).join('?');
-          window.history.replaceState(null, null,
-              l.pathname.slice(0, -1) + decoded + l.hash
-          );
+          
+          // Extract the route from the decoded path
+          var routePath = decoded.split('?')[0];
+          var queryParams = decoded.split('?').slice(1).join('?');
+          
+          // Build the correct URL for React Router
+          var finalUrl = l.protocol + '//' + l.hostname + (l.port ? ':' + l.port : '') +
+            routePath + (queryParams ? '?' + queryParams : '') + l.hash;
+          
+          console.log('SPA redirect - Original:', l.href);
+          console.log('SPA redirect - Decoded route:', routePath);
+          console.log('SPA redirect - Query params:', queryParams);
+          console.log('SPA redirect - Final URL:', finalUrl);
+          
+          window.history.replaceState(null, null, finalUrl);
         }
         
         // Handle direct route access (like /reset-password)
