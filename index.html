@@ -17,12 +17,10 @@
     <meta name="twitter:site" content="@lovable_dev" />
     <meta name="twitter:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
     
-    <!-- GitHub Pages SPA Redirect - Enhanced for Reset Password -->
+    <!-- GitHub Pages SPA Redirect - Minimal -->
     <script type="text/javascript">
-      // Enhanced Single Page Apps for GitHub Pages
-      // Handles complex query parameters and hash fragments
+      // Minimal Single Page Apps for GitHub Pages
       (function(l) {
-        // Handle the standard GitHub Pages redirect
         if (l.search[1] === '/' ) {
           var decoded = l.search.slice(1).split('&').map(function(s) { 
             return s.replace(/~and~/g, '&')
@@ -30,36 +28,6 @@
           window.history.replaceState(null, null,
               l.pathname.slice(0, -1) + decoded + l.hash
           );
-        }
-        
-        // Handle direct access to routes with query parameters
-        // This is especially important for reset-password with tokens
-        var path = l.pathname;
-        var search = l.search;
-        var hash = l.hash;
-        
-        // Special handling for reset-password route
-        if (path === '/reset-password' || path.startsWith('/reset-password')) {
-          console.log('Reset password route detected:', l.href);
-          
-          // If we have query parameters, ensure they're preserved
-          if (search && search.length > 0) {
-            // The URL is already correct, just ensure React Router can handle it
-            // No need to modify the URL, just log for debugging
-            console.log('Reset password with parameters:', search);
-          }
-          
-          // If we have hash parameters (from Supabase redirect), handle them
-          if (hash && hash.length > 1) {
-            console.log('Reset password with hash parameters:', hash);
-            // The hash will be handled by the ResetPasswordPage component
-          }
-        }
-        
-        // Handle other direct route access
-        if (path !== '/' && path !== '/index.html' && path !== '/reset-password') {
-          // For other routes, we might need to redirect through the SPA mechanism
-          // But for now, let's focus on reset-password
         }
       }(window.location))
     </script>

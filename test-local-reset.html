@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Local Reset Password</title>
+</head>
+<body>
+    <h1>Test Local Reset Password</h1>
+    
+    <h2>Tests à effectuer :</h2>
+    <ul>
+        <li><a href="http://localhost:8080/reset-password" target="_blank">Test route simple</a></li>
+        <li><a href="http://localhost:8080/reset-password?code=test123" target="_blank">Test avec paramètre code</a></li>
+        <li><a href="http://localhost:8080/reset-password?type=recovery&token=test456" target="_blank">Test avec paramètres Supabase</a></li>
+    </ul>
+    
+    <h2>Résultats attendus :</h2>
+    <ul>
+        <li>✅ La page doit s'afficher correctement</li>
+        <li>✅ Les paramètres doivent être préservés</li>
+        <li>✅ Pas d'erreur 404</li>
+    </ul>
+    
+    <script>
+        console.log('Test page loaded');
+        console.log('Current URL:', window.location.href);
+    </script>
+</body>
+</html>
