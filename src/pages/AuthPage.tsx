@@ -252,10 +252,10 @@ const AuthPage = () => {
                           <AlertDialogHeader>
                             <AlertDialogTitle className="flex items-center gap-2">
                               <Mail className="h-5 w-5" />
-                              {t('magic_link_login')}
+                              {t('password_reset_title')}
                             </AlertDialogTitle>
                             <AlertDialogDescription>
-                              {t('magic_link_instruction')}
+                              {t('password_reset_instruction')}
                             </AlertDialogDescription>
                           </AlertDialogHeader>
                           <div className="py-4">
@@ -281,7 +281,7 @@ const AuthPage = () => {
                                   {t('sending')}
                                 </>
                               ) : (
-                                t('send_magic_link')
+                                t('send_reset_link')
                               )}
                             </AlertDialogAction>
                           </AlertDialogFooter>

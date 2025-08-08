@@ -1741,21 +1741,21 @@ export const translations = {
     de: "Aktualisierung..."
   },
   
-  // Magic Link modal translations
-  magic_link_login: {
-    fr: "Connexion avec Magic Link",
-    en: "Magic Link Login",
-    de: "Magic Link Anmeldung"
+  // Password Reset modal translations
+  password_reset_title: {
+    fr: "Réinitialisation du mot de passe",
+    en: "Password Reset",
+    de: "Passwort zurücksetzen"
   },
-  magic_link_instruction: {
-    fr: "Entrez votre adresse email et nous vous enverrons un lien magique pour vous connecter automatiquement. Vous pourrez ensuite changer votre mot de passe dans l'espace de votre Profile.",
-    en: "Enter your email address and we'll send you a Magic Link to log in automatically. You can then change your password in your Profile area.",
-    de: "Geben Sie Ihre E-Mail-Adresse ein und wir senden Ihnen einen Magic Link zum automatischen Anmelden. Sie können dann Ihr Passwort in Ihrem Profil-Bereich ändern."
+  password_reset_instruction: {
+    fr: "Entrez votre adresse email et nous vous enverrons un lien de réinitialisation pour changer votre mot de passe.",
+    en: "Enter your email address and we'll send you a password reset link to change your password.",
+    de: "Geben Sie Ihre E-Mail-Adresse ein und wir senden Ihnen einen Link zum Zurücksetzen des Passworts."
   },
-  send_magic_link: {
-    fr: "Envoyer le lien magique",
-    en: "Send Magic Link",
-    de: "Magic Link senden"
+  send_reset_link: {
+    fr: "Envoyer le lien de réinitialisation",
+    en: "Send Reset Link",
+    de: "Reset-Link senden"
   },
   email_address: {
     fr: "Adresse email",

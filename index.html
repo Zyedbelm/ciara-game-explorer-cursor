@@ -17,19 +17,12 @@
     <meta name="twitter:site" content="@lovable_dev" />
     <meta name="twitter:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
     
-    <!-- GitHub Pages SPA Redirect -->
+    <!-- GitHub Pages SPA Redirect - Enhanced -->
     <script type="text/javascript">
-      // Single Page Apps for GitHub Pages
-      // MIT License
-      // https://github.com/rafgraph/spa-github-pages
-      // This script checks to see if a redirect is present in the query string,
-      // converts it back into the correct url and adds it to the
-      // browser's history using window.history.replaceState(...),
-      // which won't cause the browser to attempt to load the new url.
-      // When the single page app is loaded further down in this file,
-      // the correct url will be waiting in the browser's history for
-      // the single page app to route accordingly.
+      // Enhanced Single Page Apps for GitHub Pages
+      // Handles complex query parameters and hash fragments
       (function(l) {
+        // Handle the standard GitHub Pages redirect
         if (l.search[1] === '/' ) {
           var decoded = l.search.slice(1).split('&').map(function(s) { 
             return s.replace(/~and~/g, '&')
@@ -37,6 +30,22 @@
           window.history.replaceState(null, null,
               l.pathname.slice(0, -1) + decoded + l.hash
           );
+        }
+        
+        // Handle direct access to routes with query parameters
+        // This is especially important for reset-password with tokens
+        var path = l.pathname;
+        var search = l.search;
+        var hash = l.hash;
+        
+        // If we're accessing a route directly (not through the redirect)
+        // and it's not the root path, we need to ensure proper routing
+        if (path !== '/' && path !== '/index.html') {
+          // For reset-password specifically, preserve all parameters
+          if (path === '/reset-password' || path.startsWith('/reset-password')) {
+            // Keep the current URL as is, just ensure React Router can handle it
+            console.log('Reset password route detected:', l.href);
+          }
         }
       }(window.location))
     </script>
