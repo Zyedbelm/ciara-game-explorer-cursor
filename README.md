@@ -110,3 +110,4 @@ supabase db shell --local
 
 The test data includes realistic Swiss tourism destinations like Lausanne, Montreux, Gruyères, Zermatt, and Lucerne, complete with authentic points of interest, local partners, and interactive content.
 # Fri Aug  8 22:49:59 CEST 2025
+# Force new deployment with environment variables - Fri Aug  8 23:09:59 CEST 2025
