@@ -93,22 +93,22 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
 
   // Simplified translation function with minimal logging
   const t = useCallback((key: string, params?: Record<string, string | number>): string => {
-    // Critical magic link translations with immediate fallbacks
-    const magicLinkFallbacks: Record<string, Record<string, string>> = {
-      magic_link_login: {
-        fr: "Connexion avec Magic Link",
-        en: "Magic Link Login", 
-        de: "Magic Link Anmeldung"
+    // Critical password reset translations with immediate fallbacks
+    const passwordResetFallbacks: Record<string, Record<string, string>> = {
+      password_reset_title: {
+        fr: "Réinitialisation du mot de passe",
+        en: "Password Reset",
+        de: "Passwort zurücksetzen"
       },
-      magic_link_instruction: {
-        fr: "Entrez votre adresse email et nous vous enverrons un lien magique pour vous connecter automatiquement. Vous pourrez ensuite changer votre mot de passe dans l'espace de votre Profile.",
-        en: "Enter your email address and we'll send you a Magic Link to log in automatically. You can then change your password in your Profile area.",
-        de: "Geben Sie Ihre E-Mail-Adresse ein und wir senden Ihnen einen Magic Link zum automatischen Anmelden. Sie können dann Ihr Passwort in Ihrem Profil-Bereich ändern."
+      password_reset_instruction: {
+        fr: "Entrez votre adresse email et nous vous enverrons un lien de réinitialisation pour changer votre mot de passe.",
+        en: "Enter your email address and we'll send you a password reset link to change your password.",
+        de: "Geben Sie Ihre E-Mail-Adresse ein und wir senden Ihnen einen Link zum Zurücksetzen des Passworts."
       },
-      send_magic_link: {
-        fr: "Envoyer le lien magique",
-        en: "Send Magic Link",
-        de: "Magic Link senden"
+      send_reset_link: {
+        fr: "Envoyer le lien de réinitialisation",
+        en: "Send Reset Link",
+        de: "Reset-Link senden"
       },
       email_address: {
         fr: "Adresse email",
@@ -138,9 +138,9 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
       return processParams(dbTranslations[key].fr, params);
     }
     
-    // Priority 2.5: Magic link fallbacks (before static files)
-    if (magicLinkFallbacks[key]) {
-      const fallbackTranslation = magicLinkFallbacks[key][language] || magicLinkFallbacks[key].fr;
+    // Priority 2.5: Password reset fallbacks (before static files)
+    if (passwordResetFallbacks[key]) {
+      const fallbackTranslation = passwordResetFallbacks[key][language] || passwordResetFallbacks[key].fr;
       return processParams(fallbackTranslation, params);
     }
     
