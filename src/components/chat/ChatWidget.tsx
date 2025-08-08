@@ -10,6 +10,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useCityOptional } from '@/contexts/CityContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { getLanguageSpecificSuggestions } from '@/utils/languageDetection';
 import { MessageCircle, Send, X, Minimize2, Maximize2, Bot, User, Loader2, Sparkles, ChevronDown } from 'lucide-react';
 interface ChatWidgetProps {
   currentJourney?: string;
@@ -34,7 +35,8 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({
     city
   } = useCityOptional();
   const {
-    t
+    t,
+    currentLanguage
   } = useLanguage();
 
   // Enhanced chat hook with language detection and translation
@@ -153,28 +155,48 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({
               </div>
             </ScrollArea>
 
-            {suggestions.length > 0 && !isLoading && (
+            {/* ✅ Always show suggestions when available or when chat is empty */}
+            {(suggestions.length > 0 || messages.length === 0) && !isLoading && (
               <div className="px-4 pb-2 border-t">
                 <Collapsible open={suggestionsOpen} onOpenChange={setSuggestionsOpen}>
                   <CollapsibleTrigger className="flex items-center justify-between w-full text-xs text-muted-foreground mb-2 hover:text-foreground transition-colors">
                     <span className="flex items-center gap-1">
                       <Sparkles className="h-3 w-3" />
-                      Suggestions ({suggestions.length})
+                      {messages.length === 0 
+                        ? (currentLanguage === 'en' ? 'Suggested Questions' : 
+                           currentLanguage === 'de' ? 'Vorgeschlagene Fragen' : 
+                           'Questions suggérées')
+                        : `Suggestions (${suggestions.length})`
+                      }
                     </span>
                     <ChevronDown className={`h-3 w-3 transition-transform ${suggestionsOpen ? 'rotate-180' : ''}`} />
                   </CollapsibleTrigger>
                   <CollapsibleContent>
                     <div className="flex flex-wrap gap-1">
-                      {suggestions.map((suggestion, index) => (
-                        <Badge 
-                          key={index} 
-                          variant="outline" 
-                          className="cursor-pointer hover:bg-primary hover:text-white text-xs py-1 transition-colors" 
-                          onClick={() => handleSendMessage(suggestion)}
-                        >
-                          {suggestion}
-                        </Badge>
-                      ))}
+                      {suggestions.length > 0 ? (
+                        suggestions.map((suggestion, index) => (
+                          <Badge 
+                            key={index} 
+                            variant="outline" 
+                            className="cursor-pointer hover:bg-primary hover:text-white text-xs py-1 transition-colors" 
+                            onClick={() => handleSendMessage(suggestion)}
+                          >
+                            {suggestion}
+                          </Badge>
+                        ))
+                      ) : (
+                        // ✅ Fallback suggestions if none are loaded
+                        getLanguageSpecificSuggestions(currentLanguage).map((suggestion, index) => (
+                          <Badge 
+                            key={index} 
+                            variant="outline" 
+                            className="cursor-pointer hover:bg-primary hover:text-white text-xs py-1 transition-colors" 
+                            onClick={() => handleSendMessage(suggestion)}
+                          >
+                            {suggestion}
+                          </Badge>
+                        ))
+                      )}
                     </div>
                   </CollapsibleContent>
                 </Collapsible>

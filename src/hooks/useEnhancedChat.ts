@@ -45,7 +45,7 @@ export function useEnhancedChat(context: ChatContext = {}) {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  // Initialize welcome message
+  // Initialize welcome message and suggestions
   useEffect(() => {
     if (messages.length === 0) {
       const welcomeContent = getWelcomeMessage(currentLanguage, context.cityName);
@@ -58,9 +58,11 @@ export function useEnhancedChat(context: ChatContext = {}) {
         timestamp: new Date()
       };
       setMessages([welcomeMessage]);
-      setSuggestions(getLanguageSpecificSuggestions(currentLanguage));
     }
-  }, [currentLanguage, context.cityName]); // Proper dependencies
+    
+    // ✅ Always update suggestions when language changes
+    setSuggestions(getLanguageSpecificSuggestions(currentLanguage));
+  }, [currentLanguage, context.cityName, messages.length]);
 
   // Translate messages when language changes
   useEffect(() => {
@@ -92,6 +94,9 @@ export function useEnhancedChat(context: ChatContext = {}) {
         ]
       };
       contextualSuggestions = journeySuggestions[currentLanguage] || journeySuggestions.fr;
+    } else {
+      // ✅ Default to general suggestions when no journey context
+      contextualSuggestions = getLanguageSpecificSuggestions(currentLanguage);
     }
 
     setSuggestions(contextualSuggestions.slice(0, 4));
