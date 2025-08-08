@@ -34,21 +34,43 @@ export class PasswordResetService {
   /**
    * Valide un lien de réinitialisation et établit une session
    */
-  static async validateResetLink(accessToken: string, refreshToken: string): Promise<PasswordResetResult> {
+  static async validateResetLink(accessToken?: string, refreshToken?: string, code?: string): Promise<PasswordResetResult> {
     try {
-      const { data, error } = await supabase.auth.setSession({
-        access_token: accessToken,
-        refresh_token: refreshToken
-      });
-
-      if (error) {
-        return {
-          success: false,
-          error: 'Session invalide'
-        };
+      // Si nous avons un code, l'utiliser pour échanger contre une session
+      if (code) {
+        const { data, error } = await supabase.auth.exchangeCodeForSession(code);
+        
+        if (error) {
+          return {
+            success: false,
+            error: 'Code de récupération invalide ou expiré'
+          };
+        }
+        
+        return { success: true };
       }
+      
+      // Si nous avons des tokens, les utiliser directement
+      if (accessToken && refreshToken) {
+        const { data, error } = await supabase.auth.setSession({
+          access_token: accessToken,
+          refresh_token: refreshToken
+        });
 
-      return { success: true };
+        if (error) {
+          return {
+            success: false,
+            error: 'Session invalide'
+          };
+        }
+
+        return { success: true };
+      }
+      
+      return {
+        success: false,
+        error: 'Aucun paramètre de récupération valide'
+      };
     } catch (error: any) {
       return {
         success: false,
@@ -104,6 +126,7 @@ export class PasswordResetService {
     accessToken?: string;
     refreshToken?: string;
     type?: string;
+    code?: string;
     error?: string;
     errorDescription?: string;
   } {
@@ -113,6 +136,7 @@ export class PasswordResetService {
     const accessToken = urlObj.searchParams.get('access_token') || undefined;
     const refreshToken = urlObj.searchParams.get('refresh_token') || undefined;
     const type = urlObj.searchParams.get('type') || undefined;
+    const code = urlObj.searchParams.get('code') || undefined;
     
     // Paramètres de hash (fallback)
     const hash = urlObj.hash.substring(1);
@@ -121,6 +145,7 @@ export class PasswordResetService {
     const hashAccessToken = hashParams.get('access_token') || undefined;
     const hashRefreshToken = hashParams.get('refresh_token') || undefined;
     const hashType = hashParams.get('type') || undefined;
+    const hashCode = hashParams.get('code') || undefined;
     const error = hashParams.get('error') || undefined;
     const errorDescription = hashParams.get('error_description') || undefined;
 
@@ -128,6 +153,7 @@ export class PasswordResetService {
       accessToken: accessToken || hashAccessToken,
       refreshToken: refreshToken || hashRefreshToken,
       type: type || hashType,
+      code: code || hashCode,
       error,
       errorDescription
     };

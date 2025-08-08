@@ -42,9 +42,9 @@ const ResetPasswordPage = () => {
           return;
         }
         
-        // Check if we have valid tokens
-        if (params.accessToken && params.refreshToken && params.type === 'recovery') {
-          const result = await PasswordResetService.validateResetLink(params.accessToken, params.refreshToken);
+        // Check if we have valid parameters (tokens or code)
+        if ((params.accessToken && params.refreshToken && params.type === 'recovery') || params.code) {
+          const result = await PasswordResetService.validateResetLink(params.accessToken, params.refreshToken, params.code);
           
           if (!result.success) {
             setError(result.error || 'Session invalide');
