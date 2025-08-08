@@ -124,8 +124,8 @@ class AuthManager {
       }
     }
 
-    this.loading = false;
-    this.notifyListeners();
+      this.loading = false;
+      this.notifyListeners();
     } catch (error) {
       console.error('Auth change error:', error);
       this.loading = false;
