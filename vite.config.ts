@@ -131,10 +131,4 @@ export default defineConfig({
     // Optimisations de parsing
     target: 'esnext',
   },
-  // Configuration des tests
-  test: {
-    globals: true,
-    environment: 'jsdom',
-    setupFiles: ['./src/test/setup.ts'],
-  },
 })
