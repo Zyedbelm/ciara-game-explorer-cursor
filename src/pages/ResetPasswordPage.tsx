@@ -98,6 +98,13 @@ const ResetPasswordPage = () => {
       const finalType = hashType || type;
       const finalToken = hashToken || token;
       
+      // En mode développement, permettre l'accès sans token pour les tests
+      if (import.meta.env.DEV && !finalToken) {
+        console.log('Mode développement : Accès à la page reset-password sans token (pour les tests)');
+        setTokenVerified(true);
+        return;
+      }
+      
       if (finalType !== 'recovery' || !finalToken) {
         toast({
           title: "Lien invalide",
