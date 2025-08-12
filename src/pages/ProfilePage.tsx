@@ -77,6 +77,26 @@ const ProfilePage = () => {
     'art', 'heritage', 'adventure', 'museums', 'architecture'
   ];
 
+  // Fonction pour normaliser les clés de traduction
+  const normalizeInterestKey = (interest: string) => {
+    const normalized = interest.toLowerCase();
+    // Mapping pour gérer les variations
+    const mapping: { [key: string]: string } = {
+      'gastronomie': 'gastronomy',
+      'gastronomy': 'gastronomy',
+      'culture': 'culture',
+      'nature': 'nature',
+      'sports': 'sports',
+      'history': 'history',
+      'art': 'art',
+      'heritage': 'heritage',
+      'adventure': 'adventure',
+      'museums': 'museums',
+      'architecture': 'architecture'
+    };
+    return mapping[normalized] || normalized;
+  };
+
   // Editable form data
   const [formData, setFormData] = useState({
     full_name: profile?.full_name || '',
@@ -842,7 +862,7 @@ const ProfilePage = () => {
                         }`}
                         onClick={() => handleInterestToggle(interest)}
                       >
-                        {t(`profile_interest_categories_${interest.toLowerCase()}`)}
+                        {t(`profile_interest_categories_${normalizeInterestKey(interest)}`)}
                       </Badge>
                     ))}
                   </div>
@@ -850,7 +870,7 @@ const ProfilePage = () => {
                   <div className="flex flex-wrap gap-2">
                     {formData.interests.length > 0 ? formData.interests.map((interest, index) => (
                       <Badge key={index} className="bg-accent/20 text-accent-dark border-accent/30">
-                        {t(`profile_interest_categories_${interest.toLowerCase()}`)}
+                        {t(`profile_interest_categories_${normalizeInterestKey(interest)}`)}
                       </Badge>
                     )) : (
                       <p className="text-sm text-accent/70 italic">Aucun centre d'intérêt sélectionné</p>
