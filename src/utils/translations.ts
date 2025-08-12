@@ -1474,52 +1474,52 @@ export const translations = {
     de: "Verbinde..."
   },
   // Profile interest categories
-  'profile.interest_categories.culture': {
+  profile_interest_categories_culture: {
     fr: "Culture",
     en: "Culture",
     de: "Kultur"
   },
-  'profile.interest_categories.nature': {
+  profile_interest_categories_nature: {
     fr: "Nature",
     en: "Nature",
     de: "Natur"
   },
-  'profile.interest_categories.gastronomy': {
+  profile_interest_categories_gastronomy: {
     fr: "Gastronomie",
     en: "Gastronomy",
     de: "Gastronomie"
   },
-  'profile.interest_categories.heritage': {
+  profile_interest_categories_heritage: {
     fr: "Patrimoine",
     en: "Heritage",
     de: "Kulturerbe"
   },
-  'profile.interest_categories.adventure': {
+  profile_interest_categories_adventure: {
     fr: "Aventure",
     en: "Adventure",
     de: "Abenteuer"
   },
-  'profile.interest_categories.art': {
+  profile_interest_categories_art: {
     fr: "Art",
     en: "Art",
     de: "Kunst"
   },
-  'profile.interest_categories.history': {
+  profile_interest_categories_history: {
     fr: "Histoire",
     en: "History",
     de: "Geschichte"
   },
-  'profile.interest_categories.sports': {
+  profile_interest_categories_sports: {
     fr: "Sports",
     en: "Sports",
     de: "Sport"
   },
-  'profile.interest_categories.museums': {
+  profile_interest_categories_museums: {
     fr: "Musées",
     en: "Museums",
     de: "Museen"
   },
-  'profile.interest_categories.architecture': {
+  profile_interest_categories_architecture: {
     fr: "Architecture",
     en: "Architecture",
     de: "Architektur"

@@ -436,13 +436,13 @@ const ProfilePage = () => {
             </Avatar>
                 </div>
             
-            <div className="flex-1">
-                  <h2 className="text-2xl font-bold text-primary-dark">{profile?.full_name || 'Utilisateur'}</h2>
-                  <p className="text-primary/80">{profile?.email}</p>
+            <div className="flex-1 min-w-0">
+                  <h2 className="text-2xl font-bold text-primary-dark truncate">{profile?.full_name || 'Utilisateur'}</h2>
+                  <p className="text-primary/80 truncate">{profile?.email}</p>
               {cityName && (
                     <div className="flex items-center gap-1 text-sm text-primary/70 mt-1">
-                      <MapPin className="h-4 w-4" />
-                  {cityName}
+                      <MapPin className="h-4 w-4 flex-shrink-0" />
+                      <span className="truncate">{cityName}</span>
                 </div>
               )}
             </div>
@@ -450,7 +450,7 @@ const ProfilePage = () => {
             <Button
               variant="outline"
                   onClick={() => setIsEditing(true)}
-                  className="border-primary/30 text-primary hover:bg-primary/5"
+                  className="border-primary/30 text-primary hover:bg-primary/5 flex-shrink-0 ml-2"
             >
                   <Edit className="h-4 w-4 sm:mr-2" />
                   <span className="hidden sm:inline">Modifier</span>
@@ -842,7 +842,7 @@ const ProfilePage = () => {
                         }`}
                         onClick={() => handleInterestToggle(interest)}
                       >
-                        {t(`profile.interest_categories.${interest}`)}
+                        {t(`profile_interest_categories_${interest}`)}
                       </Badge>
                     ))}
                   </div>
@@ -850,7 +850,7 @@ const ProfilePage = () => {
                   <div className="flex flex-wrap gap-2">
                     {formData.interests.length > 0 ? formData.interests.map((interest, index) => (
                       <Badge key={index} className="bg-accent/20 text-accent-dark border-accent/30">
-                        {t(`profile.interest_categories.${interest}`)}
+                        {t(`profile_interest_categories_${interest}`)}
                       </Badge>
                     )) : (
                       <p className="text-sm text-accent/70 italic">Aucun centre d'intérêt sélectionné</p>

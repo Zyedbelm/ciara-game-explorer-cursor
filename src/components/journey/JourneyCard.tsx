@@ -497,7 +497,7 @@ const JourneyCard: React.FC<JourneyCardProps> = ({ journey, variant, onStatusCha
           />
         )}
         
-        <div className="flex flex-col gap-2 sm:flex-row mt-auto">
+        <div className="flex gap-2 mt-auto">
           <SimpleJourneyButton
             journey={{ 
               id: journey.journeyId, 
@@ -514,46 +514,40 @@ const JourneyCard: React.FC<JourneyCardProps> = ({ journey, variant, onStatusCha
             onStatusChange={onStatusChange}
           />
           
-          {/* Boutons secondaires dans une ligne séparée sur mobile */}
-          <div className="flex gap-2 w-full sm:w-auto">
-            {/* Bouton de suppression pour saved et in-progress */}
-            {(variant === 'saved' || variant === 'in-progress') && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleDelete}
-                disabled={isDeleting}
-                className="text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200 hover:border-red-300 sm:flex-none"
-              >
-                <Trash2 className="h-4 w-4" />
-              </Button>
-            )}
-            
-            {variant === 'completed' && (
-              <>
-                {/* Travel journal button */}
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  className="flex-1 sm:flex-none"
-                  onClick={handleGenerateJournal}
-                  disabled={isGeneratingJournal}
-                >
-                  {isGeneratingJournal ? (
-                    <div className="flex items-center gap-2">
-                      <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-current"></div>
-                      Génération...
-                    </div>
-                  ) : (
-                    <div className="flex items-center gap-2">
-                      <FileText className="h-4 w-4" />
-                      Carnet de voyage
-                    </div>
-                  )}
-                </Button>
-              </>
-            )}
-          </div>
+          {/* Bouton de suppression pour saved et in-progress */}
+          {(variant === 'saved' || variant === 'in-progress') && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleDelete}
+              disabled={isDeleting}
+              className="text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200 hover:border-red-300 flex-shrink-0"
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          )}
+          
+          {variant === 'completed' && (
+            <Button 
+              variant="outline" 
+              size="sm"
+              className="flex-shrink-0"
+              onClick={handleGenerateJournal}
+              disabled={isGeneratingJournal}
+            >
+              {isGeneratingJournal ? (
+                <div className="flex items-center gap-2">
+                  <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-current"></div>
+                  <span className="hidden sm:inline">Génération...</span>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <FileText className="h-4 w-4" />
+                  <span className="hidden sm:inline">Carnet de voyage</span>
+                </div>
+              )}
+            </Button>
+          )}
         </div>
       </CardContent>
     </Card>

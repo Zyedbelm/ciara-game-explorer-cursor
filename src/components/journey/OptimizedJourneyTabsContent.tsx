@@ -92,8 +92,8 @@ const JourneyGridWithControls: React.FC<JourneyGridWithControlsProps> = memo(({
             onClick={() => expandAllCards(journeys.map(j => j.id))}
             className="text-xs"
           >
-            <Navigation className="h-3 w-3 mr-1" />
-            {!isMobile && "Tout déployer"}
+            <Navigation className="h-3 w-3 sm:mr-1" />
+            <span className="hidden sm:inline">Tout déployer</span>
           </Button>
           <Button
             variant="outline"
@@ -101,8 +101,8 @@ const JourneyGridWithControls: React.FC<JourneyGridWithControlsProps> = memo(({
             onClick={collapseAllCards}
             className="text-xs"
           >
-            <Navigation className="h-3 w-3 mr-1 rotate-90" />
-            {!isMobile && "Tout replier"}
+            <Navigation className="h-3 w-3 sm:mr-1 rotate-90" />
+            <span className="hidden sm:inline">Tout replier</span>
           </Button>
         </div>
       </div>
