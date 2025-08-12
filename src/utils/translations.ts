@@ -1741,6 +1741,43 @@ export const translations = {
     de: "Aktualisierung..."
   },
   
+  // OAuth authentication translations
+  sign_in_with_google: {
+    fr: "Se connecter avec Google",
+    en: "Sign in with Google",
+    de: "Mit Google anmelden"
+  },
+  sign_in_with_facebook: {
+    fr: "Se connecter avec Facebook",
+    en: "Sign in with Facebook",
+    de: "Mit Facebook anmelden"
+  },
+  oauth_separator: {
+    fr: "ou",
+    en: "or",
+    de: "oder"
+  },
+  oauth_error: {
+    fr: "Erreur d'authentification",
+    en: "Authentication error",
+    de: "Authentifizierungsfehler"
+  },
+  oauth_connection_failed: {
+    fr: "Impossible de se connecter avec ce service",
+    en: "Unable to connect with this service",
+    de: "Verbindung mit diesem Dienst nicht möglich"
+  },
+  oauth_cancelled: {
+    fr: "Connexion annulée",
+    en: "Connection cancelled",
+    de: "Verbindung abgebrochen"
+  },
+  oauth_success: {
+    fr: "Connexion réussie !",
+    en: "Connection successful!",
+    de: "Verbindung erfolgreich!"
+  },
+
   // Password Reset modal translations
   password_reset_title: {
     fr: "Réinitialisation du mot de passe",

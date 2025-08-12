@@ -276,6 +276,37 @@ export function useAuth() {
     }
   }, [toast, user?.id]);
 
+  const signInWithOAuth = useCallback(async (provider: 'google' | 'facebook') => {
+    try {
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider,
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`
+        }
+      });
+
+      if (error) {
+        toast({
+          title: "Erreur de connexion",
+          description: error.message,
+          variant: "destructive",
+        });
+        return { error };
+      }
+
+      // Note: Le redirect est automatique, pas de toast ici
+      return { data, error: null };
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Une erreur est survenue';
+      toast({
+        title: "Erreur de connexion",
+        description: errorMessage,
+        variant: "destructive",
+      });
+      return { error: errorMessage };
+    }
+  }, [toast]);
+
   const updateProfile = useCallback(async (updates: Partial<Profile>) => {
     if (!user) return { error: 'Utilisateur non connecté' };
 
@@ -415,6 +446,7 @@ export function useAuth() {
     loading,
     signUp,
     signIn,
+    signInWithOAuth,
     signOut,
     updateProfile,
     updateEmail,
@@ -436,6 +468,7 @@ export function useAuth() {
     loading,
     signUp,
     signIn,
+    signInWithOAuth,
     signOut,
     updateProfile,
     updateEmail,
