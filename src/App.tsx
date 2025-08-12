@@ -44,6 +44,7 @@ const AboutPage = React.lazy(() => import("./pages/AboutPage"));
 const HelpPage = React.lazy(() => import("./pages/HelpPage"));
 const EmailTestPage = React.lazy(() => import("./pages/EmailTestPage"));
 const EmailDiagnosticPage = React.lazy(() => import("./pages/EmailDiagnosticPage"));
+const AuthCallbackPage = React.lazy(() => import("./pages/AuthCallbackPage"));
 const NotFound = React.lazy(() => import("./pages/NotFound"));
 
 // Optimized QueryClient configuration to prevent excessive retries
@@ -153,6 +154,11 @@ function App() {
                   <Route path="/reset-password" element={
                     <AuthGuard requireAuth={false}>
                       <ResetPasswordPage />
+                    </AuthGuard>
+                  } />
+                  <Route path="/auth/callback" element={
+                    <AuthGuard requireAuth={false}>
+                      <AuthCallbackPage />
                     </AuthGuard>
                   } />
                 
