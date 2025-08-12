@@ -55,7 +55,24 @@ GOOGLE_CLIENT_SECRET=your-google-client-secret
    https://your-project.supabase.co/auth/v1/callback
    ```
 
-#### 3.2 Exécuter la migration
+#### 3.2 Configuration via l'interface Supabase (Recommandé)
+
+**Option A : Interface web**
+1. Allez dans votre dashboard Supabase
+2. Naviguez vers **Authentication** > **Providers**
+3. Activez **Google**
+4. Entrez votre Client ID et Client Secret
+5. Configurez les URLs de redirection :
+   ```
+   https://pohqkspsdvvbqrgzfayl.supabase.co/auth/v1/callback
+   ```
+
+**Option B : Script SQL**
+1. Allez dans **SQL Editor** de votre dashboard Supabase
+2. Copiez et exécutez le contenu du fichier `setup-google-oauth.sql`
+3. Vérifiez que la configuration a été appliquée
+
+#### 3.3 Exécuter la migration (Alternative)
 ```bash
 supabase db push
 ```
