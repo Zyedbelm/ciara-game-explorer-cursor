@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useStableAuth } from '@/hooks/useStableAuth';
+import { useAuth } from '@/hooks/useAuth';
 import { useOptimizedUserStats } from '@/hooks/useOptimizedUserStats';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useSearchParams } from 'react-router-dom';
@@ -45,6 +46,7 @@ import {
 
 const ProfilePage = () => {
   const { user, profile, loading, isAuthenticated, refreshProfile, updateProfile, updateEmail, updatePassword } = useStableAuth();
+  const { hasRole } = useAuth();
   const { stats, loading: statsLoading } = useOptimizedUserStats();
   const { t } = useLanguage();
   const [searchParams, setSearchParams] = useSearchParams();
