@@ -1458,6 +1458,21 @@ export const translations = {
     en: "Profile",
     de: "Profil"
   },
+  or: {
+    fr: "ou",
+    en: "or",
+    de: "oder"
+  },
+  continue_with_google: {
+    fr: "Continuer avec Google",
+    en: "Continue with Google",
+    de: "Mit Google fortfahren"
+  },
+  connecting: {
+    fr: "Connexion...",
+    en: "Connecting...",
+    de: "Verbinde..."
+  },
   faq: {
     fr: "FAQ",
     en: "FAQ",

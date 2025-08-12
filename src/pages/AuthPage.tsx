@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Mountain, Mail, Lock, User, ArrowLeft, Loader2, AlertCircle } from 'lucide-react';
+import { Mountain, Mail, Lock, User, ArrowLeft, Loader2, AlertCircle, Chrome } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { PasswordResetService } from '@/services/passwordResetService';
@@ -23,6 +23,7 @@ const AuthPage = () => {
   const [loading, setLoading] = useState(false);
   const [resetLoading, setResetLoading] = useState(false);
   const [magicLinkLoading, setMagicLinkLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
   const [resetEmail, setResetEmail] = useState('');
   const [formData, setFormData] = useState({
     email: '',
@@ -160,6 +161,34 @@ const AuthPage = () => {
     }
   };
 
+  const handleGoogleSignIn = async () => {
+    setGoogleLoading(true);
+    
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`,
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'consent',
+          },
+        },
+      });
+
+      if (error) {
+        throw error;
+      }
+    } catch (error: any) {
+      toast({
+        title: t('error'),
+        description: error.message || "Erreur lors de la connexion avec Google",
+        variant: "destructive"
+      });
+      setGoogleLoading(false);
+    }
+  };
+
   if (authLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -275,6 +304,39 @@ const AuthPage = () => {
                         </>
                       ) : (
                         t('connect')
+                      )}
+                    </Button>
+
+                    {/* Séparateur */}
+                    <div className="relative my-6">
+                      <div className="absolute inset-0 flex items-center">
+                        <span className="w-full border-t" />
+                      </div>
+                      <div className="relative flex justify-center text-xs uppercase">
+                        <span className="bg-white px-2 text-muted-foreground">
+                          {t('or')}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Bouton Google */}
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="w-full border-gray-300 hover:bg-gray-50"
+                      onClick={handleGoogleSignIn}
+                      disabled={googleLoading}
+                    >
+                      {googleLoading ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          {t('connecting')}
+                        </>
+                      ) : (
+                        <>
+                          <Chrome className="mr-2 h-4 w-4" />
+                          {t('continue_with_google')}
+                        </>
                       )}
                     </Button>
                     
@@ -470,6 +532,39 @@ const AuthPage = () => {
                         </>
                       ) : (
                         t('create_my_account')
+                      )}
+                    </Button>
+
+                    {/* Séparateur */}
+                    <div className="relative my-6">
+                      <div className="absolute inset-0 flex items-center">
+                        <span className="w-full border-t" />
+                      </div>
+                      <div className="relative flex justify-center text-xs uppercase">
+                        <span className="bg-white px-2 text-muted-foreground">
+                          {t('or')}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Bouton Google */}
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="w-full border-gray-300 hover:bg-gray-50"
+                      onClick={handleGoogleSignIn}
+                      disabled={googleLoading}
+                    >
+                      {googleLoading ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          {t('connecting')}
+                        </>
+                      ) : (
+                        <>
+                          <Chrome className="mr-2 h-4 w-4" />
+                          {t('continue_with_google')}
+                        </>
                       )}
                     </Button>
                   </form>
