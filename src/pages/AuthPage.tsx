@@ -165,7 +165,7 @@ const AuthPage = () => {
     setGoogleLoading(true);
     
     try {
-      const { error } = await supabase.auth.signInWithOAuth({
+      const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
           redirectTo: `${window.location.origin}/auth/callback`,
@@ -179,6 +179,9 @@ const AuthPage = () => {
       if (error) {
         throw error;
       }
+
+      // Si pas d'erreur, la redirection devrait se faire automatiquement
+      console.log('OAuth initiated successfully:', data);
     } catch (error: any) {
       console.error('Google OAuth error:', error);
       toast({

@@ -20,8 +20,7 @@ const AuthCallbackPage = () => {
   useEffect(() => {
     const handleAuthCallback = async () => {
       try {
-        // Récupérer le code d'autorisation depuis l'URL
-        const code = searchParams.get('code');
+        // Vérifier s'il y a une erreur dans l'URL
         const error = searchParams.get('error');
         const errorDescription = searchParams.get('error_description');
 
@@ -32,30 +31,26 @@ const AuthCallbackPage = () => {
           return;
         }
 
-        if (!code) {
-          console.error('No authorization code found');
-          setErrorMessage('Code d\'autorisation manquant');
+        // Attendre un peu pour que Supabase traite automatiquement le callback
+        await new Promise(resolve => setTimeout(resolve, 1000));
+
+        // Vérifier si l'utilisateur est maintenant connecté
+        const { data: { user }, error: sessionError } = await supabase.auth.getUser();
+
+        if (sessionError) {
+          console.error('Session error:', sessionError);
+          setErrorMessage(sessionError.message || 'Erreur lors de la vérification de la session');
           setStatus('error');
           return;
         }
 
-        // Échanger le code contre un token avec Supabase
-        const { data, error: authError } = await supabase.auth.exchangeCodeForSession(code);
-
-        if (authError) {
-          console.error('Auth error:', authError);
-          setErrorMessage(authError.message || 'Erreur lors de l\'échange du code');
-          setStatus('error');
-          return;
-        }
-
-        if (data?.user) {
-          console.log('Authentication successful:', data.user.email);
+        if (user) {
+          console.log('Authentication successful:', user.email);
           setStatus('success');
           
           toast({
             title: 'Connexion réussie',
-            description: `Bienvenue ${data.user.email || 'utilisateur'} !`,
+            description: `Bienvenue ${user.email || 'utilisateur'} !`,
             variant: 'default',
           });
 
