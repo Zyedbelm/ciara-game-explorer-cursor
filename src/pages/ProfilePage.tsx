@@ -488,19 +488,11 @@ const ProfilePage = () => {
               <CardContent className="p-5">
                 <div className="space-y-4">
                   <div className="flex items-center gap-4">
-                    <div className="relative group">
-                      <Avatar className="h-16 w-16 border-4 border-white shadow-xl ring-2 ring-primary/20">
-                        <AvatarImage src={profile?.avatar_url || ''} />
-                        <AvatarFallback className="text-lg font-bold bg-gradient-to-br from-primary to-primary-light text-primary-foreground">
-                          {userInitials}
-                        </AvatarFallback>
-                      </Avatar>
-                      <AvatarUpload 
-                        onUploadComplete={refreshProfile}
-                        showUploadButton={true}
-                        size="sm"
-                      />
-                    </div>
+                    <AvatarUpload 
+                      onUploadComplete={refreshProfile}
+                      showUploadButton={true}
+                      size="md"
+                    />
                     <div className="flex-1">
                       <h3 className="font-semibold text-primary-dark">Profil</h3>
                     </div>
@@ -518,7 +510,16 @@ const ProfilePage = () => {
                       />
                     </div>
                     {/* Ville - Visible uniquement pour les admins */}
-                    {(hasRole('super_admin') || hasRole('tenant_admin') || hasRole('city_admin')) && (
+                    {(() => {
+                      const isAdmin = hasRole('super_admin') || hasRole('tenant_admin') || hasRole('city_admin');
+                      console.log('User roles check:', { 
+                        isAdmin, 
+                        superAdmin: hasRole('super_admin'), 
+                        tenantAdmin: hasRole('tenant_admin'), 
+                        cityAdmin: hasRole('city_admin') 
+                      });
+                      return isAdmin;
+                    })() && (
                       <div>
                         <Label className="text-sm font-medium text-primary-dark">Ville</Label>
                         <Popover open={cityPopoverOpen} onOpenChange={setCityPopoverOpen}>
