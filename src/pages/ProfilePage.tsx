@@ -452,8 +452,8 @@ const ProfilePage = () => {
                   onClick={() => setIsEditing(true)}
                   className="border-primary/30 text-primary hover:bg-primary/5"
             >
-                  <Edit className="h-4 w-4 mr-2" />
-                  Modifier
+                  <Edit className="h-4 w-4 sm:mr-2" />
+                  <span className="hidden sm:inline">Modifier</span>
             </Button>
           </div>
         </CardContent>
