@@ -9,11 +9,15 @@ import { Camera, Upload, Loader2 } from 'lucide-react';
 interface AvatarUploadProps {
   size?: 'sm' | 'md' | 'lg';
   showUploadButton?: boolean;
+  onUploadComplete?: () => void;
+  className?: string;
 }
 
 const AvatarUpload: React.FC<AvatarUploadProps> = ({ 
   size = 'lg', 
-  showUploadButton = true 
+  showUploadButton = true,
+  onUploadComplete,
+  className = ''
 }) => {
   const { user, profile, loading: authLoading, isAuthenticated, hasRole, signOut } = useAuth();
   const { toast } = useToast();
@@ -108,13 +112,15 @@ const AvatarUpload: React.FC<AvatarUploadProps> = ({
 
       if (updateError) throw updateError;
 
-      // Rafraîchir le profil
-      await refreshProfile();
-
       toast({
         title: "Photo mise à jour",
         description: "Votre photo de profil a été mise à jour avec succès.",
       });
+
+      // Appeler le callback si fourni
+      if (onUploadComplete) {
+        onUploadComplete();
+      }
 
     } catch (error) {
       toast({
@@ -132,7 +138,7 @@ const AvatarUpload: React.FC<AvatarUploadProps> = ({
   };
 
   return (
-    <div className="relative">
+    <div className={`relative ${className}`}>
       <Avatar className={`${sizeClasses[size]} border-4 border-primary-foreground/20`}>
         <AvatarImage src={profile?.avatar_url} />
         <AvatarFallback className="text-2xl font-bold bg-primary-foreground text-primary">

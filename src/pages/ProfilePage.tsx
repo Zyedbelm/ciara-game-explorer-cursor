@@ -493,17 +493,11 @@ const ProfilePage = () => {
                           {userInitials}
                         </AvatarFallback>
                       </Avatar>
-                      <div className="absolute -bottom-1 -right-1">
-                        <Button size="sm" className="h-6 w-6 p-0 bg-primary hover:bg-primary-dark rounded-full shadow-lg">
-                          <Camera className="h-3 w-3" />
-                        </Button>
-                        <AvatarUpload 
-                          onUploadComplete={refreshProfile}
-                          showUploadButton={false}
-                          size="sm"
-                          className="absolute inset-0 opacity-0"
-                        />
-                      </div>
+                      <AvatarUpload 
+                        onUploadComplete={refreshProfile}
+                        showUploadButton={true}
+                        size="sm"
+                      />
                     </div>
                     <div className="flex-1">
                       <h3 className="font-semibold text-primary-dark">Profil</h3>
@@ -521,50 +515,53 @@ const ProfilePage = () => {
                         className="mt-1 border-primary/30 focus:border-primary"
                       />
                     </div>
-                    <div>
-                      <Label className="text-sm font-medium text-primary-dark">Ville</Label>
-                      <Popover open={cityPopoverOpen} onOpenChange={setCityPopoverOpen}>
-                        <PopoverTrigger asChild>
-                          <Button
-                            variant="outline"
-                            role="combobox"
-                            aria-expanded={cityPopoverOpen}
-                            className="w-full justify-between mt-1 border-primary/30 focus:border-primary"
-                          >
-                            {formData.city_name || "Sélectionner une ville..."}
-                            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-full p-0">
-                          <Command>
-                            <CommandInput
-                              placeholder="Rechercher une ville..."
-                              value={formData.city_name}
-                              onValueChange={(value) => handleInputChange('city_name', value)}
-                            />
-                            <CommandEmpty>Aucune ville trouvée.</CommandEmpty>
-                            <CommandGroup>
-                              <CommandList>
-                                {filteredCities.map((city) => (
-                                  <CommandItem
-                                    key={city.id}
-                                    value={`${city.name}, ${city.country}`}
-                                    onSelect={() => handleCitySelect(`${city.name}, ${city.country}`)}
-                                  >
-                                    <Check
-                                      className={`mr-2 h-4 w-4 ${
-                                        formData.city_name === `${city.name}, ${city.country}` ? "opacity-100" : "opacity-0"
-                                      }`}
-                                    />
-                                    {city.name}, {city.country}
-                                  </CommandItem>
-                                ))}
-                              </CommandList>
-                            </CommandGroup>
-                          </Command>
-                        </PopoverContent>
-                      </Popover>
-                    </div>
+                    {/* Ville - Visible uniquement pour les admins */}
+                    {(hasRole('super_admin') || hasRole('tenant_admin') || hasRole('city_admin')) && (
+                      <div>
+                        <Label className="text-sm font-medium text-primary-dark">Ville</Label>
+                        <Popover open={cityPopoverOpen} onOpenChange={setCityPopoverOpen}>
+                          <PopoverTrigger asChild>
+                            <Button
+                              variant="outline"
+                              role="combobox"
+                              aria-expanded={cityPopoverOpen}
+                              className="w-full justify-between mt-1 border-primary/30 focus:border-primary"
+                            >
+                              {formData.city_name || "Sélectionner une ville..."}
+                              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-full p-0">
+                            <Command>
+                              <CommandInput
+                                placeholder="Rechercher une ville..."
+                                value={formData.city_name}
+                                onValueChange={(value) => handleInputChange('city_name', value)}
+                              />
+                              <CommandEmpty>Aucune ville trouvée.</CommandEmpty>
+                              <CommandGroup>
+                                <CommandList>
+                                  {filteredCities.map((city) => (
+                                    <CommandItem
+                                      key={city.id}
+                                      value={`${city.name}, ${city.country}`}
+                                      onSelect={() => handleCitySelect(`${city.name}, ${city.country}`)}
+                                    >
+                                      <Check
+                                        className={`mr-2 h-4 w-4 ${
+                                          formData.city_name === `${city.name}, ${city.country}` ? "opacity-100" : "opacity-0"
+                                        }`}
+                                      />
+                                      {city.name}, {city.country}
+                                    </CommandItem>
+                                  ))}
+                                </CommandList>
+                              </CommandGroup>
+                            </Command>
+                          </PopoverContent>
+                        </Popover>
+                      </div>
+                    )}
                   </div>
                   
                   <div className="flex gap-2 pt-2">
