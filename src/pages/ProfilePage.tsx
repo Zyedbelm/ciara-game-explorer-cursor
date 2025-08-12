@@ -842,7 +842,7 @@ const ProfilePage = () => {
                         }`}
                         onClick={() => handleInterestToggle(interest)}
                       >
-                        {t(`profile_interest_categories_${interest}`)}
+                        {t(`profile_interest_categories_${interest.toLowerCase()}`)}
                       </Badge>
                     ))}
                   </div>
@@ -850,7 +850,7 @@ const ProfilePage = () => {
                   <div className="flex flex-wrap gap-2">
                     {formData.interests.length > 0 ? formData.interests.map((interest, index) => (
                       <Badge key={index} className="bg-accent/20 text-accent-dark border-accent/30">
-                        {t(`profile_interest_categories_${interest}`)}
+                        {t(`profile_interest_categories_${interest.toLowerCase()}`)}
                       </Badge>
                     )) : (
                       <p className="text-sm text-accent/70 italic">Aucun centre d'intérêt sélectionné</p>
