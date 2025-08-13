@@ -279,22 +279,45 @@ export const useStepsManagement = (cityId?: string) => {
 
       if (checkError) throw checkError;
 
+      // Si l'étape est dans des parcours, proposer suppression forcée
       if (journeySteps && journeySteps.length > 0) {
-        toast({
-          title: "Impossible de supprimer",
-          description: "Cette étape est utilisée dans un ou plusieurs parcours. Retirez-la des parcours avant de la supprimer.",
-          variant: "destructive",
-        });
-        return { error: new Error("Step is used in journeys") };
+        const confirmForce = window.confirm(
+          `Cette étape est utilisée dans ${journeySteps.length} parcours.\n\n` +
+          `• ANNULER: Pour retirer l'étape des parcours manuellement\n` +
+          `• OK: Pour supprimer l'étape ET la retirer automatiquement des parcours`
+        );
+        
+        if (!confirmForce) {
+          toast({
+            title: "Suppression annulée",
+            description: "Retirez d'abord l'étape des parcours si vous souhaitez la supprimer.",
+            variant: "destructive",
+          });
+          return { error: new Error("Deletion cancelled by user") };
+        }
+
+        // Supprimer d'abord les relations journey_steps
+        const { error: deleteRelationsError } = await supabase
+          .from('journey_steps')
+          .delete()
+          .eq('step_id', stepId);
+
+        if (deleteRelationsError) {
+          console.error('Erreur suppression relations:', deleteRelationsError);
+          // Continuer même si ça échoue - CASCADE devrait gérer
+        }
       }
 
-      // Supprimer l'étape
+      // Supprimer l'étape (CASCADE devrait gérer le reste)
       const { error } = await supabase
         .from('steps')
         .delete()
         .eq('id', stepId);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Erreur suppression étape:', error);
+        throw new Error(`Suppression échouée: ${error.message}`);
+      }
 
       toast({
         title: "Succès",
@@ -305,10 +328,11 @@ export const useStepsManagement = (cityId?: string) => {
 
       await fetchSteps();
       return { error: null };
-    } catch (error) {
+    } catch (error: any) {
+      console.error('Erreur deleteStep:', error);
       toast({
         title: "Erreur",
-        description: "Impossible de supprimer l'étape",
+        description: error.message || "Impossible de supprimer l'étape",
         variant: "destructive",
       });
       return { error };

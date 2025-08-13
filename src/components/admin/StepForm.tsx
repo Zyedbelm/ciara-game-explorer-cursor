@@ -332,9 +332,9 @@ export const StepForm: React.FC<StepFormProps> = ({
               <FormLabel>Images</FormLabel>
               <FormControl>
                 <ImageUpload
-                  value={field.value || []}
-                  onChange={field.onChange}
-                  maxFiles={5}
+                  value={field.value?.[0] || ''}
+                  onChange={(url) => field.onChange(url ? [url] : [])}
+                  bucket="step-images"
                 />
               </FormControl>
               <FormMessage />
