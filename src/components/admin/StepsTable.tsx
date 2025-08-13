@@ -36,7 +36,7 @@ interface Step {
   created_at: string;
   updated_at: string;
   city_name?: string;
-  journey_name?: string;
+  journey_names?: string[];
 }
 
 interface StepsTableProps {
@@ -171,7 +171,24 @@ export const StepsTable: React.FC<StepsTableProps> = ({
                   </TableCell>
                   <TableCell>
                     <div className="text-sm">
-                      {step.journey_name || 'Aucun parcours'}
+                      {step.journey_names && step.journey_names.length > 0 ? (
+                        <div className="flex flex-wrap gap-1">
+                          {step.journey_names.slice(0, 2).map((name, index) => (
+                            <Badge key={index} variant="outline" className="text-xs">
+                              {name}
+                            </Badge>
+                          ))}
+                          {step.journey_names.length > 2 && (
+                            <Badge variant="secondary" className="text-xs">
+                              +{step.journey_names.length - 2} autres
+                            </Badge>
+                          )}
+                        </div>
+                      ) : (
+                        <Badge variant="destructive" className="text-xs">
+                          Aucun parcours
+                        </Badge>
+                      )}
                     </div>
                   </TableCell>
                   <TableCell>

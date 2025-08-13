@@ -20,7 +20,7 @@ interface Step {
   created_at: string;
   updated_at: string;
   city_name?: string;
-  journey_name?: string;
+  journey_names?: string[];
 }
 
 interface City {
@@ -92,18 +92,25 @@ export const useStepsManagement = (cityId?: string) => {
 
   const updateJourneyMetadata = async (journeyId: string) => {
     try {
-      // Récupérer toutes les étapes du parcours
+      // Récupérer toutes les étapes du parcours via la table journey_steps
       const { data: journeySteps, error: stepsError } = await supabase
-        .from('steps')
-        .select('id, points_awarded')
+        .from('journey_steps')
+        .select(`
+          steps!inner(
+            id,
+            points_awarded,
+            is_active
+          )
+        `)
         .eq('journey_id', journeyId)
-        .eq('is_active', true);
+        .eq('steps.is_active', true);
 
       if (stepsError) throw stepsError;
 
       // Calculer les métadonnées
       const totalSteps = journeySteps?.length || 0;
-      const totalPoints = journeySteps?.reduce((sum, step) => sum + (step.points_awarded || 0), 0) || 0;
+      const totalPoints = journeySteps?.reduce((sum, item) => 
+        sum + (item.steps?.points_awarded || 0), 0) || 0;
 
       // Mettre à jour le parcours
       const { error: updateError } = await supabase
@@ -131,6 +138,12 @@ export const useStepsManagement = (cityId?: string) => {
           cities!inner(
             name,
             countries!inner(id, is_active)
+          ),
+          journey_steps(
+            journeys(
+              id,
+              name
+            )
           )
         `)
         .eq('cities.countries.is_active', true)
@@ -147,7 +160,7 @@ export const useStepsManagement = (cityId?: string) => {
       const formattedSteps: Step[] = (data || []).map(step => ({
         ...step,
         city_name: step.cities?.name,
-        journey_name: undefined // Les étapes n'ont pas de relation directe avec les parcours
+        journey_names: step.journey_steps?.map((js: any) => js.journeys?.name).filter(Boolean) || []
       }));
 
       setSteps(formattedSteps);
@@ -258,14 +271,22 @@ export const useStepsManagement = (cityId?: string) => {
 
   const deleteStep = async (stepId: string) => {
     try {
-      // Récupérer l'étape pour connaître son parcours
-      const { data: step, error: fetchError } = await supabase
-        .from('steps')
+      // Vérifier si l'étape est dans des parcours
+      const { data: journeySteps, error: checkError } = await supabase
+        .from('journey_steps')
         .select('journey_id')
-        .eq('id', stepId)
-        .single();
+        .eq('step_id', stepId);
 
-      if (fetchError) throw fetchError;
+      if (checkError) throw checkError;
+
+      if (journeySteps && journeySteps.length > 0) {
+        toast({
+          title: "Impossible de supprimer",
+          description: "Cette étape est utilisée dans un ou plusieurs parcours. Retirez-la des parcours avant de la supprimer.",
+          variant: "destructive",
+        });
+        return { error: new Error("Step is used in journeys") };
+      }
 
       // Supprimer l'étape
       const { error } = await supabase
@@ -280,10 +301,7 @@ export const useStepsManagement = (cityId?: string) => {
         description: "Étape supprimée avec succès",
       });
 
-      // Mettre à jour les métadonnées du parcours si applicable
-      if (step?.journey_id) {
-        await updateJourneyMetadata(step.journey_id);
-      }
+      // Pas besoin de mettre à jour les métadonnées puisque l'étape n'était dans aucun parcours
 
       await fetchSteps();
       return { error: null };
