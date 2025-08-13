@@ -60,22 +60,14 @@ const StepsManagement: React.FC<StepsManagementProps> = ({ cityId }) => {
   } = useStepsFilters(cities, steps);
 
   const handleSubmit = async (data: StepFormData) => {
-    console.log('🎯 HANDLESUBMIT APPELÉ - editingStep:', editingStep, 'data:', data);
-    try {
-      if (editingStep) {
-        console.log('📝 MODE ÉDITION - stepId:', editingStep.id);
-        await updateStep(editingStep.id, data);
-      } else {
-        console.log('➕ MODE CRÉATION');
-        await createStep(data);
-      }
-      
-      console.log('🎉 HANDLESUBMIT TERMINÉ AVEC SUCCÈS');
-      setCreateDialogOpen(false);
-      setEditingStep(null);
-    } catch (error) {
-      console.error('💀 ERREUR DANS HANDLESUBMIT:', error);
+    if (editingStep) {
+      await updateStep(editingStep.id, data);
+    } else {
+      await createStep(data);
     }
+    
+    setCreateDialogOpen(false);
+    setEditingStep(null);
   };
 
   const handleEdit = (step: any) => {
