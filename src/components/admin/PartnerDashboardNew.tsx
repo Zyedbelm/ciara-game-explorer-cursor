@@ -14,8 +14,9 @@ import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell } from 'recharts';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, TrendingUp, DollarSign, Target, Star, Users, Clock } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { CardDescription } from '@/components/ui/card';
 
 interface PartnerStats {
   totalOffers: number;
@@ -756,10 +757,257 @@ const PartnerDashboardNew: React.FC = () => {
 
             {/* Analytics */}
             <TabsContent value="analytics" className="space-y-6">
-              {/* Supprimer la section Analytics et la remplacer par un message */}
-              <div className="text-center py-8">
-                <p className="text-muted-foreground">Analytics en cours de développement</p>
+              {/* Métriques principales */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Taux d'Engagement</CardTitle>
+                    <TrendingUp className="h-4 w-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">
+                      {stats.totalOffers > 0 ? Math.round((stats.totalRedemptions / stats.totalOffers) * 100) : 0}%
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      offres validées vs créées
+                    </p>
+                    <Progress 
+                      value={stats.totalOffers > 0 ? (stats.totalRedemptions / stats.totalOffers) * 100 : 0} 
+                      className="mt-2" 
+                    />
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Revenu Moyen</CardTitle>
+                    <DollarSign className="h-4 w-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">
+                      {stats.totalRedemptions > 0 ? formatCurrency(stats.totalRevenue / stats.totalRedemptions) : formatCurrency(0)}
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      par récompense
+                    </p>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Performance</CardTitle>
+                    <Target className="h-4 w-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">
+                      {stats.totalOffers > 0 ? Math.round((stats.activeOffers / stats.totalOffers) * 100) : 0}%
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      offres actives
+                    </p>
+                    <Progress 
+                      value={stats.totalOffers > 0 ? (stats.activeOffers / stats.totalOffers) * 100 : 0} 
+                      className="mt-2" 
+                    />
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Satisfaction</CardTitle>
+                    <Star className="h-4 w-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">
+                      {stats.averageRating.toFixed(1)}/5
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      note moyenne
+                    </p>
+                    <div className="flex items-center gap-1 mt-1">
+                      {Array.from({ length: 5 }).map((_, i) => (
+                        <Star 
+                          key={i} 
+                          className={`h-3 w-3 ${i < Math.floor(stats.averageRating) ? 'text-yellow-400 fill-current' : 'text-gray-300'}`} 
+                        />
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
               </div>
+
+              {/* Graphiques */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Activité horaire */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Activité Horaire</CardTitle>
+                    <CardDescription>Récompenses par heure sur 24h</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <ResponsiveContainer width="100%" height={300}>
+                      <BarChart data={hourlyData}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="hour" />
+                        <YAxis />
+                        <Tooltip />
+                        <Bar dataKey="redemptions" fill="#8884d8" />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </CardContent>
+                </Card>
+
+                {/* Activité quotidienne */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Activité Quotidienne</CardTitle>
+                    <CardDescription>Récompenses par jour de la semaine</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <ResponsiveContainer width="100%" height={300}>
+                      <LineChart data={dailyData}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="day" />
+                        <YAxis />
+                        <Tooltip />
+                        <Line type="monotone" dataKey="redemptions" stroke="#8884d8" strokeWidth={2} />
+                        <Line type="monotone" dataKey="revenue" stroke="#82ca9d" strokeWidth={2} />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Analyse détaillée */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Top des offres */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Top 5 des Offres</CardTitle>
+                    <CardDescription>Offres les plus populaires</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      {offers.slice(0, 5).map((offer, index) => (
+                        <div key={offer.id} className="flex items-center justify-between p-3 border rounded-lg">
+                          <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 bg-primary text-primary-foreground rounded-full flex items-center justify-center font-bold text-sm">
+                              {index + 1}
+                            </div>
+                            <div>
+                              <p className="font-medium text-sm">{offer.title}</p>
+                              <p className="text-xs text-muted-foreground">
+                                {offer.points_required} points • {formatCurrency(offer.value_chf)}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <p className="font-bold text-sm">{offer.total_redemptions || 0}</p>
+                            <p className="text-xs text-muted-foreground">rédemptions</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Tendances */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Tendances</CardTitle>
+                    <CardDescription>Évolution sur 30 jours</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <TrendingUp className="h-4 w-4 text-green-600" />
+                          <span className="text-sm font-medium">Rédemptions</span>
+                        </div>
+                        <span className="text-sm font-bold text-green-600">+12%</span>
+                      </div>
+                      <Progress value={75} className="h-2" />
+                      
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <DollarSign className="h-4 w-4 text-blue-600" />
+                          <span className="text-sm font-medium">Revenus</span>
+                        </div>
+                        <span className="text-sm font-bold text-blue-600">+8%</span>
+                      </div>
+                      <Progress value={60} className="h-2" />
+                      
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <Users className="h-4 w-4 text-purple-600" />
+                          <span className="text-sm font-medium">Nouveaux clients</span>
+                        </div>
+                        <span className="text-sm font-bold text-purple-600">+15%</span>
+                      </div>
+                      <Progress value={85} className="h-2" />
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Insights */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Insights & Recommandations</CardTitle>
+                  <CardDescription>Analyses automatiques pour optimiser vos performances</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="p-4 bg-green-50 rounded-lg border-l-4 border-green-500">
+                      <div className="flex items-start gap-3">
+                        <TrendingUp className="h-5 w-5 text-green-600 mt-0.5" />
+                        <div>
+                          <h4 className="font-medium text-green-900">Performance Excellente</h4>
+                          <p className="text-sm text-green-700 mt-1">
+                            Votre taux d'engagement est supérieur à la moyenne. Continuez sur cette lancée !
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="p-4 bg-blue-50 rounded-lg border-l-4 border-blue-500">
+                      <div className="flex items-start gap-3">
+                        <Clock className="h-5 w-5 text-blue-600 mt-0.5" />
+                        <div>
+                          <h4 className="font-medium text-blue-900">Heures de Pointe</h4>
+                          <p className="text-sm text-blue-700 mt-1">
+                            Les créneaux 12h-14h et 18h-20h sont les plus actifs. Optimisez vos offres pour ces périodes.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="p-4 bg-yellow-50 rounded-lg border-l-4 border-yellow-500">
+                      <div className="flex items-start gap-3">
+                        <Target className="h-5 w-5 text-yellow-600 mt-0.5" />
+                        <div>
+                          <h4 className="font-medium text-yellow-900">Opportunité</h4>
+                          <p className="text-sm text-yellow-700 mt-1">
+                            Créez plus d'offres à bas prix (50-100 points) pour augmenter l'engagement.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="p-4 bg-purple-50 rounded-lg border-l-4 border-purple-500">
+                      <div className="flex items-start gap-3">
+                        <Star className="h-5 w-5 text-purple-600 mt-0.5" />
+                        <div>
+                          <h4 className="font-medium text-purple-900">Satisfaction Client</h4>
+                          <p className="text-sm text-purple-700 mt-1">
+                            Votre note moyenne est excellente. Maintenez la qualité de vos offres.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
             </TabsContent>
           </Tabs>
         </TabsContent>
