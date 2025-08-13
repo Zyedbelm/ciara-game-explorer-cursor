@@ -204,18 +204,42 @@ export const useStepsManagement = (cityId?: string) => {
   const updateStep = async (stepId: string, data: StepFormData) => {
     setSubmitting(true);
     try {
-      const stepData = {
-        ...data,
-        journey_id: data.journey_id || null,
-        images: data.images || []
-      };
+      // Préparer les données en filtrant les valeurs undefined et en gérant les types correctement
+      const stepData: any = {};
+      
+      // Seulement inclure les champs qui ont des valeurs définies
+      Object.keys(data).forEach(key => {
+        const value = (data as any)[key];
+        if (value !== undefined) {
+          if (key === 'journey_id') {
+            stepData[key] = value || null;
+          } else if (key === 'images') {
+            stepData[key] = value || [];
+          } else {
+            stepData[key] = value;
+          }
+        }
+      });
 
-      const { error } = await supabase
+      // S'assurer que les champs obligatoires sont présents
+      if (!stepData.updated_at) {
+        stepData.updated_at = new Date().toISOString();
+      }
+
+      console.log('Updating step with data:', stepData);
+
+      const { error, data: result } = await supabase
         .from('steps')
         .update(stepData)
-        .eq('id', stepId);
+        .eq('id', stepId)
+        .select();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase error:', error);
+        throw error;
+      }
+
+      console.log('Update successful:', result);
 
       toast({
         title: "Succès",
