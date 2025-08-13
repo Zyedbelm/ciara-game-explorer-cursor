@@ -342,7 +342,7 @@ const PartnersAdvancedAnalytics = ({
               <div className="text-3xl font-bold text-orange-600">
                 {stats.totalRedemptions > 0 ? (stats.totalRevenue / stats.totalRedemptions).toFixed(2) : 0}
               </div>
-                              <div className="text-sm text-muted-foreground">Revenu moyen par récompense (CHF)</div>
+              <div className="text-sm text-muted-foreground">Revenu moyen par récompense (CHF)</div>
             </div>
             
             <div className="text-center">
@@ -357,52 +357,6 @@ const PartnersAdvancedAnalytics = ({
                 {stats.totalRewards > 0 ? Math.round((stats.totalRedemptions / stats.totalRewards) * 100) : 0}%
               </div>
               <div className="text-sm text-muted-foreground">Taux de conversion des offres</div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Insights et recommandations */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Insights et Recommandations</CardTitle>
-          <CardDescription>
-            Analyses automatiques et suggestions d'amélioration
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <div className="flex items-start space-x-3 p-4 bg-blue-50 rounded-lg">
-              <Target className="h-5 w-5 text-blue-600 mt-0.5" />
-              <div>
-                <h4 className="font-medium text-blue-900">Opportunité d'Optimisation</h4>
-                <p className="text-sm text-blue-700">
-                  Les partenaires de la catégorie "Restaurant" montrent un taux de conversion de 15% supérieur à la moyenne. 
-                  Considérez des incitations spéciales pour cette catégorie.
-                </p>
-              </div>
-            </div>
-            
-            <div className="flex items-start space-x-3 p-4 bg-green-50 rounded-lg">
-              <Award className="h-5 w-5 text-green-600 mt-0.5" />
-              <div>
-                <h4 className="font-medium text-green-900">Performance Exceptionnelle</h4>
-                <p className="text-sm text-green-700">
-                  Les heures de pointe (12:00-14:00) génèrent 40% des récompenses. 
-                  Optimisez les offres pour ces créneaux horaires.
-                </p>
-              </div>
-            </div>
-            
-            <div className="flex items-start space-x-3 p-4 bg-orange-50 rounded-lg">
-              <Activity className="h-5 w-5 text-orange-600 mt-0.5" />
-              <div>
-                <h4 className="font-medium text-orange-900">Attention Requise</h4>
-                <p className="text-sm text-orange-700">
-                  30% des partenaires n'ont pas d'offres actives. 
-                  Contactez-les pour les encourager à créer de nouvelles offres.
-                </p>
-              </div>
             </div>
           </div>
         </CardContent>

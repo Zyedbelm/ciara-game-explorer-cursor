@@ -160,7 +160,7 @@ const PartnersRewardsAnalytics = ({
               {stats.totalRewards > 0 ? Math.round((stats.totalRedemptions / stats.totalRewards) * 100) : 0}%
             </div>
             <p className="text-xs text-muted-foreground">
-              récompenses vs offres créées
+              offres validées vs offres créées
             </p>
           </CardContent>
         </Card>
