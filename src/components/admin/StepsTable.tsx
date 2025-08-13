@@ -167,9 +167,6 @@ export const StepsTable: React.FC<StepsTableProps> = ({
                   <TableCell>
                     <div className="text-sm">
                       <div className="font-medium">{step.city_name}</div>
-                      <div className="text-muted-foreground">
-                        {step.latitude.toFixed(4)}, {step.longitude.toFixed(4)}
-                      </div>
                     </div>
                   </TableCell>
                   <TableCell>
