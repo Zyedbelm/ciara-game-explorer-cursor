@@ -202,6 +202,7 @@ export const useStepsManagement = (cityId?: string) => {
   };
 
   const updateStep = async (stepId: string, data: StepFormData) => {
+    console.log('🚀 UPDATESTEP APPELÉ - stepId:', stepId, 'data:', data);
     setSubmitting(true);
     try {
       // Préparer les données en filtrant les valeurs undefined et en gérant les types correctement
@@ -224,7 +225,7 @@ export const useStepsManagement = (cityId?: string) => {
         stepData.updated_at = new Date().toISOString();
       }
 
-      console.log('Updating step with data:', stepData);
+      console.log('🔄 DONNÉES PRÉPARÉES POUR SUPABASE:', stepData);
 
       const { error, data: result } = await supabase
         .from('steps')
@@ -233,11 +234,11 @@ export const useStepsManagement = (cityId?: string) => {
         .select();
 
       if (error) {
-        console.error('Supabase error:', error);
+        console.error('💥 ERREUR SUPABASE:', error);
         throw error;
       }
 
-      console.log('Update successful:', result);
+      console.log('✅ UPDATE SUPABASE RÉUSSI:', result);
 
       toast({
         title: "Succès",

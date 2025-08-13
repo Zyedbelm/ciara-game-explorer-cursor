@@ -101,9 +101,19 @@ export const StepForm: React.FC<StepFormProps> = ({
     return labels[type as keyof typeof labels] || type;
   };
 
+  const handleFormSubmit = async (data: StepFormData) => {
+    console.log('🔥 FORMULAIRE SOUMIS - Données:', data);
+    try {
+      await onSubmit(data);
+      console.log('✅ ONSUBMIT TERMINÉ AVEC SUCCÈS');
+    } catch (error) {
+      console.error('❌ ERREUR DANS ONSUBMIT:', error);
+    }
+  };
+
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+      <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <FormField
             control={form.control}
