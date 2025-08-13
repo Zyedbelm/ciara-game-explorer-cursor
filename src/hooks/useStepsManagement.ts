@@ -306,6 +306,17 @@ export const useStepsManagement = (cityId?: string) => {
           console.error('Erreur suppression relations:', deleteRelationsError);
           // Continuer même si ça échoue - CASCADE devrait gérer
         }
+
+        // Supprimer les analytics_events (pas de CASCADE)
+        const { error: deleteAnalyticsError } = await supabase
+          .from('analytics_events')
+          .delete()
+          .eq('step_id', stepId);
+
+        if (deleteAnalyticsError) {
+          console.error('Erreur suppression analytics:', deleteAnalyticsError);
+          // Continuer même si ça échoue
+        }
       }
 
       // Supprimer l'étape (CASCADE devrait gérer le reste)
