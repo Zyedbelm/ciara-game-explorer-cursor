@@ -756,41 +756,9 @@ const PartnerDashboardNew: React.FC = () => {
 
             {/* Analytics */}
             <TabsContent value="analytics" className="space-y-6">
-              <div className="grid gap-4 md:grid-cols-2">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Activité Horaires</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <ResponsiveContainer width="100%" height={300}>
-                      <BarChart data={hourlyData}>
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="hour" />
-                        <YAxis />
-                        <Tooltip />
-                        <Bar dataKey="redemptions" fill="#8884d8" />
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Activité Quotidienne</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <ResponsiveContainer width="100%" height={300}>
-                      <LineChart data={dailyData}>
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="day" />
-                        <YAxis />
-                        <Tooltip />
-                        <Line type="monotone" dataKey="redemptions" stroke="#8884d8" />
-                        <Line type="monotone" dataKey="revenue" stroke="#82ca9d" />
-                      </LineChart>
-                    </ResponsiveContainer>
-                  </CardContent>
-                </Card>
+              {/* Supprimer la section Analytics et la remplacer par un message */}
+              <div className="text-center py-8">
+                <p className="text-muted-foreground">Analytics en cours de développement</p>
               </div>
             </TabsContent>
           </Tabs>
