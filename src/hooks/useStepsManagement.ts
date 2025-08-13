@@ -211,9 +211,7 @@ export const useStepsManagement = (cityId?: string) => {
       Object.keys(data).forEach(key => {
         const value = (data as any)[key];
         if (value !== undefined) {
-          if (key === 'journey_id') {
-            stepData[key] = value || null;
-          } else if (key === 'images') {
+          if (key === 'images') {
             stepData[key] = value || [];
           } else {
             stepData[key] = value;

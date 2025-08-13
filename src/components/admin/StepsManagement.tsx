@@ -34,7 +34,7 @@ const StepsManagement: React.FC<StepsManagementProps> = ({ cityId }) => {
   const {
     steps,
     cities,
-    journeys,
+
     loading,
     submitting,
     createStep,
@@ -135,7 +135,6 @@ const StepsManagement: React.FC<StepsManagementProps> = ({ cityId }) => {
                       onCancel={handleCancel}
                       initialData={editingStep}
                       cities={filteredCities}
-                      journeys={journeys}
                       loading={submitting}
                     />
                   </TabsContent>

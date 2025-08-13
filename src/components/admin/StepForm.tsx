@@ -39,7 +39,7 @@ const stepSchema = z.object({
   images: z.array(z.string().url()).optional(),
   is_active: z.boolean().optional(),
   city_id: z.string().uuid('ID de ville invalide'),
-  journey_id: z.string().optional().nullable(),
+
   language: z.string().optional(),
   review_status: z.enum(['draft', 'pending_review', 'approved', 'rejected']).optional(),
   name_en: z.string().optional(),
@@ -55,7 +55,7 @@ interface StepFormProps {
   onCancel: () => void;
   initialData?: Partial<StepFormData>;
   cities: Array<{ id: string; name: string }>;
-  journeys: Array<{ id: string; name: string; city_id: string }>;
+
   loading?: boolean;
 }
 
@@ -64,7 +64,6 @@ export const StepForm: React.FC<StepFormProps> = ({
   onCancel,
   initialData,
   cities,
-  journeys,
   loading = false
 }) => {
   const form = useForm<StepFormData>({
@@ -82,13 +81,12 @@ export const StepForm: React.FC<StepFormProps> = ({
       images: [],
       is_active: true,
       city_id: '',
-      journey_id: null,
+
       ...initialData,
     },
   });
 
-  const watchCityId = form.watch('city_id');
-  const filteredJourneys = journeys.filter(journey => journey.city_id === watchCityId);
+
 
   const getTypeLabel = (type: string) => {
     const labels = {
@@ -268,31 +266,7 @@ export const StepForm: React.FC<StepFormProps> = ({
             )}
           />
 
-          <FormField
-            control={form.control}
-            name="journey_id"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Parcours (optionnel)</FormLabel>
-                <Select onValueChange={(value) => field.onChange(value === 'none' ? null : value)} defaultValue={field.value || 'none'}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Sélectionner un parcours" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem value="none">Aucun parcours</SelectItem>
-                    {filteredJourneys.map((journey) => (
-                      <SelectItem key={journey.id} value={journey.id}>
-                        {journey.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
