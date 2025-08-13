@@ -306,17 +306,20 @@ export const useStepsManagement = (cityId?: string) => {
           console.error('Erreur suppression relations:', deleteRelationsError);
           // Continuer même si ça échoue - CASCADE devrait gérer
         }
+      }
 
-        // Supprimer les analytics_events (pas de CASCADE)
-        const { error: deleteAnalyticsError } = await supabase
-          .from('analytics_events')
-          .delete()
-          .eq('step_id', stepId);
+      // TOUJOURS supprimer les analytics_events (pas de CASCADE)
+      console.log('🧹 Suppression analytics_events pour étape:', stepId);
+      const { error: deleteAnalyticsError } = await supabase
+        .from('analytics_events')
+        .delete()
+        .eq('step_id', stepId);
 
-        if (deleteAnalyticsError) {
-          console.error('Erreur suppression analytics:', deleteAnalyticsError);
-          // Continuer même si ça échoue
-        }
+      if (deleteAnalyticsError) {
+        console.error('❌ Erreur suppression analytics:', deleteAnalyticsError);
+        // Continuer même si ça échoue
+      } else {
+        console.log('✅ Analytics_events supprimés avec succès');
       }
 
       // Supprimer l'étape (CASCADE devrait gérer le reste)
@@ -326,8 +329,24 @@ export const useStepsManagement = (cityId?: string) => {
         .eq('id', stepId);
 
       if (error) {
-        console.error('Erreur suppression étape:', error);
-        throw new Error(`Suppression échouée: ${error.message}`);
+        console.error('❌ Erreur suppression étape:', error);
+        
+        // Fallback: essayer avec la fonction RPC
+        console.log('🔄 Tentative avec fonction RPC force_delete_step...');
+        const { data: rpcResult, error: rpcError } = await supabase.rpc('force_delete_step', {
+          step_id_param: stepId
+        });
+        
+        if (rpcError) {
+          console.error('❌ RPC force_delete_step échoué:', rpcError);
+          throw new Error(`Suppression échouée: ${error.message}. RPC échoué: ${rpcError.message}`);
+        }
+        
+        if (!rpcResult) {
+          throw new Error(`Suppression échouée: ${error.message}. RPC retourné false.`);
+        }
+        
+        console.log('✅ Suppression réussie via RPC');
       }
 
       toast({
