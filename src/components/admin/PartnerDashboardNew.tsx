@@ -948,66 +948,7 @@ const PartnerDashboardNew: React.FC = () => {
                     </div>
                   </CardContent>
                 </Card>
-              </div>
-
-              {/* Insights */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Insights & Recommandations</CardTitle>
-                  <CardDescription>Analyses automatiques pour optimiser vos performances</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="p-4 bg-green-50 rounded-lg border-l-4 border-green-500">
-                      <div className="flex items-start gap-3">
-                        <TrendingUp className="h-5 w-5 text-green-600 mt-0.5" />
-                        <div>
-                          <h4 className="font-medium text-green-900">Performance Excellente</h4>
-                          <p className="text-sm text-green-700 mt-1">
-                            Votre taux d'engagement est supérieur à la moyenne. Continuez sur cette lancée !
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <div className="p-4 bg-blue-50 rounded-lg border-l-4 border-blue-500">
-                      <div className="flex items-start gap-3">
-                        <Clock className="h-5 w-5 text-blue-600 mt-0.5" />
-                        <div>
-                          <h4 className="font-medium text-blue-900">Heures de Pointe</h4>
-                          <p className="text-sm text-blue-700 mt-1">
-                            Les créneaux 12h-14h et 18h-20h sont les plus actifs. Optimisez vos offres pour ces périodes.
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <div className="p-4 bg-yellow-50 rounded-lg border-l-4 border-yellow-500">
-                      <div className="flex items-start gap-3">
-                        <Target className="h-5 w-5 text-yellow-600 mt-0.5" />
-                        <div>
-                          <h4 className="font-medium text-yellow-900">Opportunité</h4>
-                          <p className="text-sm text-yellow-700 mt-1">
-                            Créez plus d'offres à bas prix (50-100 points) pour augmenter l'engagement.
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <div className="p-4 bg-purple-50 rounded-lg border-l-4 border-purple-500">
-                      <div className="flex items-start gap-3">
-                        <Star className="h-5 w-5 text-purple-600 mt-0.5" />
-                        <div>
-                          <h4 className="font-medium text-purple-900">Satisfaction Client</h4>
-                          <p className="text-sm text-purple-700 mt-1">
-                            Votre note moyenne est excellente. Maintenez la qualité de vos offres.
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+                            </div>
             </TabsContent>
           </Tabs>
         </TabsContent>

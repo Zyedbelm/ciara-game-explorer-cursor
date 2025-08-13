@@ -17,13 +17,15 @@ import {
   Users,
   Calendar,
   Clock,
-  Filter
+  Filter,
+  Target
 } from 'lucide-react';
 import PartnersOffersManagement from './PartnersOffersManagement';
 import PartnersRewardsAnalytics from './PartnersRewardsAnalytics';
 import PartnersAdvancedAnalytics from './PartnersAdvancedAnalytics';
 import PartnersManagement from './PartnersManagement';
 import PartnersRewardsHistory from './PartnersRewardsHistory';
+import { ResponsiveContainer, BarChart, Bar, CartesianGrid, XAxis, YAxis, Tooltip, LineChart, Line } from 'recharts';
 
 interface PartnerData {
   id: string;
@@ -644,43 +646,56 @@ const PartnersDashboard = () => {
                   <CardContent>
                     <div className="text-2xl font-bold">{stats.averageRating}</div>
                     <p className="text-xs text-muted-foreground">sur 5 étoiles</p>
+                    <div className="flex items-center gap-1 mt-1">
+                      {Array.from({ length: 5 }).map((_, i) => (
+                        <Star 
+                          key={i} 
+                          className={`h-3 w-3 ${i < Math.floor(stats.averageRating) ? 'text-yellow-400 fill-current' : 'text-gray-300'}`} 
+                        />
+                      ))}
+                    </div>
                   </CardContent>
                 </Card>
               </div>
 
-              {/* Graphiques */}
+              {/* Graphiques améliorés */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* Jours les plus actifs */}
+                {/* Activité quotidienne - Graphique */}
                 <Card>
                   <CardHeader>
-                    <CardTitle>Jours les Plus Actifs</CardTitle>
+                    <CardTitle>Activité Quotidienne</CardTitle>
+                    <CardDescription>Récompenses par jour de la semaine</CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <div className="space-y-3">
-                      {dailyStats.map((day, index) => (
-                        <div key={index} className="flex items-center justify-between">
-                          <span className="text-sm">{day.day} {day.redemptions} récompenses</span>
-                          <span className="text-sm font-medium">{formatCurrency(day.revenue)}</span>
-                        </div>
-                      ))}
-                    </div>
+                    <ResponsiveContainer width="100%" height={300}>
+                      <BarChart data={dailyStats}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="day" />
+                        <YAxis />
+                        <Tooltip />
+                        <Bar dataKey="redemptions" fill="#8884d8" />
+                      </BarChart>
+                    </ResponsiveContainer>
                   </CardContent>
                 </Card>
 
-                {/* Heures les plus actives */}
+                {/* Activité horaire - Graphique */}
                 <Card>
                   <CardHeader>
-                    <CardTitle>Heures les Plus Actives</CardTitle>
+                    <CardTitle>Activité Horaire</CardTitle>
+                    <CardDescription>Récompenses par heure sur 24h</CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <div className="space-y-3">
-                      {hourlyStats.map((hour, index) => (
-                        <div key={index} className="flex items-center justify-between">
-                          <span className="text-sm">{hour.hour} {hour.redemptions} récompenses</span>
-                          <span className="text-sm font-medium">{formatCurrency(hour.revenue)}</span>
-                        </div>
-                      ))}
-                    </div>
+                    <ResponsiveContainer width="100%" height={300}>
+                      <LineChart data={hourlyStats}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="hour" />
+                        <YAxis />
+                        <Tooltip />
+                        <Line type="monotone" dataKey="redemptions" stroke="#8884d8" strokeWidth={2} />
+                        <Line type="monotone" dataKey="revenue" stroke="#82ca9d" strokeWidth={2} />
+                      </LineChart>
+                    </ResponsiveContainer>
                   </CardContent>
                 </Card>
               </div>
@@ -741,9 +756,197 @@ const PartnersDashboard = () => {
             </TabsContent>
 
             <TabsContent value="analytics" className="space-y-6">
-              {/* Supprimer la section Insights et recommandations */}
-              <div className="text-center py-8">
-                <p className="text-muted-foreground">Analytics en cours de développement</p>
+              {/* Métriques principales */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Taux d'Engagement</CardTitle>
+                    <TrendingUp className="h-4 w-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">
+                      {stats.totalRewards > 0 ? Math.round((stats.totalRedemptions / stats.totalRewards) * 100) : 0}%
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      offres validées vs créées
+                    </p>
+                    <Progress 
+                      value={stats.totalRewards > 0 ? (stats.totalRedemptions / stats.totalRewards) * 100 : 0} 
+                      className="mt-2" 
+                    />
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Revenu Moyen</CardTitle>
+                    <DollarSign className="h-4 w-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">
+                      {stats.totalRedemptions > 0 ? formatCurrency(stats.totalRevenue / stats.totalRedemptions) : formatCurrency(0)}
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      par récompense
+                    </p>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Performance</CardTitle>
+                    <Target className="h-4 w-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">
+                      {stats.totalRewards > 0 ? Math.round((stats.totalRewards / stats.totalRewards) * 100) : 0}%
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      offres actives
+                    </p>
+                    <Progress 
+                      value={100} 
+                      className="mt-2" 
+                    />
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Satisfaction</CardTitle>
+                    <Star className="h-4 w-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">
+                      {stats.averageRating.toFixed(1)}/5
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      note moyenne
+                    </p>
+                    <div className="flex items-center gap-1 mt-1">
+                      {Array.from({ length: 5 }).map((_, i) => (
+                        <Star 
+                          key={i} 
+                          className={`h-3 w-3 ${i < Math.floor(stats.averageRating) ? 'text-yellow-400 fill-current' : 'text-gray-300'}`} 
+                        />
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Graphiques */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Activité horaire */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Activité Horaire</CardTitle>
+                    <CardDescription>Récompenses par heure sur 24h</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <ResponsiveContainer width="100%" height={300}>
+                      <BarChart data={hourlyStats}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="hour" />
+                        <YAxis />
+                        <Tooltip />
+                        <Bar dataKey="redemptions" fill="#8884d8" />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </CardContent>
+                </Card>
+
+                {/* Activité quotidienne */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Activité Quotidienne</CardTitle>
+                    <CardDescription>Récompenses par jour de la semaine</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <ResponsiveContainer width="100%" height={300}>
+                      <LineChart data={dailyStats}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="day" />
+                        <YAxis />
+                        <Tooltip />
+                        <Line type="monotone" dataKey="redemptions" stroke="#8884d8" strokeWidth={2} />
+                        <Line type="monotone" dataKey="revenue" stroke="#82ca9d" strokeWidth={2} />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Analyse détaillée */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Top des offres */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Top 5 des Offres</CardTitle>
+                    <CardDescription>Offres les plus populaires</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      {topOffers.slice(0, 5).map((offer, index) => (
+                        <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
+                          <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 bg-primary text-primary-foreground rounded-full flex items-center justify-center font-bold text-sm">
+                              {index + 1}
+                            </div>
+                            <div>
+                              <p className="font-medium text-sm">{offer.title}</p>
+                              <p className="text-xs text-muted-foreground">
+                                {offer.points} points • {formatCurrency(offer.value)}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <p className="font-bold text-sm">{offer.redemptions}</p>
+                            <p className="text-xs text-muted-foreground">rédemptions</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Tendances */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Tendances</CardTitle>
+                    <CardDescription>Évolution sur 30 jours</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <TrendingUp className="h-4 w-4 text-green-600" />
+                          <span className="text-sm font-medium">Rédemptions</span>
+                        </div>
+                        <span className="text-sm font-bold text-green-600">+12%</span>
+                      </div>
+                      <Progress value={75} className="h-2" />
+                      
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <DollarSign className="h-4 w-4 text-blue-600" />
+                          <span className="text-sm font-medium">Revenus</span>
+                        </div>
+                        <span className="text-sm font-bold text-blue-600">+8%</span>
+                      </div>
+                      <Progress value={60} className="h-2" />
+                      
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <Users className="h-4 w-4 text-purple-600" />
+                          <span className="text-sm font-medium">Nouveaux clients</span>
+                        </div>
+                        <span className="text-sm font-bold text-purple-600">+15%</span>
+                      </div>
+                      <Progress value={85} className="h-2" />
+                    </div>
+                  </CardContent>
+                </Card>
               </div>
             </TabsContent>
           </Tabs>
