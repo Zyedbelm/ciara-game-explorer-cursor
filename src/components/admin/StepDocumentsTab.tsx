@@ -52,10 +52,10 @@ import {
 } from 'lucide-react';
 
 const documentSchema = z.object({
-  title: z.string().min(1, 'Le titre est requis'),
+  title: z.string().min(3, 'Le titre doit contenir au moins 3 caractères'),
   description: z.string().optional(),
-  ai_content: z.string().optional(),
-  document_type: z.string().min(1, 'Le type de document est requis'),
+  document_type: z.enum(['guide', 'map', 'audio_transcript', 'historical_document', 'menu', 'brochure']),
+  is_active: z.boolean(),
   file_url: z.string().optional(),
   file_name: z.string().optional(),
   file_size: z.number().optional(),

@@ -17,6 +17,10 @@ import { ImageUpload } from '@/components/ui/image-upload';
 import CountryFilters from '@/components/admin/CountryFilters';
 import ArticlePreview from '@/components/admin/ArticlePreview';
 import { useOptimizedTranslations } from '@/hooks/useOptimizedTranslations';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 
 interface Article {
   id: string;
@@ -35,6 +39,21 @@ interface Article {
   updated_at: string;
   tags?: string[];
 }
+
+const articleSchema = z.object({
+  title: z.string().min(3, 'Le titre doit contenir au moins 3 caractères'),
+  slug: z.string().min(3, 'Le slug doit contenir au moins 3 caractères'),
+  content: z.string().min(10, 'Le contenu doit contenir au moins 10 caractères'),
+  excerpt: z.string().optional(),
+  featured_image_url: z.string().optional(),
+  category: z.string().min(1, 'La catégorie est requise'),
+  city_id: z.string().uuid('ID de ville invalide').optional(),
+  status: z.enum(['draft', 'published', 'archived']),
+  is_featured: z.boolean(),
+  tags: z.array(z.string()).optional(),
+});
+
+type ArticleFormData = z.infer<typeof articleSchema>;
 
 interface Country {
   id: string;

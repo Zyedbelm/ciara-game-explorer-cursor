@@ -60,7 +60,7 @@ const documentSchema = z.object({
   description: z.string().optional(),
   document_type: z.enum(['guide', 'map', 'audio_transcript', 'historical_document', 'menu', 'brochure']),
   step_id: z.string().uuid('ID d\'étape invalide').optional(),
-  journey_id: z.string().uuid('ID de parcours invalide').optional(),
+  journey_id: z.string().optional().nullable(),
   is_active: z.boolean(),
 });
 

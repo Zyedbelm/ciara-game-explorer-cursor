@@ -19,6 +19,10 @@ import {
   TrendingUp,
   Users
 } from 'lucide-react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 
 interface Reward {
   id: string;
@@ -67,6 +71,22 @@ interface RewardStats {
   max_redemptions_per_user?: number;
   can_redeem: boolean;
 }
+
+const rewardSchema = z.object({
+  title: z.string().min(3, 'Le titre doit contenir au moins 3 caractères'),
+  description: z.string().optional(),
+  type: z.enum(['discount', 'free_item', 'experience', 'voucher']),
+  points_required: z.number().min(1, 'Points requis minimum : 1'),
+  value_chf: z.number().min(0).optional(),
+  is_active: z.boolean(),
+  max_redemptions: z.number().min(1).optional(),
+  max_redemptions_per_user: z.number().min(1).optional(),
+  validity_days: z.number().min(1).optional(),
+  image_url: z.string().optional(),
+  partner_id: z.string().uuid('ID de partenaire invalide').optional(),
+});
+
+type RewardFormData = z.infer<typeof rewardSchema>;
 
 const RewardsManagement = () => {
   const { user, profile, loading: authLoading, isAuthenticated, hasRole, signOut } = useAuth();

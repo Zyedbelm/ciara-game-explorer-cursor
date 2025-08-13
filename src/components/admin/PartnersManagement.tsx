@@ -21,6 +21,10 @@ import {
   Phone,
   MapPin
 } from 'lucide-react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 
 interface Partner {
   id: string;
@@ -59,6 +63,23 @@ interface Country {
   id: string;
   name_fr: string;
 }
+
+const partnerSchema = z.object({
+  name: z.string().min(2, 'Le nom doit contenir au moins 2 caractères'),
+  category: z.string().min(1, 'La catégorie est requise'),
+  description: z.string().optional(),
+  address: z.string().optional(),
+  phone: z.string().optional(),
+  email: z.string().email('Email invalide').optional().or(z.literal('')),
+  website: z.string().url('URL invalide').optional().or(z.literal('')),
+  latitude: z.number().min(-90).max(90).optional(),
+  longitude: z.number().min(-180).max(180).optional(),
+  logo_url: z.string().optional(),
+  city_id: z.string().uuid('ID de ville invalide'),
+  is_active: z.boolean(),
+});
+
+type PartnerFormData = z.infer<typeof partnerSchema>;
 
 const PartnersManagement = () => {
   const { toast } = useToast();
