@@ -58,7 +58,7 @@ import {
 
 const journeySchema = z.object({
   name: z.string().min(3, 'Le nom doit contenir au moins 3 caractères'),
-  description: z.string().min(10, 'La description doit contenir au moins 10 caractères'),
+  description: z.string().optional(),
   category_id: z.string().min(1, 'Veuillez sélectionner une catégorie'),
   difficulty: z.enum(['easy', 'medium', 'hard', 'expert']),
   estimated_duration: z.number().min(15, 'Durée minimale de 15 minutes'),

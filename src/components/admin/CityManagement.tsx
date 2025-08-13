@@ -46,7 +46,7 @@ const citySchema = z.object({
   name: z.string().min(2, 'Le nom doit contenir au moins 2 caractères'),
   slug: z.string().min(2, 'Le slug doit contenir au moins 2 caractères'),
   country_id: z.string().uuid('Veuillez sélectionner un pays'),
-  description: z.string().min(10, 'La description doit contenir au moins 10 caractères'),
+  description: z.string().optional(),
   latitude: z.number().min(-90).max(90),
   longitude: z.number().min(-180).max(180),
   timezone: z.string().optional(),
