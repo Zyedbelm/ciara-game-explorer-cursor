@@ -24,8 +24,8 @@ export function useErrorBoundary() {
 
     // Prevent duplicate toasts for the same error
     const errorKey = `${error.name}_${error.message.substring(0, 50)}`;
-    const lastToastKey = localStorage.getItem('lastToastKey');
-    const lastToastTime = localStorage.getItem('lastToastTime');
+    const lastToastKey = sessionStorage.getItem('lastToastKey');
+    const lastToastTime = sessionStorage.getItem('lastToastTime');
     const now = Date.now();
     
     // Show toast only if different error or 5 seconds have passed
@@ -36,8 +36,8 @@ export function useErrorBoundary() {
         variant: "destructive",
       });
       
-      localStorage.setItem('lastToastKey', errorKey);
-      localStorage.setItem('lastToastTime', now.toString());
+      sessionStorage.setItem('lastToastKey', errorKey);
+      sessionStorage.setItem('lastToastTime', now.toString());
     }
   }, [toast]);
 

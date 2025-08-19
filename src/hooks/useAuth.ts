@@ -3,6 +3,7 @@ import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { User, Session } from '@supabase/supabase-js';
 import { useToast } from '@/hooks/use-toast';
+import { validateAndSanitizeInput, validateFormData } from '@/utils/securityUtils';
 
 type JourneyType = 'hiking' | 'museums' | 'old_town' | 'gastronomy' | 'art_culture' | 'nature' | 'adventure' | 'family';
 type UserRole = 'super_admin' | 'tenant_admin' | 'visitor' | 'partner';
@@ -163,88 +164,117 @@ export function useAuth() {
   }, [handleAuthStateChange, user?.id]);
 
   // Fonctions d'authentification optimisées
-  const signUp = useCallback(async (email: string, password: string, userData?: {
-    firstName?: string;
-    lastName?: string;
-  }) => {
+  const signUp = useCallback(async (email: string, password: string, metadata?: any) => {
     try {
-      const redirectUrl = 'https://ciara.city/';
-      
+      // Validation et sanitisation des entrées
+      const emailValidation = validateAndSanitizeInput(email, 'email');
+      if (!emailValidation.isValid) {
+        toast({ title: "Erreur d'inscription", description: emailValidation.error || 'Email invalide', variant: "destructive" });
+        return { error: emailValidation.error || 'Email invalide' };
+      }
+
+      // Validation du mot de passe
+      if (!password || password.length < 6) {
+        toast({ title: "Erreur d'inscription", description: "Le mot de passe doit contenir au moins 6 caractères", variant: "destructive" });
+        return { error: "Le mot de passe doit contenir au moins 6 caractères" };
+      }
+
+      // Sanitisation des métadonnées si présentes
+      let sanitizedMetadata = metadata;
+      if (metadata) {
+        const metadataValidation = validateFormData(metadata, {
+          full_name: 'name',
+          company: 'text',
+          phone: 'text'
+        });
+        if (!metadataValidation.isValid) {
+          toast({ title: "Erreur d'inscription", description: "Données de profil invalides", variant: "destructive" });
+          return { error: "Données de profil invalides" };
+        }
+        sanitizedMetadata = metadataValidation.sanitized;
+      }
+
       const { data, error } = await supabase.auth.signUp({
-        email,
+        email: emailValidation.sanitized,
         password,
         options: {
-          emailRedirectTo: redirectUrl,
-          data: {
-            first_name: userData?.firstName || '',
-            last_name: userData?.lastName || ''
-          }
+          data: sanitizedMetadata
         }
       });
 
       if (error) {
-        toast({
-          title: "Erreur d'inscription",
-          description: error.message,
-          variant: "destructive",
-        });
-        return { error };
+        let errorMessage = 'Une erreur d\'inscription est survenue';
+        if (import.meta.env.DEV) {
+          errorMessage = error.message; // Detailed message in dev
+        } else {
+          // Generic messages in production based on error content
+          if (error.message?.includes('User already registered')) {
+            errorMessage = "Un compte avec cet email existe déjà.";
+          } else if (error.message?.includes('Password should be at least')) {
+            errorMessage = "Le mot de passe doit contenir au moins 6 caractères.";
+          } else if (error.message?.includes('Invalid email')) {
+            errorMessage = "Adresse email invalide.";
+          }
+        }
+        toast({ title: "Erreur d'inscription", description: errorMessage, variant: "destructive" });
+        return { error: errorMessage };
       }
 
-      toast({
-        title: "Inscription réussie",
-        description: "Vérifiez votre email pour confirmer votre compte.",
-      });
-
-      return { data, error: null };
+      toast({ title: "Inscription réussie", description: "Vérifiez votre email pour confirmer votre compte" });
+      return { data };
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Une erreur est survenue';
-      toast({
-        title: "Erreur d'inscription",
-        description: errorMessage,
-        variant: "destructive",
-      });
+      const errorMessage = import.meta.env.DEV
+        ? (error instanceof Error ? error.message : 'Une erreur est survenue')
+        : 'Une erreur d\'inscription est survenue';
+      toast({ title: "Erreur d'inscription", description: errorMessage, variant: "destructive" });
       return { error: errorMessage };
     }
   }, [toast]);
 
   const signIn = useCallback(async (email: string, password: string) => {
     try {
+      // Validation et sanitisation des entrées
+      const emailValidation = validateAndSanitizeInput(email, 'email');
+      if (!emailValidation.isValid) {
+        toast({ title: "Erreur de connexion", description: emailValidation.error || 'Email invalide', variant: "destructive" });
+        return { error: emailValidation.error || 'Email invalide' };
+      }
+
+      // Validation du mot de passe
+      if (!password || password.length < 1) {
+        toast({ title: "Erreur de connexion", description: "Mot de passe requis", variant: "destructive" });
+        return { error: "Mot de passe requis" };
+      }
+
       const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
+        email: emailValidation.sanitized,
+        password
       });
 
       if (error) {
-        if (error.message?.includes('Email not confirmed')) {
-          toast({
-            title: "Email non confirmé",
-            description: "Vérifiez votre email et confirmez votre compte avant de vous connecter.",
-            variant: "destructive",
-          });
+        let errorMessage = 'Une erreur de connexion est survenue';
+        if (import.meta.env.DEV) {
+          errorMessage = error.message; // Detailed message in dev
         } else {
-          toast({
-            title: "Erreur de connexion",
-            description: error.message,
-            variant: "destructive",
-          });
+          // Generic messages in production based on error content
+          if (error.message?.includes('Invalid login credentials')) {
+            errorMessage = "Email ou mot de passe incorrect.";
+          } else if (error.message?.includes('Email not confirmed')) {
+            errorMessage = "Veuillez confirmer votre email avant de vous connecter.";
+          } else if (error.message?.includes('Too many requests')) {
+            errorMessage = "Trop de tentatives. Veuillez attendre avant de réessayer.";
+          }
         }
-        return { error };
+        toast({ title: "Erreur de connexion", description: errorMessage, variant: "destructive" });
+        return { error: errorMessage };
       }
 
-      toast({
-        title: "Connexion réussie",
-        description: "Bienvenue sur CIARA !",
-      });
-
-      return { data, error: null };
+      return { data };
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Une erreur est survenue';
-      toast({
-        title: "Erreur de connexion",
-        description: errorMessage,
-        variant: "destructive",
-      });
+      const errorMessage = import.meta.env.DEV
+        ? (error instanceof Error ? error.message : 'Une erreur est survenue')
+        : 'Une erreur de connexion est survenue';
+      toast({ title: "Erreur de connexion", description: errorMessage, variant: "destructive" });
       return { error: errorMessage };
     }
   }, [toast]);

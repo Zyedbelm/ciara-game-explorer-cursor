@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Sparkles, Zap, MapPin, AlertCircle } from 'lucide-react';
@@ -42,6 +42,16 @@ const JourneyGeneratorModal: React.FC<{ trigger?: React.ReactNode }> = ({ trigge
     saveJourney,
     resetJourney
   } = useJourneyGeneration();
+
+  // Initialize preferences with user's profile interests
+  useEffect(() => {
+    if (profile?.interests && profile.interests.length > 0) {
+      setPreferences(prev => ({
+        ...prev,
+        interests: profile.interests
+      }));
+    }
+  }, [profile?.interests]);
 
   const handleTriggerClick = () => {
     if (!isAuthenticated) {

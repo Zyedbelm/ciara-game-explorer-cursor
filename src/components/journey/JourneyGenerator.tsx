@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -33,8 +33,7 @@ const JourneyGenerator: React.FC<JourneyGeneratorProps> = ({
   const [preferences, setPreferences] = useState<JourneyPreferences>({
     duration: '60',
     interests: [],
-    difficulty: parseInt(profile?.fitness_level || '3') <= 2 ? 'easy' : 
-                parseInt(profile?.fitness_level || '3') >= 4 ? 'hard' : 'medium',
+    difficulty: 'medium',
     groupSize: '',
     startLocation: ''
   });
@@ -46,6 +45,16 @@ const JourneyGenerator: React.FC<JourneyGeneratorProps> = ({
     saveJourney,
     resetJourney
   } = useJourneyGeneration();
+
+  // Initialize preferences with user's profile interests
+  useEffect(() => {
+    if (profile?.interests && profile.interests.length > 0) {
+      setPreferences(prev => ({
+        ...prev,
+        interests: profile.interests
+      }));
+    }
+  }, [profile?.interests]);
 
   const handleGenerate = async () => {
     if (!isAuthenticated) {
@@ -88,9 +97,8 @@ const JourneyGenerator: React.FC<JourneyGeneratorProps> = ({
     resetJourney();
     setPreferences({
       duration: '60',
-      interests: [],
-      difficulty: parseInt(profile?.fitness_level || '3') <= 2 ? 'easy' : 
-                  parseInt(profile?.fitness_level || '3') >= 4 ? 'hard' : 'medium',
+      interests: profile?.interests || [],
+      difficulty: 'medium',
       groupSize: '',
       startLocation: ''
     });

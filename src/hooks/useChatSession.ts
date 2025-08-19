@@ -11,17 +11,17 @@ export function useChatSession(baseKey?: string) {
 
   const initialize = useCallback(() => {
     // Check if existing session is still valid
-    const existingTimestamp = typeof window !== 'undefined' ? localStorage.getItem(STORAGE_TIMESTAMP_KEY) : null;
+    const existingTimestamp = typeof window !== 'undefined' ? sessionStorage.getItem(STORAGE_TIMESTAMP_KEY) : null;
     const now = Date.now();
-    let existing = typeof window !== 'undefined' ? localStorage.getItem(STORAGE_KEY) : null;
+    let existing = typeof window !== 'undefined' ? sessionStorage.getItem(STORAGE_KEY) : null;
     
     // Clear expired session
     if (existing && existingTimestamp) {
       const sessionAge = now - parseInt(existingTimestamp, 10);
       if (sessionAge > SESSION_TIMEOUT_MS) {
         try { 
-          localStorage.removeItem(STORAGE_KEY);
-          localStorage.removeItem(STORAGE_TIMESTAMP_KEY);
+          sessionStorage.removeItem(STORAGE_KEY);
+          sessionStorage.removeItem(STORAGE_TIMESTAMP_KEY);
         } catch {}
         existing = null;
       }
@@ -34,8 +34,8 @@ export function useChatSession(baseKey?: string) {
       if (baseKey) segments.push(baseKey);
       existing = segments.join('_');
       try { 
-        localStorage.setItem(STORAGE_KEY, existing);
-        localStorage.setItem(STORAGE_TIMESTAMP_KEY, now.toString());
+        sessionStorage.setItem(STORAGE_KEY, existing);
+        sessionStorage.setItem(STORAGE_TIMESTAMP_KEY, now.toString());
       } catch {}
     }
     setSessionKey(existing);
@@ -43,16 +43,16 @@ export function useChatSession(baseKey?: string) {
 
   const override = useCallback((nextKey: string) => {
     try { 
-      localStorage.setItem(STORAGE_KEY, nextKey);
-      localStorage.setItem(STORAGE_TIMESTAMP_KEY, Date.now().toString());
+      sessionStorage.setItem(STORAGE_KEY, nextKey);
+      sessionStorage.setItem(STORAGE_TIMESTAMP_KEY, Date.now().toString());
     } catch {}
     setSessionKey(nextKey);
   }, []);
 
   const clear = useCallback(() => {
     try { 
-      localStorage.removeItem(STORAGE_KEY);
-      localStorage.removeItem(STORAGE_TIMESTAMP_KEY);
+      sessionStorage.removeItem(STORAGE_KEY);
+      sessionStorage.removeItem(STORAGE_TIMESTAMP_KEY);
     } catch {}
     setSessionKey(null);
   }, []);

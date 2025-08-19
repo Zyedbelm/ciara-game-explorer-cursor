@@ -24,7 +24,8 @@ if (import.meta.env.PROD) {
 // Configuration sécurisée du client
 export const supabase = createClient<Database>(SUPABASE_URL!, SUPABASE_PUBLISHABLE_KEY!, {
   auth: {
-    storage: typeof window !== 'undefined' ? localStorage : undefined,
+    // Utiliser sessionStorage pour plus de sécurité (session perdue à la fermeture du navigateur)
+    storage: typeof window !== 'undefined' ? sessionStorage : undefined,
     persistSession: true,
     autoRefreshToken: true,
     detectSessionInUrl: true,

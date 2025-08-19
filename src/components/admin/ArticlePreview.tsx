@@ -111,6 +111,10 @@ export default function ArticlePreview({ article, isOpen, onClose }: ArticlePrev
           )}
 
           {/* Article Content */}
+import { sanitizeHTML } from '@/utils/securityUtils';
+
+// ... existing code ...
+
           <div 
             className="prose prose-lg prose-gray dark:prose-invert max-w-none
               prose-headings:text-foreground prose-headings:font-bold
@@ -122,7 +126,7 @@ export default function ArticlePreview({ article, isOpen, onClose }: ArticlePrev
               prose-ul:text-muted-foreground prose-ol:text-muted-foreground
               prose-li:mb-2 prose-blockquote:border-l-primary"
             dangerouslySetInnerHTML={{ 
-              __html: article.content 
+              __html: sanitizeHTML(article.content, import.meta.env.VITE_SECURITY_DRY_RUN === 'true') 
             }}
           />
         </article>

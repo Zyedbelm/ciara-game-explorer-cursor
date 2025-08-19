@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -22,6 +22,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useTranslation } from '@/hooks/useTranslation';
+import { sanitizeHTML } from '@/utils/securityUtils';
 
 interface UnifiedJourneyCompletionModalProps {
   isVisible: boolean;
@@ -429,9 +430,12 @@ export const UnifiedJourneyCompletionModal: React.FC<UnifiedJourneyCompletionMod
           </DialogHeader>
           
           <div className="space-y-4">
-            <div className="prose prose-sm max-w-none">
-              <div dangerouslySetInnerHTML={{ __html: journalContent || '' }} />
-            </div>
+            <div 
+              className="prose prose-sm max-w-none mt-4 p-4 bg-muted/50 rounded-lg"
+              dangerouslySetInnerHTML={{ 
+                __html: sanitizeHTML(journalContent || '', import.meta.env.VITE_SECURITY_DRY_RUN === 'true') 
+              }} 
+            />
             
             <div className="flex gap-2 pt-4 border-t">
               <Button

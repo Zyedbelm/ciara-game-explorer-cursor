@@ -34,7 +34,7 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
   // Simplified state management - no loading state to avoid render loops
   const [language, setLanguageState] = useState<Language>(() => {
     try {
-      const savedLanguage = localStorage.getItem('preferredLanguage');
+      const savedLanguage = sessionStorage.getItem('preferredLanguage');
       return (savedLanguage as Language) || 'fr';
     } catch (error) {
       return 'fr';
@@ -79,7 +79,7 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
   const setLanguage = useCallback((lang: Language) => {
     setLanguageState(lang);
     try {
-      localStorage.setItem('preferredLanguage', lang);
+      sessionStorage.setItem('preferredLanguage', lang);
     } catch (error) {
     }
   }, [language]);

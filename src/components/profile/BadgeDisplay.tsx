@@ -144,7 +144,10 @@ const BadgeDisplay: React.FC<BadgeDisplayProps> = ({ currentPoints, className })
       {nextBadge && (
         <div className="mt-3 text-center p-3 bg-gradient-to-r from-primary/5 to-secondary/5 rounded-lg border border-primary/20">
           <p className="text-xs text-muted-foreground">
-            <strong>{pointsToNext} points</strong> pour débloquer <strong>{nextBadge.name}</strong>
+            {t('profile.badges.next_badge', { 
+              points: pointsToNext.toString(), 
+              badge: nextBadge.name 
+            })}
           </p>
         </div>
       )}

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -9,6 +9,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { getLocalizedTitle, getLocalizedContent, getLocalizedExcerpt } from '@/utils/articleLocalization';
+import { sanitizeHTML } from '@/utils/securityUtils';
 
 interface Article {
   id: string;
@@ -296,22 +297,12 @@ const ArticleDetailPage = () => {
 
         {/* Article Content */}
         <div 
-          className="prose prose-lg prose-gray dark:prose-invert max-w-none mb-12
-            prose-headings:text-foreground prose-headings:font-bold
-            prose-h1:text-2xl prose-h1:font-bold prose-h1:mt-6 prose-h1:mb-4
-            prose-h2:text-xl prose-h2:font-bold prose-h2:mt-6 prose-h2:mb-4 prose-h2:border-b prose-h2:border-border prose-h2:pb-2
-            prose-h3:text-lg prose-h3:font-bold prose-h3:mt-6 prose-h3:mb-3
-            prose-p:text-muted-foreground prose-p:leading-7 prose-p:mb-4
-            prose-strong:text-foreground prose-strong:font-semibold
-            prose-a:text-primary prose-a:no-underline hover:prose-a:underline
-            prose-ul:text-muted-foreground prose-ol:text-muted-foreground prose-ul:my-4 prose-ol:my-4
-            prose-ul:pl-6 prose-ol:pl-6
-            prose-li:mb-2 prose-blockquote:border-l-primary prose-blockquote:pl-4 prose-blockquote:italic prose-blockquote:text-muted-foreground prose-blockquote:my-4"
+          className="prose prose-lg max-w-none mt-8"
           style={{
             lineHeight: '1.6'
           }}
           dangerouslySetInnerHTML={{ 
-            __html: getLocalizedContentAsHTML(article) 
+            __html: sanitizeHTML(getLocalizedContentAsHTML(article), import.meta.env.VITE_SECURITY_DRY_RUN === 'true') 
           }}
         />
         

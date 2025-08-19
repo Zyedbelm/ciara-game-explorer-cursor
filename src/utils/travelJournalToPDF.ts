@@ -349,22 +349,34 @@ export const createJournalHTML = (journalData: TravelJournalData): HTMLElement =
   container.style.backgroundColor = 'white';
   container.style.color = '#333';
 
-  container.innerHTML = `
+  // Fonction pour échapper le HTML de manière sécurisée
+  const escapeHtml = (str: string): string => {
+    if (!str) return '';
+    return str
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#x27;');
+  };
+
+  // Générer le HTML de manière sécurisée
+  const safeHtml = `
     <div style="text-align: center; margin-bottom: 30px;">
       <h1 style="color: #667eea; font-size: 32px; margin: 0;">CIARA</h1>
       <p style="color: #666; font-size: 14px; margin: 10px 0;">Carnet de Voyage Personnel</p>
-      <h2 style="font-size: 24px; margin: 20px 0;">${journalData.journey}</h2>
+      <h2 style="font-size: 24px; margin: 20px 0;">${escapeHtml(journalData.journey)}</h2>
     </div>
     
     <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 30px;">
       <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; text-align: center;">
         <div>
           <div style="font-size: 12px; color: #666; text-transform: uppercase; font-weight: bold;">Ville</div>
-          <div style="font-size: 16px; font-weight: bold;">${journalData.city}</div>
+          <div style="font-size: 16px; font-weight: bold;">${escapeHtml(journalData.city)}</div>
         </div>
         <div>
           <div style="font-size: 12px; color: #666; text-transform: uppercase; font-weight: bold;">Date</div>
-          <div style="font-size: 16px; font-weight: bold;">${journalData.date}</div>
+          <div style="font-size: 16px; font-weight: bold;">${escapeHtml(journalData.date)}</div>
         </div>
         <div>
           <div style="font-size: 12px; color: #666; text-transform: uppercase; font-weight: bold;">Points</div>
@@ -383,20 +395,20 @@ export const createJournalHTML = (journalData: TravelJournalData): HTMLElement =
       <h3 style="color: #667eea; font-size: 18px; margin-bottom: 15px;">Détail des étapes</h3>
       ${journalData.steps.map((step, index) => `
         <div style="background: #f8fafc; margin-bottom: 15px; padding: 15px; border-radius: 8px; border-left: 3px solid #667eea;">
-          <h4 style="margin: 0 0 10px 0; font-size: 16px;">${index + 1}. ${step.name}</h4>
-          <p style="margin: 0 0 10px 0; color: #666; font-size: 14px;">${step.description}</p>
+          <h4 style="margin: 0 0 10px 0; font-size: 16px;">${index + 1}. ${escapeHtml(step.name)}</h4>
+          <p style="margin: 0 0 10px 0; color: #666; font-size: 14px;">${escapeHtml(step.description)}</p>
           <div style="font-size: 12px; color: #666;">
-            <span><strong>Complétée le:</strong> ${step.completedAt}</span> | 
+            <span><strong>Complétée le:</strong> ${escapeHtml(step.completedAt)}</span> | 
             <span><strong>Points gagnés:</strong> ${step.points}</span>
           </div>
           ${step.quiz ? `
             <div style="margin-top: 10px; padding: 10px; background: #e0f2fe; border-radius: 4px;">
               <p style="margin: 0 0 5px 0; font-weight: bold; color: #0277bd;">Quiz:</p>
-              <p style="margin: 0 0 5px 0; font-size: 12px;"><strong>Question:</strong> ${step.quiz.question}</p>
-              <p style="margin: 0 0 5px 0; font-size: 12px;"><strong>Réponse:</strong> ${step.quiz.answer}</p>
+              <p style="margin: 0 0 5px 0; font-size: 12px;"><strong>Question:</strong> ${escapeHtml(step.quiz.question)}</p>
+              <p style="margin: 0 0 5px 0; font-size: 12px;"><strong>Réponse:</strong> ${escapeHtml(step.quiz.answer)}</p>
               ${step.quiz.userAnswer ? `
                 <p style="margin: 0; font-size: 12px; color: ${step.quiz.correct ? '#2e7d32' : '#c62828'};">
-                  <strong>Votre réponse:</strong> ${step.quiz.userAnswer} ${step.quiz.correct ? 'Correct' : 'Incorrect'}
+                  <strong>Votre réponse:</strong> ${escapeHtml(step.quiz.userAnswer)} ${step.quiz.correct ? 'Correct' : 'Incorrect'}
                 </p>
               ` : ''}
             </div>
@@ -410,6 +422,8 @@ export const createJournalHTML = (journalData: TravelJournalData): HTMLElement =
       <p>www.ciara.city | info@ciara.city</p>
     </div>
   `;
+
+  container.innerHTML = safeHtml;
 
   return container;
 }; 

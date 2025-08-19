@@ -321,7 +321,7 @@ class EmailTemplateCache {
     if (!this.config.persistToDisk) return;
     
     try {
-      const stored = localStorage.getItem('ciara-email-cache');
+      const stored = sessionStorage.getItem('ciara-email-cache');
       if (stored) {
         const data = JSON.parse(stored);
         // Reconstruct cache with validation
@@ -330,22 +330,22 @@ class EmailTemplateCache {
             this.cache.set(key, entry as CacheEntry);
           }
         }
-        logger.info('performance', 'Cache loaded from disk', { size: this.cache.size });
+        logger.info('performance', 'Cache loaded from session', { size: this.cache.size });
       }
     } catch (error) {
-      logger.warn('performance', 'Failed to load cache from disk', { error });
+      logger.warn('performance', 'Failed to load cache from session', { error });
     }
   }
 
-  // Save to disk (placeholder for persistence)
+  // Save to session (secure storage)
   private saveToDisk(): void {
     if (!this.config.persistToDisk) return;
     
     try {
       const data = Object.fromEntries(this.cache.entries());
-      localStorage.setItem('ciara-email-cache', JSON.stringify(data));
+      sessionStorage.setItem('ciara-email-cache', JSON.stringify(data));
     } catch (error) {
-      logger.warn('performance', 'Failed to save cache to disk', { error });
+      logger.warn('performance', 'Failed to save cache to session', { error });
     }
   }
 

@@ -21,7 +21,7 @@ import StandardPageLayout from '@/components/layout/StandardPageLayout';
 import BadgeDisplay from '@/components/profile/BadgeDisplay';
 import AvatarUpload from '@/components/profile/AvatarUpload';
 import MonthlyStatsCard from '@/components/profile/MonthlyStatsCard';
-import FitnessSegmented from '@/components/profile/FitnessSegmented';
+
 import { 
   User, 
   MapPin, 
@@ -73,16 +73,16 @@ const ProfilePage = () => {
     confirmPassword: ''
   });
 
-  // Available interests
+  // Available interests (sans doublons)
   const availableInterests = [
-    'nature', 'culture', 'gastronomy', 'sports', 'history', 
+    'nature', 'culture', 'gastronomy', 'history', 
     'art', 'heritage', 'adventure', 'museums', 'architecture'
   ];
 
-  // Fonction pour normaliser les clés de traduction
+  // Fonction pour normaliser les clés de traduction et éviter les doublons
   const normalizeInterestKey = (interest: string) => {
     const normalized = interest.toLowerCase();
-    // Mapping pour gérer les variations
+    // Mapping pour gérer les variations et éviter les doublons
     const mapping: { [key: string]: string } = {
       'gastronomie': 'gastronomy',
       'gastronomy': 'gastronomy',
@@ -99,11 +99,17 @@ const ProfilePage = () => {
     return mapping[normalized] || normalized;
   };
 
+  // Fonction pour dédupliquer les intérêts
+  const deduplicateInterests = (interests: string[]) => {
+    const normalized = interests.map(normalizeInterestKey);
+    const unique = [...new Set(normalized)];
+    return unique;
+  };
+
   // Editable form data
   const [formData, setFormData] = useState({
     full_name: profile?.full_name || '',
     city_name: '',
-    fitness_level: profile?.fitness_level || '3',
     preferred_languages: profile?.preferred_languages || ['fr'],
     interests: profile?.interests || []
   });
@@ -167,7 +173,7 @@ const ProfilePage = () => {
         setFormData({
           full_name: profile.full_name || '',
           city_name: cityName,
-          fitness_level: profile.fitness_level || '3',
+
           preferred_languages: profile.preferred_languages || ['fr'],
           interests: profile.interests || []
         });
@@ -219,9 +225,8 @@ const ProfilePage = () => {
       const result = await updateProfile({
         full_name: formData.full_name,
         city_id: selectedCity?.id || null,
-        fitness_level: formData.fitness_level,
         preferred_languages: formData.preferred_languages,
-        interests: formData.interests
+        interests: deduplicateInterests(formData.interests)
       });
 
       if (result?.error) {
@@ -269,7 +274,7 @@ const ProfilePage = () => {
         setFormData({
           full_name: profile.full_name || '',
           city_name: cityName,
-          fitness_level: profile.fitness_level || '3',
+
           preferred_languages: profile.preferred_languages || ['fr'],
           interests: profile.interests || []
         });
@@ -475,7 +480,7 @@ const ProfilePage = () => {
                   className="border-primary/30 text-primary hover:bg-primary/5 flex-shrink-0 ml-2"
             >
                   <Edit className="h-4 w-4 sm:mr-2" />
-                  <span className="hidden sm:inline">Modifier</span>
+                  <span className="hidden sm:inline">{t('profile.edit_profile')}</span>
             </Button>
           </div>
         </CardContent>
@@ -494,34 +499,33 @@ const ProfilePage = () => {
                       size="md"
                     />
                     <div className="flex-1">
-                      <h3 className="font-semibold text-primary-dark">Profil</h3>
+                      <h3 className="font-semibold text-primary-dark">{t('profile.title')}</h3>
                     </div>
                   </div>
                   
                   <div className="space-y-3">
                     <div>
-                      <Label htmlFor="full_name" className="text-sm font-medium text-primary-dark">Nom complet</Label>
+                      <Label htmlFor="full_name" className="text-sm font-medium text-primary-dark">{t('profile.full_name')}</Label>
                       <Input
                         id="full_name"
                         value={formData.full_name}
                         onChange={(e) => handleInputChange('full_name', e.target.value)}
-                        placeholder="Votre nom complet"
+                        placeholder={t('profile.full_name_placeholder')}
                         className="mt-1 border-primary/30 focus:border-primary"
                       />
                     </div>
                     {/* Ville - Visible uniquement pour les admins */}
                     {(() => {
-                      const isAdmin = hasRole('super_admin') || hasRole('tenant_admin') || hasRole('city_admin');
+                      const isAdmin = hasRole(['super_admin']) || hasRole(['tenant_admin']);
                       console.log('User roles check:', { 
                         isAdmin, 
-                        superAdmin: hasRole('super_admin'), 
-                        tenantAdmin: hasRole('tenant_admin'), 
-                        cityAdmin: hasRole('city_admin') 
+                        superAdmin: hasRole(['super_admin']), 
+                        tenantAdmin: hasRole(['tenant_admin'])
                       });
                       return isAdmin;
                     })() && (
                       <div>
-                        <Label className="text-sm font-medium text-primary-dark">Ville</Label>
+                        <Label className="text-sm font-medium text-primary-dark">{t('profile.city')}</Label>
                         <Popover open={cityPopoverOpen} onOpenChange={setCityPopoverOpen}>
                           <PopoverTrigger asChild>
                             <Button
@@ -530,18 +534,18 @@ const ProfilePage = () => {
                               aria-expanded={cityPopoverOpen}
                               className="w-full justify-between mt-1 border-primary/30 focus:border-primary"
                             >
-                              {formData.city_name || "Sélectionner une ville..."}
+                              {formData.city_name || t('profile.select_city')}
                               <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                             </Button>
                           </PopoverTrigger>
                           <PopoverContent className="w-full p-0">
                             <Command>
                               <CommandInput
-                                placeholder="Rechercher une ville..."
+                                placeholder={t('profile.search_city')}
                                 value={formData.city_name}
                                 onValueChange={(value) => handleInputChange('city_name', value)}
                               />
-                              <CommandEmpty>Aucune ville trouvée.</CommandEmpty>
+                              <CommandEmpty>{t('profile.no_city_found')}</CommandEmpty>
                               <CommandGroup>
                                 <CommandList>
                                   {filteredCities.map((city) => (
@@ -595,7 +599,7 @@ const ProfilePage = () => {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-nature-dark">
                   <Shield className="h-5 w-5 text-nature" />
-                  {t('profile.security_title')}
+                  {t('profile.security')}
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -605,7 +609,7 @@ const ProfilePage = () => {
                     <div>
                       <Label className="flex items-center gap-2 text-nature-dark">
                         <Mail className="h-4 w-4" />
-                        Email
+                        {t('profile.email')}
                       </Label>
                       <p className="text-sm text-nature/70">{profile?.email}</p>
                     </div>
@@ -617,7 +621,7 @@ const ProfilePage = () => {
                         onClick={() => setShowEmailChange(true)}
                         className="border-nature/30 text-nature hover:bg-nature/5"
                       >
-                        Modifier
+                        {t('profile.edit_profile')}
                       </Button>
                     )}
                   </div>
@@ -668,23 +672,23 @@ const ProfilePage = () => {
                     <div>
                       <Label className="flex items-center gap-2 text-nature-dark">
                         <Lock className="h-4 w-4" />
-                        Mot de passe
+                        {t('profile.password')}
                       </Label>
                       <p className="text-xs text-nature/70 mt-1">
-                        Modifiez votre mot de passe de connexion
+                        {t('profile.change_password_desc')}
                       </p>
                     </div>
                     {!showPasswordChange && (
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setShowPasswordChange(true)}
-                        className="border-nature/30 text-nature hover:bg-nature/5"
-                      >
-                        <Shield className="h-3 w-3 mr-1" />
-                        Modifier
-                      </Button>
+                                              <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setShowPasswordChange(true)}
+                          className="border-nature/30 text-nature hover:bg-nature/5"
+                        >
+                          <Shield className="h-3 w-3 mr-1" />
+                          {t('profile.edit_profile')}
+                        </Button>
                     )}
                   </div>
                   
@@ -692,7 +696,7 @@ const ProfilePage = () => {
                     <form onSubmit={handlePasswordSubmit} className="mt-3 space-y-3">
                       <div className="space-y-2">
                         <Label htmlFor="newPassword" className="text-sm font-medium">
-                          Nouveau mot de passe *
+                          {t('profile.new_password')} *
                         </Label>
                         <Input
                           id="newPassword"
@@ -707,7 +711,7 @@ const ProfilePage = () => {
                       
                       <div className="space-y-2">
                         <Label htmlFor="confirmPassword" className="text-sm font-medium">
-                          Confirmer le nouveau mot de passe *
+                          {t('profile.confirm_new_password')} *
                         </Label>
                         <Input
                           id="confirmPassword"
@@ -822,7 +826,7 @@ const ProfilePage = () => {
         {/* LIGNE 3 COL 1 : Stats mensuelles */}
         <div className="lg:col-span-1">
       {!statsLoading && stats && (
-        <MonthlyStatsCard stats={stats} />
+        <MonthlyStatsCard />
       )}
         </div>
 
@@ -835,16 +839,7 @@ const ProfilePage = () => {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div>
-              <Label className="text-sm font-medium text-accent-dark">Niveau de forme physique</Label>
-              <div className="mt-2">
-                <FitnessSegmented 
-                  value={parseInt(formData.fitness_level || '3')}
-                  editable={isEditing}
-                  onChange={(n) => handleInputChange('fitness_level', String(n))}
-                />
-              </div>
-            </div>
+
 
             <div>
               <Label className="text-sm font-medium text-accent-dark">Centres d'intérêt</Label>
@@ -868,7 +863,7 @@ const ProfilePage = () => {
                   </div>
                 ) : (
                   <div className="flex flex-wrap gap-2">
-                    {formData.interests.length > 0 ? formData.interests.map((interest, index) => (
+                    {formData.interests.length > 0 ? deduplicateInterests(formData.interests).map((interest, index) => (
                       <Badge key={index} className="bg-accent/20 text-accent-dark border-accent/30">
                         {t(`profile_interest_categories_${normalizeInterestKey(interest)}`)}
                       </Badge>
