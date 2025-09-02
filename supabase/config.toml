@@ -72,12 +72,17 @@ file_size_limit = "50MiB"
 
 # Configuration Auth native simplifiée
 [auth]
+# URL de base de votre site - utilisée pour les redirections OAuth
+site_url = "https://ciara.city"
+
 # Configuration native Supabase - pas de webhooks personnalisés
 additional_redirect_urls = [
   "https://ciara.city/profile",
   "https://ciara.city/reset-password",
+  "https://ciara.city/auth/callback",
   "http://localhost:8080/profile",
-  "http://localhost:8080/reset-password"
+  "http://localhost:8080/reset-password",
+  "http://localhost:8080/auth/callback"
 ]
 # How long tokens are valid for, in seconds. Defaults to 3600 (1 hour), maximum 604,800 seconds (1
 # week).
@@ -95,7 +100,10 @@ double_confirm_changes = true
 # If enabled, users need to confirm their email address before signing in.
 enable_confirmations = true
 
-# Configuration OAuth sécurisée (désactivée par défaut)
+# Configuration OAuth sécurisée
+# Note: Les credentials Google sont configurés via le dashboard Supabase
+# Cette section active juste le support OAuth Google
+
 [auth.external.apple]
 enabled = false
 client_id = ""
