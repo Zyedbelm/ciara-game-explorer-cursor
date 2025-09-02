@@ -164,6 +164,11 @@ function App() {
                       <NativeAuthCallbackPage />
                     </AuthGuard>
                   } />
+                  <Route path="/auth/unified-callback" element={
+                    <AuthGuard requireAuth={false}>
+                      <NativeAuthCallbackPage />
+                    </AuthGuard>
+                  } />
                   <Route path="/auth/error" element={
                     <AuthGuard requireAuth={false}>
                       <AuthErrorPage />
