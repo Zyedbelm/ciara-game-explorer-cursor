@@ -24,8 +24,18 @@ const AuthCallbackPage = () => {
         const accessToken = searchParams.get('access_token');
         const refreshToken = searchParams.get('refresh_token');
         const type = searchParams.get('type');
+        const code = searchParams.get('code');
         const error = searchParams.get('error');
         const errorDescription = searchParams.get('error_description');
+        
+        console.log('🔍 AuthCallback - Paramètres reçus:', {
+          accessToken: !!accessToken,
+          refreshToken: !!refreshToken,
+          type,
+          code,
+          error,
+          errorDescription
+        });
         
         // Gérer les erreurs
         if (error) {
@@ -46,8 +56,38 @@ const AuthCallbackPage = () => {
           return;
         }
         
-        // Gérer le magic link
-        if (type === 'magiclink' && accessToken && refreshToken) {
+        // Gérer le magic link avec code
+        if (code && !accessToken && !refreshToken) {
+          console.log('🔍 Magic Link avec code détecté, échange contre session...');
+          
+          const { data, error: sessionError } = await supabase.auth.exchangeCodeForSession(code);
+          
+          if (sessionError) {
+            console.log('🔍 Erreur échange code:', sessionError);
+            throw new Error('Code d\'authentification invalide ou expiré');
+          }
+          
+          if (data.session) {
+            console.log('🔍 Session Magic Link établie avec succès');
+            setSuccess(true);
+            toast({
+              title: "Connexion réussie !",
+              description: "Vous êtes maintenant connecté via Magic Link",
+              variant: "default"
+            });
+            
+            // Rediriger vers le profil après un délai
+            setTimeout(() => {
+              navigate('/profile', { replace: true });
+            }, 2000);
+          } else {
+            throw new Error('Session Magic Link non établie');
+          }
+        }
+        
+        // Gérer le magic link avec tokens (ancienne méthode)
+        else if (type === 'magiclink' && accessToken && refreshToken) {
+          console.log('🔍 Magic Link avec tokens détecté...');
           const { data, error: sessionError } = await supabase.auth.setSession({
             access_token: accessToken,
             refresh_token: refreshToken
