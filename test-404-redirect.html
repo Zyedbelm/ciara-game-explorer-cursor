@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Redirection 404</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+        }
+        .test-link {
+            display: inline-block;
+            background: #007bff;
+            color: white;
+            padding: 10px 20px;
+            text-decoration: none;
+            border-radius: 5px;
+            margin: 10px 5px;
+        }
+        .test-link:hover {
+            background: #0056b3;
+        }
+        .info {
+            background: #e7f3ff;
+            border: 1px solid #b3d9ff;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        .warning {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 Test Redirection 404</h1>
+    
+    <div class="info">
+        <h3>ℹ️ Objectif</h3>
+        <p>Ce fichier teste si la redirection 404 fonctionne correctement pour les routes SPA.</p>
+    </div>
+
+    <div class="warning">
+        <h3>⚠️ Problème actuel</h3>
+        <p>La route <code>/reset-password</code> retourne une erreur 404 sur ciara.city.</p>
+    </div>
+
+    <div class="test-section">
+        <h3>🔗 Test 1 : Routes qui devraient fonctionner</h3>
+        <p>Ces liens testent les routes principales :</p>
+        
+        <a href="/" class="test-link">
+            Test page d'accueil (/)
+        </a>
+        
+        <a href="/auth" class="test-link">
+            Test page d'authentification (/auth)
+        </a>
+        
+        <a href="/profile" class="test-link">
+            Test page de profil (/profile)
+        </a>
+    </div>
+
+    <div class="test-section">
+        <h3>🔗 Test 2 : Routes qui devraient rediriger via 404.html</h3>
+        <p>Ces liens testent la redirection 404 :</p>
+        
+        <a href="/reset-password" class="test-link">
+            Test reset-password sans paramètres
+        </a>
+        
+        <a href="/reset-password?code=test123" class="test-link">
+            Test reset-password avec paramètres
+        </a>
+        
+        <a href="/auth/callback" class="test-link">
+            Test auth/callback
+        </a>
+        
+        <a href="/auth/error" class="test-link">
+            Test auth/error
+        </a>
+    </div>
+
+    <div class="test-section">
+        <h3>🔗 Test 3 : Routes inexistantes</h3>
+        <p>Ces liens testent des routes qui n'existent pas :</p>
+        
+        <a href="/route-inexistante" class="test-link">
+            Test route inexistante
+        </a>
+        
+        <a href="/test/123/abc" class="test-link">
+            Test route complexe inexistante
+        </a>
+    </div>
+
+    <div class="info">
+        <h3>📋 Instructions de test</h3>
+        <ol>
+            <li><strong>Ouvrir</strong> http://localhost:8080/test-404-redirect.html</li>
+            <li><strong>Cliquer</strong> sur chaque lien de test</li>
+            <li><strong>Observer</strong> ce qui se passe</li>
+            <li><strong>Vérifier</strong> que les routes SPA fonctionnent</li>
+        </ol>
+    </div>
+
+    <div class="warning">
+        <h3>🎯 Résultat attendu</h3>
+        <p>Après déploiement, toutes les routes devraient fonctionner ou rediriger correctement vers l'application SPA.</p>
+    </div>
+
+    <div class="test-section">
+        <h3>🔍 Debug Console</h3>
+        <p>Ouvrez la console du navigateur (F12) pour voir :</p>
+        <ul>
+            <li>Logs de redirection 404.html</li>
+            <li>Routes détectées</li>
+            <li>URLs de redirection</li>
+        </ul>
+    </div>
+
+    <script>
+        // Log des informations de test
+        console.log('🧪 Test 404-redirect.html chargé');
+        console.log('🧪 URL actuelle:', window.location.href);
+        console.log('🧪 Hostname:', window.location.hostname);
+        
+        // Fonction pour tester une route
+        function testRoute(route) {
+            console.log('🧪 Test de la route:', route);
+            
+            // Simuler un clic sur le lien
+            const link = document.createElement('a');
+            link.href = route;
+            link.target = '_blank';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+        
+        // Ajouter des logs sur les liens de test
+        document.querySelectorAll('.test-link').forEach(link => {
+            link.addEventListener('click', function(e) {
+                console.log('🧪 Test cliqué:', this.href);
+                console.log('🧪 Route testée:', this.getAttribute('href'));
+            });
+        });
+    </script>
+</body>
+</html>
