@@ -187,6 +187,8 @@ export class PasswordResetService {
     error?: string;
     errorDescription?: string;
   } {
+    console.log('🔍 PasswordResetService.extractResetParams - URL:', url);
+    
     const urlObj = new URL(url);
     
     // Paramètres de requête
@@ -194,6 +196,12 @@ export class PasswordResetService {
     const refreshToken = urlObj.searchParams.get('refresh_token') || undefined;
     const type = urlObj.searchParams.get('type') || undefined;
     const code = urlObj.searchParams.get('code') || undefined;
+    
+    console.log('🔍 Paramètres de requête:');
+    console.log('- access_token:', accessToken);
+    console.log('- refresh_token:', refreshToken);
+    console.log('- type:', type);
+    console.log('- code:', code);
     
     // Paramètres de hash (fallback)
     const hash = urlObj.hash.substring(1);
@@ -206,7 +214,15 @@ export class PasswordResetService {
     const error = hashParams.get('error') || undefined;
     const errorDescription = hashParams.get('error_description') || undefined;
 
-    return {
+    console.log('🔍 Paramètres de hash:');
+    console.log('- hash access_token:', hashAccessToken);
+    console.log('- hash refresh_token:', hashRefreshToken);
+    console.log('- hash type:', hashType);
+    console.log('- hash code:', hashCode);
+    console.log('- hash error:', error);
+    console.log('- hash error_description:', errorDescription);
+
+    const result = {
       accessToken: accessToken || hashAccessToken,
       refreshToken: refreshToken || hashRefreshToken,
       type: type || hashType,
@@ -214,6 +230,9 @@ export class PasswordResetService {
       error,
       errorDescription
     };
+    
+    console.log('🔍 Résultat final:', result);
+    return result;
   }
 
   /**

@@ -25,11 +25,17 @@ const ResetPasswordPage = () => {
   useEffect(() => {
     const validateResetLink = async () => {
       try {
+        console.log('🔍 ResetPasswordPage: Début de validation');
+        console.log('🔍 URL actuelle:', window.location.href);
+        console.log('🔍 Search params:', searchParams.toString());
+        
         // Extract parameters from current URL
         const params = PasswordResetService.extractResetParams(window.location.href);
+        console.log('🔍 Paramètres extraits:', params);
         
         // Check for errors first
         if (params.error) {
+          console.log('🔍 Erreur détectée:', params.error);
           let errorMessage = "Le lien de récupération n'est pas valide.";
           
           if (params.error === 'access_denied') {
@@ -44,7 +50,9 @@ const ResetPasswordPage = () => {
         
         // Check if we have valid parameters (tokens or code)
         if ((params.accessToken && params.refreshToken && params.type === 'recovery') || params.code) {
+          console.log('🔍 Paramètres valides détectés, validation du lien...');
           const result = await PasswordResetService.validateResetLink(params.accessToken, params.refreshToken, params.code);
+          console.log('🔍 Résultat validation:', result);
           
           if (!result.success) {
             setError(result.error || 'Session invalide');
@@ -56,15 +64,27 @@ const ResetPasswordPage = () => {
           return;
         }
         
+        console.log('🔍 Aucun paramètre valide, vérification de la session...');
+        
+        // EN DÉVELOPPEMENT : Permettre l'affichage du formulaire pour les tests
+        if (process.env.NODE_ENV === 'development' || window.location.hostname === 'localhost') {
+          console.log('🔍 Mode développement détecté, affichage du formulaire pour les tests');
+          return; // Afficher le formulaire
+        }
+        
         // Check if user is already authenticated (for direct access)
         const hasSession = await PasswordResetService.hasValidSession();
+        console.log('🔍 Session valide:', hasSession);
         
         if (!hasSession) {
+          console.log('🔍 Pas de session valide, affichage erreur');
           setError("Lien de récupération invalide ou expiré. Veuillez demander un nouveau lien.");
           return;
         }
         
+        console.log('🔍 Validation réussie, affichage du formulaire');
       } catch (err: any) {
+        console.error('🔍 Erreur lors de la validation:', err);
         setError(err.message || "Erreur lors de la validation du lien");
       }
     };
