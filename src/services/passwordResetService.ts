@@ -41,42 +41,55 @@ export class PasswordResetService {
    */
   static async validateResetLink(accessToken?: string, refreshToken?: string, code?: string): Promise<PasswordResetResult> {
     try {
-      // Si nous avons un code, l'utiliser pour échanger contre une session
-      if (code) {
-        const { data, error } = await supabase.auth.exchangeCodeForSession(code);
-        
-        if (error) {
-          return {
-            success: false,
-            error: 'Code de récupération invalide ou expiré'
-          };
-        }
-        
-        return { success: true };
-      }
+      console.log('🔍 validateResetLink appelée avec:', { accessToken: !!accessToken, refreshToken: !!refreshToken, code });
       
-      // Si nous avons des tokens, les utiliser directement
+      // Pour le reset password, Supabase redirige avec des tokens dans le hash
+      // Le paramètre "code" dans l'URL n'est PAS un code d'échange, c'est juste un identifiant
+      
+      // Si nous avons des tokens d'accès, les utiliser directement
       if (accessToken && refreshToken) {
+        console.log('🔍 Utilisation des tokens d\'accès pour établir la session');
         const { data, error } = await supabase.auth.setSession({
           access_token: accessToken,
           refresh_token: refreshToken
         });
 
         if (error) {
+          console.log('🔍 Erreur lors de l\'établissement de la session:', error);
           return {
             success: false,
             error: 'Session invalide'
           };
         }
 
+        console.log('🔍 Session établie avec succès');
         return { success: true };
       }
       
+      // Si nous avons seulement un code (paramètre d'URL), vérifier la session existante
+      if (code) {
+        console.log('🔍 Code détecté, vérification de la session existante');
+        const { data: { session }, error } = await supabase.auth.getSession();
+        
+        if (session) {
+          console.log('🔍 Session existante trouvée');
+          return { success: true };
+        }
+        
+        console.log('🔍 Pas de session existante avec le code');
+        return {
+          success: false,
+          error: 'Lien de récupération invalide ou expiré. Veuillez demander un nouveau lien.'
+        };
+      }
+      
+      console.log('🔍 Aucun paramètre de récupération valide');
       return {
         success: false,
         error: 'Aucun paramètre de récupération valide'
       };
     } catch (error: any) {
+      console.error('🔍 Erreur dans validateResetLink:', error);
       return {
         success: false,
         error: error.message || 'Erreur lors de la validation du lien'

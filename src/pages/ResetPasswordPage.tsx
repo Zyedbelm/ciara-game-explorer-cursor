@@ -48,9 +48,11 @@ const ResetPasswordPage = () => {
           return;
         }
         
-        // Check if we have valid parameters (tokens or code)
-        if ((params.accessToken && params.refreshToken && params.type === 'recovery') || params.code) {
-          console.log('🔍 Paramètres valides détectés, validation du lien...');
+        // APPROCHE SIMPLIFIÉE : Supabase gère l'authentification via le lien de reset
+        
+        // 1. Si nous avons des tokens d'accès complets, valider la session
+        if (params.accessToken && params.refreshToken && params.type === 'recovery') {
+          console.log('🔍 Tokens complets détectés, validation de la session...');
           const result = await PasswordResetService.validateResetLink(params.accessToken, params.refreshToken, params.code);
           console.log('🔍 Résultat validation:', result);
           
@@ -59,42 +61,48 @@ const ResetPasswordPage = () => {
             return;
           }
           
-          // Clean up URL
+          // Clean up URL et afficher le formulaire
           PasswordResetService.cleanUrl();
           return;
         }
         
-        console.log('🔍 Aucun paramètre valide, vérification de la session...');
+        // 2. Si nous avons un code (lien de reset), vérifier la session
+        if (params.code) {
+          console.log('🔍 Code de reset détecté, vérification de la session...');
+          const hasSession = await PasswordResetService.hasValidSession();
+          console.log('🔍 Session valide après code:', hasSession);
+          
+          if (hasSession) {
+            console.log('🔍 Session valide trouvée, affichage du formulaire');
+            // Clean up URL et afficher le formulaire
+            PasswordResetService.cleanUrl();
+            return;
+          } else {
+            console.log('🔍 Pas de session valide avec le code');
+            setError("Lien de récupération invalide ou expiré. Veuillez demander un nouveau lien.");
+            return;
+          }
+        }
         
-        // EN DÉVELOPPEMENT : Permettre l'affichage du formulaire pour les tests
+        // 3. Mode développement : toujours afficher le formulaire
         if (process.env.NODE_ENV === 'development' || window.location.hostname === 'localhost') {
           console.log('🔍 Mode développement détecté, affichage du formulaire pour les tests');
-          return; // Afficher le formulaire
-        }
-        
-        // EN PRODUCTION : Debug temporaire pour identifier le problème
-        console.log('🔍 PRODUCTION: Paramètres reçus:', params);
-        console.log('🔍 PRODUCTION: URL complète:', window.location.href);
-        console.log('🔍 PRODUCTION: Code détecté:', params.code);
-        console.log('🔍 PRODUCTION: Condition validation:', (params.accessToken && params.refreshToken && params.type === 'recovery') || params.code);
-        
-        // TEMPORAIRE : Permettre l'affichage du formulaire si on a un code
-        if (params.code) {
-          console.log('🔍 PRODUCTION: Code détecté, affichage du formulaire');
-          return; // Afficher le formulaire
-        }
-        
-        // Check if user is already authenticated (for direct access)
-        const hasSession = await PasswordResetService.hasValidSession();
-        console.log('🔍 Session valide:', hasSession);
-        
-        if (!hasSession) {
-          console.log('🔍 Pas de session valide, affichage erreur');
-          setError("Lien de récupération invalide ou expiré. Veuillez demander un nouveau lien.");
           return;
         }
         
-        console.log('🔍 Validation réussie, affichage du formulaire');
+        // 4. Accès direct sans paramètres : vérifier la session existante
+        console.log('🔍 Accès direct, vérification de la session...');
+        const hasSession = await PasswordResetService.hasValidSession();
+        console.log('🔍 Session valide:', hasSession);
+        
+        if (hasSession) {
+          console.log('🔍 Session existante trouvée, affichage du formulaire');
+          return;
+        }
+        
+        // 5. Aucune session valide
+        console.log('🔍 Aucune session valide, affichage erreur');
+        setError("Lien de récupération invalide ou expiré. Veuillez demander un nouveau lien.");
       } catch (err: any) {
         console.error('🔍 Erreur lors de la validation:', err);
         setError(err.message || "Erreur lors de la validation du lien");

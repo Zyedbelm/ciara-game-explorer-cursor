@@ -194,7 +194,7 @@ serve(async (req) => {
       case "magiclink":
         secureLog("Traitement Magic Link");
         functionName = 'send-magic-link';
-        confirmationUrl = `${baseUrl}/auth/v1/verify?token=${token_hash}&type=${email_action_type}&redirect_to=${encodeURIComponent(CIARA_DOMAIN + "/profile")}&apikey=${supabaseAnonKey}`;
+        confirmationUrl = `${baseUrl}/auth/v1/verify?token=${token_hash}&type=${email_action_type}&redirect_to=${encodeURIComponent(CIARA_DOMAIN + "/auth/callback")}&apikey=${supabaseAnonKey}`;
         functionData = {
           email: user.email,
           magicLinkUrl: confirmationUrl,
