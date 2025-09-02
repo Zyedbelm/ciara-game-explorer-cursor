@@ -325,7 +325,7 @@ const RewardsPage = () => {
         .from('rewards')
         .select(`
           *,
-          partners!inner(
+          partners(
             id,
             name,
             category,
@@ -717,16 +717,20 @@ const RewardsPage = () => {
 
   // Filter rewards based on geographical selection and search
   const filteredRewards = rewards.filter(reward => {
+    // Vérifier que le partenaire existe
+    if (!reward.partner) return false;
+    
     const matchesSearch = !searchTerm || 
       reward.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       reward.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       reward.partner.name.toLowerCase().includes(searchTerm.toLowerCase());
 
+    // Filtrage géographique - si aucune ville sélectionnée, montrer toutes les récompenses
     const matchesCountry = selectedCountry === 'all' || 
-      reward.partner.city?.country_id === selectedCountry;
+      (reward.partner.city?.country_id && reward.partner.city.country_id === selectedCountry);
     
     const matchesCity = selectedCity === 'all' || 
-      reward.partner.city_id === selectedCity;
+      (reward.partner.city_id && reward.partner.city_id === selectedCity);
 
     return matchesSearch && matchesCountry && matchesCity;
   });
@@ -895,13 +899,22 @@ const RewardsPage = () => {
                           <span className="truncate">{reward.partner.address}</span>
                         </div>
                       )}
-                      {reward.partner.city && (
+                      {reward.partner.city ? (
                         <div className="flex items-center gap-2">
                           <Badge 
                             variant="outline" 
                             className={`text-xs font-medium ${getCityBadgeColor(reward.partner.city.name)}`}
                           >
                             {reward.partner.city.name}
+                          </Badge>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-2">
+                          <Badge 
+                            variant="outline" 
+                            className="text-xs font-medium bg-gray-100 text-gray-600 border-gray-300"
+                          >
+                            Ville non spécifiée
                           </Badge>
                         </div>
                       )}
