@@ -32,7 +32,11 @@ const AuthCallbackPage = () => {
           let errorMessage = "Erreur d'authentification";
           
           if (error === 'access_denied') {
-            errorMessage = "Accès refusé. Veuillez réessayer.";
+            if (errorDescription && errorDescription.includes('expired')) {
+              errorMessage = "Le lien a expiré. Veuillez demander un nouveau lien de réinitialisation.";
+            } else {
+              errorMessage = "Accès refusé. Veuillez réessayer.";
+            }
           } else if (errorDescription) {
             errorMessage = decodeURIComponent(errorDescription);
           }

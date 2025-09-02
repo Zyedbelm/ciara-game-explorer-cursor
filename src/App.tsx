@@ -45,6 +45,7 @@ const HelpPage = React.lazy(() => import("./pages/HelpPage"));
 const EmailTestPage = React.lazy(() => import("./pages/EmailTestPage"));
 const EmailDiagnosticPage = React.lazy(() => import("./pages/EmailDiagnosticPage"));
 const AuthCallbackPage = React.lazy(() => import("./pages/AuthCallbackPage"));
+const AuthErrorPage = React.lazy(() => import("./pages/AuthErrorPage"));
 const NotFound = React.lazy(() => import("./pages/NotFound"));
 
 // Optimized QueryClient configuration to prevent excessive retries
@@ -159,6 +160,11 @@ function App() {
                   <Route path="/auth/callback" element={
                     <AuthGuard requireAuth={false}>
                       <AuthCallbackPage />
+                    </AuthGuard>
+                  } />
+                  <Route path="/auth/error" element={
+                    <AuthGuard requireAuth={false}>
+                      <AuthErrorPage />
                     </AuthGuard>
                   } />
                 

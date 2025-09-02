@@ -115,7 +115,7 @@ const AuthPage = () => {
 
       toast({
         title: "Email envoyé",
-        description: "Un lien de réinitialisation a été envoyé à votre adresse email. Vérifiez votre boîte de réception.",
+        description: "Un lien de réinitialisation a été envoyé à votre adresse email. Vérifiez votre boîte de réception et cliquez sur le lien dans les 24h.",
         variant: "default"
       });
       
@@ -144,10 +144,15 @@ const AuthPage = () => {
     setMagicLinkLoading(true);
     
     try {
+      // Utiliser une URL absolue pour le magic link
+      const magicLinkUrl = window.location.hostname === 'localhost' 
+        ? 'http://localhost:8080/auth/callback'
+        : 'https://ciara.city/auth/callback';
+        
       const { error } = await supabase.auth.signInWithOtp({
         email: resetEmail,
         options: {
-          emailRedirectTo: `${window.location.origin}/auth/callback`
+          emailRedirectTo: magicLinkUrl
         }
       });
 
@@ -177,10 +182,15 @@ const AuthPage = () => {
     setGoogleLoading(true);
     
     try {
+      // Utiliser une URL absolue pour OAuth
+      const oauthUrl = window.location.hostname === 'localhost' 
+        ? 'http://localhost:8080/auth/callback'
+        : 'https://ciara.city/auth/callback';
+        
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
+          redirectTo: oauthUrl,
           queryParams: {
             access_type: 'offline',
             prompt: 'consent',

@@ -11,8 +11,13 @@ export class PasswordResetService {
    */
   static async sendResetEmail(email: string, redirectUrl?: string): Promise<PasswordResetResult> {
     try {
+      // Utiliser une URL absolue pour la réinitialisation
+      const resetUrl = redirectUrl || (window.location.hostname === 'localhost' 
+        ? 'http://localhost:8080/reset-password'
+        : 'https://ciara.city/reset-password');
+        
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: redirectUrl || `${window.location.origin}/reset-password`
+        redirectTo: resetUrl
       });
 
       if (error) {
