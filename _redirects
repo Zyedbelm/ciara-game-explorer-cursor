@@ -1,5 +1,7 @@
 /*    /index.html   200
 /reset-password    /index.html   200
+/reset-password-simple    /index.html   200
 /auth/*    /index.html   200
 /auth/callback    /index.html   200
+/auth/unified-callback    /index.html   200
 /auth/error    /index.html   200

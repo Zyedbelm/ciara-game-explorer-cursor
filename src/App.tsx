@@ -45,7 +45,9 @@ const HelpPage = React.lazy(() => import("./pages/HelpPage"));
 const EmailTestPage = React.lazy(() => import("./pages/EmailTestPage"));
 const EmailDiagnosticPage = React.lazy(() => import("./pages/EmailDiagnosticPage"));
 const AuthCallbackPage = React.lazy(() => import("./pages/AuthCallbackPage"));
+const UnifiedAuthCallbackPage = React.lazy(() => import("./pages/UnifiedAuthCallbackPage"));
 const AuthErrorPage = React.lazy(() => import("./pages/AuthErrorPage"));
+const SimpleResetPasswordPage = React.lazy(() => import("./pages/SimpleResetPasswordPage"));
 const NotFound = React.lazy(() => import("./pages/NotFound"));
 
 // Optimized QueryClient configuration to prevent excessive retries
@@ -162,9 +164,19 @@ function App() {
                       <AuthCallbackPage />
                     </AuthGuard>
                   } />
+                  <Route path="/auth/unified-callback" element={
+                    <AuthGuard requireAuth={false}>
+                      <UnifiedAuthCallbackPage />
+                    </AuthGuard>
+                  } />
                   <Route path="/auth/error" element={
                     <AuthGuard requireAuth={false}>
                       <AuthErrorPage />
+                    </AuthGuard>
+                  } />
+                  <Route path="/reset-password-simple" element={
+                    <AuthGuard requireAuth={false}>
+                      <SimpleResetPasswordPage />
                     </AuthGuard>
                   } />
                 

@@ -9,6 +9,7 @@ import { Mountain, Mail, Lock, User, ArrowLeft, Loader2, AlertCircle, Chrome } f
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { PasswordResetService } from '@/services/passwordResetService';
+import { UnifiedAuthManager } from '@/services/unifiedAuthManager';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import Footer from '@/components/common/Footer';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -107,8 +108,9 @@ const AuthPage = () => {
     setResetLoading(true);
     
     try {
-      const result = await PasswordResetService.sendResetEmail(resetEmail);
-
+      // Utiliser le gestionnaire unifié
+      const result = await UnifiedAuthManager.sendAuthEmail(resetEmail, 'reset');
+      
       if (!result.success) {
         throw new Error(result.error);
       }
@@ -121,6 +123,8 @@ const AuthPage = () => {
       
       setResetEmail('');
     } catch (error: any) {
+      console.error('Erreur lors de l\'envoi de l\'email de réinitialisation:', error);
+      
       toast({
         title: "Erreur",
         description: error.message || "Impossible d'envoyer l'email de réinitialisation",
@@ -144,20 +148,11 @@ const AuthPage = () => {
     setMagicLinkLoading(true);
     
     try {
-      // Utiliser une URL absolue pour le magic link
-      const magicLinkUrl = window.location.hostname === 'localhost' 
-        ? 'http://localhost:8080/auth/callback'
-        : 'https://ciara.city/auth/callback';
-        
-      const { error } = await supabase.auth.signInWithOtp({
-        email: resetEmail,
-        options: {
-          emailRedirectTo: magicLinkUrl
-        }
-      });
-
-      if (error) {
-        throw error;
+      // Utiliser le gestionnaire unifié
+      const result = await UnifiedAuthManager.sendAuthEmail(resetEmail, 'magic');
+      
+      if (!result.success) {
+        throw new Error(result.error);
       }
 
       toast({
