@@ -52,9 +52,29 @@ serve(async (req) => {
       
       console.log('✅ Profil créé avec succès pour:', record.id)
       
+      // ENVOYER L'EMAIL DE CONFIRMATION AUTOMATIQUEMENT
+      console.log('📧 Envoi automatique de l\'email de confirmation...')
+      try {
+        const { error: emailError } = await supabase.auth.admin.generateLink({
+          type: 'signup',
+          email: record.email,
+          options: {
+            redirectTo: 'https://ciara.city/auth/callback'
+          }
+        })
+        
+        if (emailError) {
+          console.error('❌ Erreur envoi email:', emailError)
+        } else {
+          console.log('✅ Email de confirmation envoyé automatiquement')
+        }
+      } catch (emailError) {
+        console.error('❌ Erreur lors de l\'envoi de l\'email:', emailError)
+      }
+      
       return new Response(
         JSON.stringify({ 
-          message: 'Profile created successfully',
+          message: 'Profile created successfully and confirmation email sent',
           user_id: record.id 
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
