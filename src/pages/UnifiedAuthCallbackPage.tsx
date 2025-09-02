@@ -42,7 +42,7 @@ const UnifiedAuthCallbackPage = () => {
         if (authResult.success && authResult.requiresRedirect && authResult.redirectUrl) {
           toast({
             title: "Connexion réussie !",
-            description: this.getSuccessMessage(authResult.action),
+            description: getSuccessMessage(authResult.action),
             variant: "default"
           });
           
@@ -87,7 +87,7 @@ const UnifiedAuthCallbackPage = () => {
   /**
    * 📝 MESSAGES DE SUCCÈS PERSONNALISÉS
    */
-  private getSuccessMessage(action?: string): string {
+  const getSuccessMessage = (action?: string): string => {
     switch (action) {
       case 'magic':
         return "Vous êtes connecté via Magic Link";
@@ -98,12 +98,12 @@ const UnifiedAuthCallbackPage = () => {
       default:
         return "Vous êtes maintenant connecté";
     }
-  }
+  };
   
   /**
    * 🎨 ICÔNE SELON L'ACTION
    */
-  private getActionIcon(action?: string) {
+  const getActionIcon = (action?: string) => {
     switch (action) {
       case 'magic':
         return <Mail className="h-8 w-8 text-blue-600" />;
@@ -114,7 +114,7 @@ const UnifiedAuthCallbackPage = () => {
       default:
         return <CheckCircle className="h-8 w-8 text-green-600" />;
     }
-  }
+  };
 
   // 🔄 État de chargement
   if (loading) {
@@ -164,13 +164,13 @@ const UnifiedAuthCallbackPage = () => {
             <Card className="border-0 shadow-2xl bg-white/95 backdrop-blur-sm">
               <CardHeader className="text-center">
                 <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  {this.getActionIcon(result.action)}
+                  {getActionIcon(result.action)}
                 </div>
                 <CardTitle className="text-2xl text-green-700">
                   {result.action === 'reset' ? 'Lien validé !' : 'Connexion réussie !'}
                 </CardTitle>
                 <CardDescription>
-                  {this.getSuccessMessage(result.action)}
+                  {getSuccessMessage(result.action)}
                 </CardDescription>
               </CardHeader>
               <CardContent>
