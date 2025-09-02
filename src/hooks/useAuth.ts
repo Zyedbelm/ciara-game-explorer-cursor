@@ -183,15 +183,24 @@ export function useAuth() {
       let sanitizedMetadata = metadata;
       if (metadata) {
         const metadataValidation = validateFormData(metadata, {
-          full_name: 'name',
-          company: 'text',
-          phone: 'text'
+          firstName: 'name',
+          lastName: 'name'
         });
         if (!metadataValidation.isValid) {
           toast({ title: "Erreur d'inscription", description: "Données de profil invalides", variant: "destructive" });
           return { error: "Données de profil invalides" };
         }
-        sanitizedMetadata = metadataValidation.sanitized;
+        
+        // Construire le full_name à partir de firstName et lastName
+        const firstName = metadataValidation.sanitized.firstName || '';
+        const lastName = metadataValidation.sanitized.lastName || '';
+        const fullName = `${firstName} ${lastName}`.trim();
+        
+        sanitizedMetadata = {
+          first_name: firstName,
+          last_name: lastName,
+          full_name: fullName || undefined
+        };
       }
 
       const { data, error } = await supabase.auth.signUp({

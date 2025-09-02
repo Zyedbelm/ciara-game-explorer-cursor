@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Création Profil</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 600px; margin: 50px auto; padding: 20px; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; }
+        input { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; }
+        button { background: #007bff; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        .error { color: red; margin-top: 5px; }
+        .success { color: green; margin-top: 5px; }
+    </style>
+</head>
+<body>
+    <h1>🧪 Test Création Profil</h1>
+    <p>Ce fichier teste la validation des données de profil dans useAuth.ts</p>
+    
+    <div class="form-group">
+        <label for="firstName">Prénom:</label>
+        <input type="text" id="firstName" placeholder="Entrez votre prénom" value="Jean">
+    </div>
+    
+    <div class="form-group">
+        <label for="lastName">Nom:</label>
+        <input type="text" id="lastName" placeholder="Entrez votre nom" value="Dupont">
+    </div>
+    
+    <div class="form-group">
+        <label for="email">Email:</label>
+        <input type="email" id="email" placeholder="Entrez votre email" value="jean.dupont@test.com">
+    </div>
+    
+    <div class="form-group">
+        <label for="password">Mot de passe:</label>
+        <input type="password" id="password" placeholder="Entrez votre mot de passe" value="Test123!">
+    </div>
+    
+    <button onclick="testValidation()">🧪 Tester la Validation</button>
+    
+    <div id="result"></div>
+    
+    <script>
+        function testValidation() {
+            const firstName = document.getElementById('firstName').value;
+            const lastName = document.getElementById('lastName').value;
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            
+            const resultDiv = document.getElementById('result');
+            
+            // Test de validation basique
+            const errors = [];
+            
+            // Validation firstName
+            if (!firstName || firstName.length < 2 || firstName.length > 50) {
+                errors.push('Prénom invalide (2-50 caractères)');
+            }
+            
+            // Validation lastName
+            if (!lastName || lastName.length < 2 || lastName.length > 50) {
+                errors.push('Nom invalide (2-50 caractères)');
+            }
+            
+            // Validation email
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+                errors.push('Email invalide');
+            }
+            
+            // Validation password
+            if (!password || password.length < 6) {
+                errors.push('Mot de passe trop court (minimum 6 caractères)');
+            }
+            
+            // Affichage du résultat
+            if (errors.length === 0) {
+                resultDiv.innerHTML = `
+                    <div class="success">
+                        <h3>✅ Validation réussie !</h3>
+                        <p><strong>Données validées :</strong></p>
+                        <ul>
+                            <li>Prénom: ${firstName}</li>
+                            <li>Nom: ${lastName}</li>
+                            <li>Email: ${email}</li>
+                            <li>Mot de passe: ${'*'.repeat(password.length)}</li>
+                        </ul>
+                        <p><strong>Métadonnées qui seraient envoyées :</strong></p>
+                        <pre>{
+  "firstName": "${firstName}",
+  "lastName": "${lastName}"
+}</pre>
+                        <p><strong>Métadonnées transformées :</strong></p>
+                        <pre>{
+  "first_name": "${firstName}",
+  "last_name": "${lastName}",
+  "full_name": "${firstName} ${lastName}"
+}</pre>
+                    </div>
+                `;
+            } else {
+                resultDiv.innerHTML = `
+                    <div class="error">
+                        <h3>❌ Erreurs de validation :</h3>
+                        <ul>
+                            ${errors.map(error => `<li>${error}</li>`).join('')}
+                        </ul>
+                    </div>
+                `;
+            }
+        }
+        
+        // Test automatique au chargement
+        window.onload = function() {
+            testValidation();
+        };
+    </script>
+</body>
+</html>
