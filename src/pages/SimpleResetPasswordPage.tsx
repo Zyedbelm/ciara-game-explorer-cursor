@@ -17,7 +17,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Mountain, Lock, ArrowLeft, Loader2, CheckCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { UnifiedAuthManager } from '@/services/unifiedAuthManager';
+import { supabase } from '@/integrations/supabase/client';
 import { usePasswordManagement } from '@/hooks/usePasswordManagement';
 
 const SimpleResetPasswordPage = () => {
@@ -39,22 +39,18 @@ const SimpleResetPasswordPage = () => {
       console.log('🔐 SimpleResetPasswordPage - Validation de l\'accès');
       
       try {
-        // Traiter l'URL avec le gestionnaire unifié
-        const result = await UnifiedAuthManager.handleAuthentication();
-        console.log('🔐 Résultat validation:', result);
+        // APPROCHE SIMPLE : Vérifier directement la session Supabase
+        const { data: { session }, error } = await supabase.auth.getSession();
+        console.log('🔐 Session Supabase:', session);
         
-        if (result.success && result.action === 'reset') {
-          console.log('🔐 Accès autorisé pour reset password');
-          setValidating(false);
+        if (error) {
+          console.log('🔐 Erreur session:', error);
+          setError('Erreur lors de la vérification de la session');
           return;
         }
         
-        // Vérifier si l'utilisateur a une session valide (cas d'accès direct)
-        const hasSession = await UnifiedAuthManager.hasValidSession();
-        console.log('🔐 Session existante:', hasSession);
-        
-        if (hasSession) {
-          console.log('🔐 Session valide, accès autorisé');
+        if (session) {
+          console.log('🔐 Session valide trouvée, accès autorisé');
           setValidating(false);
           return;
         }

@@ -47,6 +47,7 @@ const EmailDiagnosticPage = React.lazy(() => import("./pages/EmailDiagnosticPage
 const NativeAuthCallbackPage = React.lazy(() => import("./pages/NativeAuthCallbackPage"));
 const AuthErrorPage = React.lazy(() => import("./pages/AuthErrorPage"));
 const NativeResetPasswordPage = React.lazy(() => import("./pages/NativeResetPasswordPage"));
+const SimpleResetPasswordPage = React.lazy(() => import("./pages/SimpleResetPasswordPage"));
 const NotFound = React.lazy(() => import("./pages/NotFound"));
 
 // Optimized QueryClient configuration to prevent excessive retries
@@ -161,11 +162,6 @@ function App() {
                   <Route path="/auth/callback" element={
                     <AuthGuard requireAuth={false}>
                       <NativeAuthCallbackPage />
-                    </AuthGuard>
-                  } />
-                  <Route path="/profile" element={
-                    <AuthGuard>
-                      <ProfilePage />
                     </AuthGuard>
                   } />
                   <Route path="/auth/error" element={
