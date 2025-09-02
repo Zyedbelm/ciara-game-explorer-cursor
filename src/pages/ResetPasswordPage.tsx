@@ -72,6 +72,18 @@ const ResetPasswordPage = () => {
           return; // Afficher le formulaire
         }
         
+        // EN PRODUCTION : Debug temporaire pour identifier le problème
+        console.log('🔍 PRODUCTION: Paramètres reçus:', params);
+        console.log('🔍 PRODUCTION: URL complète:', window.location.href);
+        console.log('🔍 PRODUCTION: Code détecté:', params.code);
+        console.log('🔍 PRODUCTION: Condition validation:', (params.accessToken && params.refreshToken && params.type === 'recovery') || params.code);
+        
+        // TEMPORAIRE : Permettre l'affichage du formulaire si on a un code
+        if (params.code) {
+          console.log('🔍 PRODUCTION: Code détecté, affichage du formulaire');
+          return; // Afficher le formulaire
+        }
+        
         // Check if user is already authenticated (for direct access)
         const hasSession = await PasswordResetService.hasValidSession();
         console.log('🔍 Session valide:', hasSession);
