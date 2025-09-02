@@ -8,8 +8,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Mountain, Mail, Lock, User, ArrowLeft, Loader2, AlertCircle, Chrome } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
-import { PasswordResetService } from '@/services/passwordResetService';
-import { UnifiedAuthManager } from '@/services/unifiedAuthManager';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import Footer from '@/components/common/Footer';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -108,11 +106,13 @@ const AuthPage = () => {
     setResetLoading(true);
     
     try {
-      // Utiliser le gestionnaire unifié
-      const result = await UnifiedAuthManager.sendAuthEmail(resetEmail, 'reset');
+      // UTILISER LA FONCTION NATIVE SUPABASE
+      const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
+        redirectTo: `${window.location.origin}/reset-password`
+      });
       
-      if (!result.success) {
-        throw new Error(result.error);
+      if (error) {
+        throw error;
       }
 
       toast({
@@ -148,11 +148,16 @@ const AuthPage = () => {
     setMagicLinkLoading(true);
     
     try {
-      // Utiliser le gestionnaire unifié
-      const result = await UnifiedAuthManager.sendAuthEmail(resetEmail, 'magic');
-      
-      if (!result.success) {
-        throw new Error(result.error);
+      // UTILISER LA FONCTION NATIVE SUPABASE
+      const { error } = await supabase.auth.signInWithOtp({
+        email: resetEmail,
+        options: {
+          emailRedirectTo: `${window.location.origin}/profile`
+        }
+      });
+
+      if (error) {
+        throw error;
       }
 
       toast({
@@ -177,15 +182,11 @@ const AuthPage = () => {
     setGoogleLoading(true);
     
     try {
-      // Utiliser une URL absolue pour OAuth
-      const oauthUrl = window.location.hostname === 'localhost' 
-        ? 'http://localhost:8080/auth/callback'
-        : 'https://ciara.city/auth/callback';
-        
+      // UTILISER LA FONCTION NATIVE SUPABASE
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: oauthUrl,
+          redirectTo: `${window.location.origin}/profile`,
           queryParams: {
             access_type: 'offline',
             prompt: 'consent',

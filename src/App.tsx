@@ -44,10 +44,9 @@ const AboutPage = React.lazy(() => import("./pages/AboutPage"));
 const HelpPage = React.lazy(() => import("./pages/HelpPage"));
 const EmailTestPage = React.lazy(() => import("./pages/EmailTestPage"));
 const EmailDiagnosticPage = React.lazy(() => import("./pages/EmailDiagnosticPage"));
-const AuthCallbackPage = React.lazy(() => import("./pages/AuthCallbackPage"));
-const UnifiedAuthCallbackPage = React.lazy(() => import("./pages/UnifiedAuthCallbackPage"));
+const NativeAuthCallbackPage = React.lazy(() => import("./pages/NativeAuthCallbackPage"));
 const AuthErrorPage = React.lazy(() => import("./pages/AuthErrorPage"));
-const SimpleResetPasswordPage = React.lazy(() => import("./pages/SimpleResetPasswordPage"));
+const NativeResetPasswordPage = React.lazy(() => import("./pages/NativeResetPasswordPage"));
 const NotFound = React.lazy(() => import("./pages/NotFound"));
 
 // Optimized QueryClient configuration to prevent excessive retries
@@ -156,17 +155,17 @@ function App() {
                   } />
                   <Route path="/reset-password" element={
                     <AuthGuard requireAuth={false}>
-                      <ResetPasswordPage />
+                      <NativeResetPasswordPage />
                     </AuthGuard>
                   } />
                   <Route path="/auth/callback" element={
                     <AuthGuard requireAuth={false}>
-                      <AuthCallbackPage />
+                      <NativeAuthCallbackPage />
                     </AuthGuard>
                   } />
-                  <Route path="/auth/unified-callback" element={
-                    <AuthGuard requireAuth={false}>
-                      <UnifiedAuthCallbackPage />
+                  <Route path="/profile" element={
+                    <AuthGuard>
+                      <ProfilePage />
                     </AuthGuard>
                   } />
                   <Route path="/auth/error" element={
