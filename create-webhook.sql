@@ -61,3 +61,6 @@ WHERE name = 'auth_profile_creation';
 -- 4. Instructions pour les templates d'emails
 -- Note: Les templates doivent être configurés manuellement dans le dashboard
 -- Authentication → Email Templates
+
+-- IMPORTANT: Ce webhook doit être créé via l'interface :
+-- Platform → Webhooks → Create a new webhook

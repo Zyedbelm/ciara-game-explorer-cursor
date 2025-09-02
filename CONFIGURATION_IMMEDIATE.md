@@ -7,8 +7,8 @@
 #### **Étape 1 : Aller dans Supabase Dashboard**
 1. **Ouvrez** [https://supabase.com/dashboard](https://supabase.com/dashboard)
 2. **Sélectionnez** votre projet `ciara-game-explorer`
-3. **Menu gauche** → **"Database"**
-4. **Onglet** → **"Hooks"**
+3. **Menu gauche** → **"PLATFORM"**
+4. **Cliquez** sur **"Webhooks"**
 
 #### **Étape 2 : Créer le Hook de Profil**
 1. **Cliquez** sur **"Create a new hook"**

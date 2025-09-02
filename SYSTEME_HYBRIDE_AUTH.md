@@ -14,11 +14,11 @@ Au lieu de choisir entre webhook personnalisé ET natif, nous avons créé un **
 
 ### **1. Configuration du Webhook dans Supabase Dashboard**
 
-#### **Étape 1 : Aller dans Database → Hooks**
+#### **Étape 1 : Aller dans Platform → Webhooks**
 1. **Ouvrez** [Supabase Dashboard](https://supabase.com/dashboard)
 2. **Sélectionnez** votre projet `ciara-game-explorer`
-3. **Menu gauche** → **"Database"**
-4. **Onglet** → **"Hooks"**
+3. **Menu gauche** → **"PLATFORM"**
+4. **Cliquez** sur **"Webhooks"**
 
 #### **Étape 2 : Créer le Hook de Profil**
 1. **Cliquez** sur **"Create a new hook"**
