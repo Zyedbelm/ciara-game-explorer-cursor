@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -16,6 +16,7 @@ import { supabase } from '@/integrations/supabase/client';
 
 const AuthPage = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { user, profile, loading: authLoading, isAuthenticated, hasRole, signOut, signIn, signUp } = useAuth();
   const { toast } = useToast();
   const { t, refreshTranslations } = useLanguage();
@@ -25,6 +26,7 @@ const AuthPage = () => {
   const [magicLinkLoading, setMagicLinkLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [resetEmail, setResetEmail] = useState('');
+  const [activeTab, setActiveTab] = useState('signin');
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -37,6 +39,16 @@ const AuthPage = () => {
   useEffect(() => {
     refreshTranslations();
   }, [refreshTranslations]);
+
+  // Gérer l'onglet actif basé sur les paramètres d'URL
+  useEffect(() => {
+    const tab = searchParams.get('tab');
+    if (tab === 'signup') {
+      setActiveTab('signup');
+    } else if (tab === 'signin') {
+      setActiveTab('signin');
+    }
+  }, [searchParams]);
 
   // Redirect if already authenticated
   useEffect(() => {
@@ -237,7 +249,7 @@ const AuthPage = () => {
           </div>
 
           <Card className="border-0 shadow-2xl bg-white/95 backdrop-blur-sm">
-            <Tabs defaultValue="signin" className="w-full">
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
               <TabsList className="grid w-full grid-cols-2 p-1">
                 <TabsTrigger 
                   value="signin" 
@@ -439,7 +451,7 @@ const AuthPage = () => {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <form onSubmit={handleSignUp} className="space-y-4">
+                  <form onSubmit={handleSignUp} className="space-y-3">
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Label htmlFor="firstName">{t('first_name')}</Label>
@@ -522,8 +534,8 @@ const AuthPage = () => {
                           required
                         />
                       </div>
-                      {formData.confirmPassword && formData.password !== formData.confirmPassword && (
-                        <p className="text-sm text-destructive">
+                                              {formData.confirmPassword && formData.password !== formData.confirmPassword && (
+                        <p className="text-sm text-destructive mt-1">
                           {t('passwords_not_match')}
                         </p>
                       )}
@@ -545,7 +557,7 @@ const AuthPage = () => {
                     </Button>
 
                     {/* Séparateur */}
-                    <div className="relative my-6">
+                    <div className="relative my-4">
                       <div className="absolute inset-0 flex items-center">
                         <span className="w-full border-t" />
                       </div>
@@ -587,7 +599,7 @@ const AuthPage = () => {
             </Tabs>
           </Card>
 
-          <div className="text-center mt-6">
+          <div className="text-center mt-8">
             <p className="text-white/70 text-sm">
               {t('terms_privacy_text')}{' '}
               <Link to="/terms" className="underline hover:text-white">

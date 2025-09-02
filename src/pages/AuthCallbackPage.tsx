@@ -1,153 +1,229 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
-import { useLanguage } from '@/contexts/LanguageContext';
-import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Loader2, CheckCircle, XCircle, Home } from 'lucide-react';
-import StandardPageLayout from '@/components/layout/StandardPageLayout';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Loader2, CheckCircle, AlertCircle, ArrowLeft } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 
 const AuthCallbackPage = () => {
-  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { toast } = useToast();
-  const { t } = useLanguage();
   
-  const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
-  const [errorMessage, setErrorMessage] = useState<string>('');
+  const [loading, setLoading] = useState(true);
+  const [success, setSuccess] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const handleAuthCallback = async () => {
       try {
-        // Vérifier s'il y a une erreur dans l'URL
+        setLoading(true);
+        
+        // Récupérer les paramètres de l'URL
+        const accessToken = searchParams.get('access_token');
+        const refreshToken = searchParams.get('refresh_token');
+        const type = searchParams.get('type');
         const error = searchParams.get('error');
         const errorDescription = searchParams.get('error_description');
-
+        
+        // Gérer les erreurs
         if (error) {
-          console.error('OAuth error:', error, errorDescription);
-          setErrorMessage(errorDescription || 'Erreur lors de l\'authentification');
-          setStatus('error');
-          return;
-        }
-
-        // Attendre un peu pour que Supabase traite automatiquement le callback
-        await new Promise(resolve => setTimeout(resolve, 1000));
-
-        // Vérifier si l'utilisateur est maintenant connecté
-        const { data: { user }, error: sessionError } = await supabase.auth.getUser();
-
-        if (sessionError) {
-          console.error('Session error:', sessionError);
-          setErrorMessage(sessionError.message || 'Erreur lors de la vérification de la session');
-          setStatus('error');
-          return;
-        }
-
-        if (user) {
-          console.log('Authentication successful:', user.email);
-          setStatus('success');
+          let errorMessage = "Erreur d'authentification";
           
-          toast({
-            title: 'Connexion réussie',
-            description: `Bienvenue ${user.email || 'utilisateur'} !`,
-            variant: 'default',
-          });
-
-          // Rediriger vers la page d'accueil après un court délai
-          setTimeout(() => {
-            navigate('/', { replace: true });
-          }, 2000);
-        } else {
-          setErrorMessage('Aucun utilisateur trouvé après authentification');
-          setStatus('error');
+          if (error === 'access_denied') {
+            errorMessage = "Accès refusé. Veuillez réessayer.";
+          } else if (errorDescription) {
+            errorMessage = decodeURIComponent(errorDescription);
+          }
+          
+          setError(errorMessage);
+          setLoading(false);
+          return;
         }
-
-      } catch (error) {
-        console.error('Unexpected error during auth callback:', error);
-        setErrorMessage('Erreur inattendue lors de l\'authentification');
-        setStatus('error');
+        
+        // Gérer le magic link
+        if (type === 'magiclink' && accessToken && refreshToken) {
+          const { data, error: sessionError } = await supabase.auth.setSession({
+            access_token: accessToken,
+            refresh_token: refreshToken
+          });
+          
+          if (sessionError) {
+            throw new Error('Erreur lors de l\'établissement de la session');
+          }
+          
+          if (data.session) {
+            setSuccess(true);
+            toast({
+              title: "Connexion réussie !",
+              description: "Vous êtes maintenant connecté",
+              variant: "default"
+            });
+            
+            // Rediriger vers le profil après un délai
+            setTimeout(() => {
+              navigate('/profile', { replace: true });
+            }, 2000);
+          } else {
+            throw new Error('Session non établie');
+          }
+        }
+        
+        // Gérer OAuth (Google, etc.)
+        else if (accessToken && refreshToken) {
+          const { data, error: sessionError } = await supabase.auth.setSession({
+            access_token: accessToken,
+            refresh_token: refreshToken
+          });
+          
+          if (sessionError) {
+            throw new Error('Erreur lors de l\'établissement de la session OAuth');
+          }
+          
+          if (data.session) {
+            setSuccess(true);
+            toast({
+              title: "Connexion réussie !",
+              description: "Vous êtes maintenant connecté",
+              variant: "default"
+            });
+            
+            // Rediriger vers le profil après un délai
+            setTimeout(() => {
+              navigate('/profile', { replace: true });
+            }, 2000);
+          } else {
+            throw new Error('Session OAuth non établie');
+          }
+        }
+        
+        // Aucun paramètre valide
+        else {
+          throw new Error('Paramètres d\'authentification invalides');
+        }
+        
+      } catch (err: any) {
+        console.error('Erreur lors du traitement du callback:', err);
+        setError(err.message || 'Erreur lors de l\'authentification');
+      } finally {
+        setLoading(false);
       }
     };
 
     handleAuthCallback();
   }, [searchParams, navigate, toast]);
 
-  const handleGoHome = () => {
-    navigate('/', { replace: true });
-  };
+  // État de chargement
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-alpine relative overflow-hidden">
+        <div className="absolute inset-0 bg-black/20" />
+        
+        <div className="relative container mx-auto px-4 min-h-screen flex items-center justify-center">
+          <div className="w-full max-w-md">
+            <Card className="border-0 shadow-2xl bg-white/95 backdrop-blur-sm">
+              <CardContent className="p-8 text-center">
+                <div className="flex items-center justify-center mb-4">
+                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                </div>
+                <h2 className="text-xl font-semibold text-gray-800 mb-2">
+                  Traitement de l'authentification...
+                </h2>
+                <p className="text-gray-600">
+                  Veuillez patienter pendant que nous vous connectons.
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
-  const handleRetry = () => {
-    setStatus('loading');
-    setErrorMessage('');
-    // Recharger la page pour réessayer
-    window.location.reload();
-  };
-
-  return (
-    <StandardPageLayout 
-      showBackButton={false}
-      title="Authentification"
-      className="flex items-center justify-center min-h-[60vh]"
-    >
-      <Card className="w-full max-w-md">
-        <CardContent className="p-8 text-center">
-          {status === 'loading' && (
-            <div className="space-y-4">
-              <div className="flex justify-center">
-                <Loader2 className="h-12 w-12 animate-spin text-primary" />
-              </div>
-              <h2 className="text-xl font-semibold">Authentification en cours...</h2>
-              <p className="text-muted-foreground">
-                Veuillez patienter pendant que nous finalisons votre connexion.
-              </p>
-            </div>
-          )}
-
-          {status === 'success' && (
-            <div className="space-y-4">
-              <div className="flex justify-center">
-                <CheckCircle className="h-12 w-12 text-green-500" />
-              </div>
-              <h2 className="text-xl font-semibold text-green-700">
-                Connexion réussie !
-              </h2>
-              <p className="text-muted-foreground">
-                Vous allez être redirigé vers la page d'accueil...
-              </p>
-              <Button onClick={handleGoHome} className="w-full">
-                <Home className="mr-2 h-4 w-4" />
-                Aller à l'accueil
-              </Button>
-            </div>
-          )}
-
-          {status === 'error' && (
-            <div className="space-y-4">
-              <div className="flex justify-center">
-                <XCircle className="h-12 w-12 text-red-500" />
-              </div>
-              <h2 className="text-xl font-semibold text-red-700">
-                Erreur d'authentification
-              </h2>
-              <p className="text-muted-foreground">
-                {errorMessage}
-              </p>
-              <div className="flex gap-2">
-                <Button onClick={handleRetry} variant="outline" className="flex-1">
-                  Réessayer
+  // État de succès
+  if (success) {
+    return (
+      <div className="min-h-screen bg-gradient-alpine relative overflow-hidden">
+        <div className="absolute inset-0 bg-black/20" />
+        
+        <div className="relative container mx-auto px-4 min-h-screen flex items-center justify-center">
+          <div className="w-full max-w-md">
+            <Card className="border-0 shadow-2xl bg-white/95 backdrop-blur-sm">
+              <CardHeader className="text-center">
+                <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <CheckCircle className="h-8 w-8 text-green-600" />
+                </div>
+                <CardTitle className="text-2xl text-green-700">
+                  Connexion réussie !
+                </CardTitle>
+                <CardDescription>
+                  Vous allez être redirigé vers votre profil dans quelques secondes.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Button
+                  onClick={() => navigate('/profile')}
+                  className="w-full bg-primary hover:bg-primary/90"
+                >
+                  Aller au profil maintenant
                 </Button>
-                <Button onClick={handleGoHome} className="flex-1">
-                  <Home className="mr-2 h-4 w-4" />
-                  Accueil
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // État d'erreur
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gradient-alpine relative overflow-hidden">
+        <div className="absolute inset-0 bg-black/20" />
+        
+        <div className="absolute top-6 left-6 z-10">
+          <Button
+            variant="ghost"
+            className="text-white hover:bg-white/10"
+            onClick={() => navigate('/auth')}
+          >
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Retour à la connexion
+          </Button>
+        </div>
+
+        <div className="relative container mx-auto px-4 min-h-screen flex items-center justify-center">
+          <div className="w-full max-w-md">
+            <Card className="border-0 shadow-2xl bg-white/95 backdrop-blur-sm">
+              <CardHeader className="text-center">
+                <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <AlertCircle className="h-8 w-8 text-red-600" />
+                </div>
+                <CardTitle className="text-2xl text-red-700">
+                  Erreur d'authentification
+                </CardTitle>
+                <CardDescription>
+                  {error}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Button
+                  onClick={() => navigate('/auth')}
+                  className="w-full bg-primary hover:bg-primary/90"
+                >
+                  Retour à la connexion
                 </Button>
-              </div>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-    </StandardPageLayout>
-  );
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // État par défaut (ne devrait jamais arriver)
+  return null;
 };
 
 export default AuthCallbackPage;

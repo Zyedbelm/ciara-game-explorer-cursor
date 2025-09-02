@@ -84,26 +84,78 @@ export class PasswordResetService {
    */
   static async updatePassword(password: string): Promise<PasswordResetResult> {
     try {
-      const { error } = await supabase.auth.updateUser({
-        password: password
-      });
-
-      if (error) {
+      // 1. Vérifier que l'utilisateur est connecté
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      
+      if (userError || !user) {
         return {
           success: false,
-          error: error.message
+          error: 'Session utilisateur invalide. Veuillez utiliser le lien de réinitialisation.'
         };
       }
 
-      // Déconnecter l'utilisateur après la mise à jour
-      await supabase.auth.signOut();
+      // 2. Vérifier que la session est valide
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError || !session) {
+        return {
+          success: false,
+          error: 'Session expirée. Veuillez utiliser le lien de réinitialisation.'
+        };
+      }
 
+      // 3. Mettre à jour le mot de passe
+      const { error: updateError } = await supabase.auth.updateUser({
+        password: password
+      });
+
+      if (updateError) {
+        console.error('Erreur de mise à jour du mot de passe:', updateError);
+        
+        // Analyser le type d'erreur
+        if (updateError.message.includes('422')) {
+          return {
+            success: false,
+            error: 'Données de mot de passe invalides. Vérifiez les critères de sécurité.'
+          };
+        }
+        
+        if (updateError.message.includes('401') || updateError.message.includes('403')) {
+          return {
+            success: false,
+            error: 'Session expirée. Veuillez utiliser le lien de réinitialisation.'
+          };
+        }
+        
+        return {
+          success: false,
+          error: `Erreur lors de la mise à jour: ${updateError.message}`
+        };
+      }
+
+      // 4. Succès - NE PAS déconnecter immédiatement
+      // L'utilisateur doit pouvoir confirmer la mise à jour
       return { success: true };
+      
     } catch (error: any) {
+      console.error('Erreur inattendue lors de la mise à jour du mot de passe:', error);
+      
       return {
         success: false,
         error: error.message || 'Erreur lors de la mise à jour du mot de passe'
       };
+    }
+  }
+
+  /**
+   * Déconnecte l'utilisateur après confirmation de la mise à jour
+   * À appeler explicitement après confirmation
+   */
+  static async signOutAfterConfirmation(): Promise<void> {
+    try {
+      await supabase.auth.signOut();
+    } catch (error) {
+      console.error('Erreur lors de la déconnexion:', error);
     }
   }
 

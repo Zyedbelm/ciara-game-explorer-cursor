@@ -116,9 +116,19 @@ const ResetPasswordPage = () => {
         variant: "default"
       });
 
-      // Redirect after 3 seconds
-      setTimeout(() => {
-        navigate('/auth', { replace: true });
+      // Attendre un peu pour que l'utilisateur voie le message de succès
+      setTimeout(async () => {
+        try {
+          // Déconnecter l'utilisateur après confirmation
+          await PasswordResetService.signOutAfterConfirmation();
+          
+          // Rediriger vers la page de connexion
+          navigate('/auth', { replace: true });
+        } catch (error) {
+          console.error('Erreur lors de la déconnexion:', error);
+          // Rediriger quand même
+          navigate('/auth', { replace: true });
+        }
       }, 3000);
 
     } catch (err: any) {

@@ -21,6 +21,7 @@ import StandardPageLayout from '@/components/layout/StandardPageLayout';
 import BadgeDisplay from '@/components/profile/BadgeDisplay';
 import AvatarUpload from '@/components/profile/AvatarUpload';
 import MonthlyStatsCard from '@/components/profile/MonthlyStatsCard';
+import { usePasswordManagement } from '@/hooks/usePasswordManagement';
 
 import { 
   User, 
@@ -45,7 +46,7 @@ import {
 } from 'lucide-react';
 
 const ProfilePage = () => {
-  const { user, profile, loading, isAuthenticated, refreshProfile, updateProfile, updateEmail, updatePassword } = useStableAuth();
+  const { user, profile, loading, isAuthenticated, refreshProfile, updateProfile, updateEmail } = useStableAuth();
   const { hasRole } = useAuth();
   const { stats, loading: statsLoading } = useOptimizedUserStats();
   const { t } = useLanguage();
@@ -54,10 +55,12 @@ const ProfilePage = () => {
   const [cityName, setCityName] = useState<string>('');
   const { toast } = useToast();
 
+  // Nouveau hook de gestion des mots de passe
+  const { updatePassword, loading: isPasswordLoading, validatePassword } = usePasswordManagement();
+
   // Loading states
   const [isProfileLoading, setIsProfileLoading] = useState(false);
   const [isEmailLoading, setIsEmailLoading] = useState(false);
-  const [isPasswordLoading, setIsPasswordLoading] = useState(false);
   
   // Form states
   const [cities, setCities] = useState<any[]>([]);
@@ -293,36 +296,7 @@ const ProfilePage = () => {
     `${city.name}, ${city.country}`.toLowerCase().includes(formData.city_name.toLowerCase())
   ).slice(0, 10);
 
-  // Password functions (sans current password)
-  const validatePassword = (password: string): string[] => {
-    const errors: string[] = [];
-    
-    if (password.length < 8) {
-      errors.push('Le mot de passe doit contenir au moins 8 caractères');
-    }
-    if (password.length > 128) {
-      errors.push('Le mot de passe ne doit pas dépasser 128 caractères');
-    }
-    if (!/(?=.*[a-z])/.test(password)) {
-      errors.push('Le mot de passe doit contenir au moins une lettre minuscule');
-    }
-    if (!/(?=.*[A-Z])/.test(password)) {
-      errors.push('Le mot de passe doit contenir au moins une lettre majuscule');
-    }
-    if (!/(?=.*\d)/.test(password)) {
-      errors.push('Le mot de passe doit contenir au moins un chiffre');
-    }
-    if (!/(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?`~])/.test(password)) {
-      errors.push('Le mot de passe doit contenir au moins un caractère spécial');
-    }
-    
-    const commonPasswords = ['password', 'password123', '123456', 'qwerty', 'admin'];
-    if (commonPasswords.some(common => password.toLowerCase().includes(common))) {
-      errors.push('Le mot de passe ne doit pas contenir de mots communs');
-    }
-    
-    return errors;
-  };
+  // Password functions (sans current password) - Utilise le hook usePasswordManagement
 
   const handlePasswordChange = (field: 'newPassword' | 'confirmPassword', value: string) => {
     setPasswords(prev => ({ ...prev, [field]: value }));
@@ -356,14 +330,24 @@ const ProfilePage = () => {
       return;
     }
     
-    setIsPasswordLoading(true);
     setPasswordErrors([]);
     
     try {
       const result = await updatePassword(passwords.newPassword);
       
-      if (result?.error) {
-        throw result.error;
+      if (!result.success) {
+        if (result.requiresReauth) {
+          toast({
+            title: "Session expirée",
+            description: "Votre session a expiré. Veuillez vous reconnecter.",
+            variant: "destructive",
+          });
+          // Rediriger vers la page de connexion
+          window.location.href = '/auth';
+          return;
+        }
+        
+        throw new Error(result.error);
       }
       
       toast({
@@ -378,7 +362,7 @@ const ProfilePage = () => {
     } catch (error: any) {
       console.error('Erreur lors du changement de mot de passe:', error);
       
-      const errorMessage = 'Impossible de modifier le mot de passe. Veuillez réessayer.';
+      const errorMessage = error.message || 'Impossible de modifier le mot de passe. Veuillez réessayer.';
       
       toast({
         title: "Erreur",
@@ -387,8 +371,6 @@ const ProfilePage = () => {
       });
       
       setPasswordErrors([errorMessage]);
-    } finally {
-      setIsPasswordLoading(false);
     }
   };
 

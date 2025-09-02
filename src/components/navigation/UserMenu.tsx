@@ -69,7 +69,7 @@ const UserMenu: React.FC<UserMenuProps> = ({ variant = 'default' }) => {
           size={isMobile ? "sm" : "default"}
           className={isTransparent ? 'bg-white text-primary hover:bg-white/90' : ''}
         >
-          <Link to="/auth" className="flex items-center">
+          <Link to="/auth?tab=signup" className="flex items-center">
             {isMobile ? (
               <UserPlus className="h-4 w-4" />
             ) : (
