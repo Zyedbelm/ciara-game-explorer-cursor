@@ -19,7 +19,7 @@ serve(async (req) => {
     console.log('🔔 Auth Webhook - Type:', type)
     console.log('🔔 Auth Webhook - Record:', record?.id ? 'User ID: ' + record.id : 'No user ID')
     
-    // Only handle user creation - let Supabase handle emails natively
+    // Handle user creation - create profile and send confirmation email
     if (type === 'INSERT' && record?.id) {
       console.log('👤 Création de profil pour utilisateur:', record.id)
       
@@ -38,6 +38,7 @@ serve(async (req) => {
           role: 'visitor', // Default role
           first_name: record.user_metadata?.first_name || '',
           last_name: record.user_metadata?.last_name || '',
+          total_points: 0, // Initialize with 0 points
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
         })
@@ -93,6 +94,64 @@ serve(async (req) => {
         JSON.stringify({ 
           message: 'Profile created successfully and confirmation email sent via Resend',
           user_id: record.id 
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+    
+    // Handle email confirmation - award 10 points and send welcome email
+    if (type === 'UPDATE' && record?.id && record?.email_confirmed_at && !old_record?.email_confirmed_at) {
+      console.log('✅ Email confirmé pour utilisateur:', record.id)
+      console.log('🎁 Attribution des 10 points de bienvenue...')
+      
+      // Create Supabase client
+      const supabaseUrl = Deno.env.get('SUPABASE_URL')!
+      const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+      
+      const supabase = createClient(supabaseUrl, supabaseServiceKey)
+      
+      try {
+        // 1. Attribuer 10 points de bienvenue
+        const { error: pointsError } = await supabase
+          .from('profiles')
+          .update({ 
+            total_points: 10,
+            updated_at: new Date().toISOString()
+          })
+          .eq('user_id', record.id)
+        
+        if (pointsError) {
+          console.error('❌ Erreur attribution points:', pointsError)
+        } else {
+          console.log('✅ 10 points de bienvenue attribués avec succès')
+        }
+        
+        // 2. Envoyer l'email de bienvenue
+        console.log('📧 Envoi de l\'email de bienvenue...')
+        const { data: welcomeData, error: welcomeError } = await supabase.functions.invoke('send-welcome-ciara', {
+          body: {
+            userName: record.user_metadata?.first_name || record.user_metadata?.last_name || record.email.split('@')[0],
+            email: record.email,
+            loginUrl: 'https://ciara.city/auth'
+          }
+        })
+        
+        if (welcomeError) {
+          console.error('❌ Erreur envoi email de bienvenue:', welcomeError)
+        } else {
+          console.log('✅ Email de bienvenue envoyé avec succès')
+          console.log('📧 Message ID:', welcomeData?.messageId)
+        }
+        
+      } catch (error) {
+        console.error('❌ Erreur lors du traitement post-confirmation:', error)
+      }
+      
+      return new Response(
+        JSON.stringify({ 
+          message: 'Welcome bonus awarded and welcome email sent',
+          user_id: record.id,
+          points_awarded: 10
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
