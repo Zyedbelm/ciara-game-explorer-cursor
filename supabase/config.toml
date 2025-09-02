@@ -70,12 +70,12 @@ pop3_port = 54326
 # The maximum file size allowed (e.g. "5MB", "500KB").
 file_size_limit = "50MiB"
 
-# Configuration Auth native simplifiée
+# Configuration Auth hybride intelligente
 [auth]
 # URL de base de votre site - utilisée pour les redirections OAuth
 site_url = "https://ciara.city"
 
-# Configuration native Supabase - pas de webhooks personnalisés
+# Configuration hybride : webhook minimal + emails natifs
 additional_redirect_urls = [
   "https://ciara.city/profile",
   "https://ciara.city/reset-password",
@@ -84,6 +84,9 @@ additional_redirect_urls = [
   "http://localhost:8080/reset-password",
   "http://localhost:8080/auth/callback"
 ]
+
+# Note: Le webhook auth-webhook sera configuré via le dashboard Supabase
+# pour gérer uniquement la création automatique des profils
 # How long tokens are valid for, in seconds. Defaults to 3600 (1 hour), maximum 604,800 seconds (1
 # week).
 jwt_expiry = 3600
