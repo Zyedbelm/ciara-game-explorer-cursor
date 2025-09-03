@@ -64,12 +64,12 @@ serve(async (req) => {
       // ENVOYER L'EMAIL DE CONFIRMATION VIA RESEND (COMME LES PARTENAIRES)
       console.log('📧 Envoi automatique de l\'email de confirmation via Resend...')
       try {
-        // Générer le lien de confirmation
+        // Générer le lien de confirmation SIMPLIFIÉ (pas de callback complexe)
         const { data: linkData, error: linkError } = await supabase.auth.admin.generateLink({
           type: 'signup',
           email: record.email,
           options: {
-            redirectTo: 'https://ciara.city/auth/callback'
+            redirectTo: 'https://ciara.city/auth' // Redirection simple vers la page de connexion
           }
         })
         

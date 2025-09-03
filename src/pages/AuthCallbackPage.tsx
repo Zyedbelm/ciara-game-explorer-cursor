@@ -56,9 +56,9 @@ const AuthCallbackPage = () => {
           return;
         }
         
-        // Gérer le magic link avec code
+        // Gérer le magic link avec code (pour mot de passe oublié)
         if (code && !accessToken && !refreshToken) {
-          console.log('🔍 Magic Link avec code détecté, échange contre session...');
+          console.log('🔍 Magic Link avec code détecté (mot de passe oublié)...');
           
           const { data, error: sessionError } = await supabase.auth.exchangeCodeForSession(code);
           
@@ -85,64 +85,7 @@ const AuthCallbackPage = () => {
           }
         }
         
-        // Gérer le magic link avec tokens (ancienne méthode)
-        else if (type === 'magiclink' && accessToken && refreshToken) {
-          console.log('🔍 Magic Link avec tokens détecté...');
-          const { data, error: sessionError } = await supabase.auth.setSession({
-            access_token: accessToken,
-            refresh_token: refreshToken
-          });
-          
-          if (sessionError) {
-            throw new Error('Erreur lors de l\'établissement de la session');
-          }
-          
-          if (data.session) {
-            setSuccess(true);
-            toast({
-              title: "Connexion réussie !",
-              description: "Vous êtes maintenant connecté",
-              variant: "default"
-            });
-            
-            // Rediriger vers le profil après un délai
-            setTimeout(() => {
-              navigate('/profile', { replace: true });
-            }, 2000);
-          } else {
-            throw new Error('Session non établie');
-          }
-        }
-        
-        // Gérer OAuth (Google, etc.)
-        else if (accessToken && refreshToken) {
-          const { data, error: sessionError } = await supabase.auth.setSession({
-            access_token: accessToken,
-            refresh_token: refreshToken
-          });
-          
-          if (sessionError) {
-            throw new Error('Erreur lors de l\'établissement de la session OAuth');
-          }
-          
-          if (data.session) {
-            setSuccess(true);
-            toast({
-              title: "Connexion réussie !",
-              description: "Vous êtes maintenant connecté",
-              variant: "default"
-            });
-            
-            // Rediriger vers le profil après un délai
-            setTimeout(() => {
-              navigate('/profile', { replace: true });
-            }, 2000);
-          } else {
-            throw new Error('Session OAuth non établie');
-          }
-        }
-        
-        // Gérer la confirmation d'email de signup (nouveau)
+        // Gérer la confirmation d'email de signup (SIMPLIFIÉ)
         else if (type === 'signup' && accessToken && refreshToken) {
           console.log('🔍 Confirmation d\'email de signup détectée...');
           
@@ -234,21 +177,13 @@ const AuthCallbackPage = () => {
                 <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
                   <CheckCircle className="h-8 w-8 text-green-600" />
                 </div>
-                <CardTitle className="text-2xl text-green-700">
-                  Connexion réussie !
+                <CardTitle className="text-2xl font-bold text-green-600">
+                  Authentification réussie !
                 </CardTitle>
-                <CardDescription>
-                  Vous allez être redirigé vers votre profil dans quelques secondes.
+                <CardDescription className="text-gray-600">
+                  Vous allez être redirigé vers votre profil dans quelques secondes...
                 </CardDescription>
               </CardHeader>
-              <CardContent>
-                <Button
-                  onClick={() => navigate('/profile')}
-                  className="w-full bg-primary hover:bg-primary/90"
-                >
-                  Aller au profil maintenant
-                </Button>
-              </CardContent>
             </Card>
           </div>
         </div>
@@ -257,53 +192,39 @@ const AuthCallbackPage = () => {
   }
 
   // État d'erreur
-  if (error) {
-    return (
-      <div className="min-h-screen bg-gradient-alpine relative overflow-hidden">
-        <div className="absolute inset-0 bg-black/20" />
-        
-        <div className="absolute top-6 left-6 z-10">
-          <Button
-            variant="ghost"
-            className="text-white hover:bg-white/10"
-            onClick={() => navigate('/auth')}
-          >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Retour à la connexion
-          </Button>
-        </div>
-
-        <div className="relative container mx-auto px-4 min-h-screen flex items-center justify-center">
-          <div className="w-full max-w-md">
-            <Card className="border-0 shadow-2xl bg-white/95 backdrop-blur-sm">
-              <CardHeader className="text-center">
-                <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <AlertCircle className="h-8 w-8 text-red-600" />
-                </div>
-                <CardTitle className="text-2xl text-red-700">
-                  Erreur d'authentification
-                </CardTitle>
-                <CardDescription>
-                  {error}
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Button
-                  onClick={() => navigate('/auth')}
-                  className="w-full bg-primary hover:bg-primary/90"
-                >
-                  Retour à la connexion
-                </Button>
-              </CardContent>
-            </Card>
-          </div>
+  return (
+    <div className="min-h-screen bg-gradient-alpine relative overflow-hidden">
+      <div className="absolute inset-0 bg-black/20" />
+      
+      <div className="relative container mx-auto px-4 min-h-screen flex items-center justify-center">
+        <div className="w-full max-w-md">
+          <Card className="border-0 shadow-2xl bg-white/95 backdrop-blur-sm">
+            <CardHeader className="text-center">
+              <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <AlertCircle className="h-8 w-8 text-red-600" />
+              </div>
+              <CardTitle className="text-2xl font-bold text-red-600">
+                Erreur d'authentification
+              </CardTitle>
+              <CardDescription className="text-gray-600">
+                {error || 'Une erreur est survenue lors de l\'authentification'}
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="p-6 space-y-4">
+              <Button 
+                onClick={() => navigate('/auth')} 
+                className="w-full"
+                variant="outline"
+              >
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Retour à la connexion
+              </Button>
+            </CardContent>
+          </Card>
         </div>
       </div>
-    );
-  }
-
-  // État par défaut (ne devrait jamais arriver)
-  return null;
+    </div>
+  );
 };
 
 export default AuthCallbackPage;
