@@ -142,9 +142,45 @@ const AuthCallbackPage = () => {
           }
         }
         
+        // Gérer la confirmation d'email de signup (nouveau)
+        else if (type === 'signup' && accessToken && refreshToken) {
+          console.log('🔍 Confirmation d\'email de signup détectée...');
+          
+          const { data, error: sessionError } = await supabase.auth.setSession({
+            access_token: accessToken,
+            refresh_token: refreshToken
+          });
+          
+          if (sessionError) {
+            throw new Error('Erreur lors de l\'établissement de la session de signup');
+          }
+          
+          if (data.session) {
+            setSuccess(true);
+            toast({
+              title: "Email confirmé avec succès !",
+              description: "Votre compte est maintenant actif et vous êtes connecté",
+              variant: "default"
+            });
+            
+            // Rediriger vers le profil après un délai
+            setTimeout(() => {
+              navigate('/profile', { replace: true });
+            }, 2000);
+          } else {
+            throw new Error('Session de signup non établie');
+          }
+        }
+        
         // Aucun paramètre valide
         else {
-          throw new Error('Paramètres d\'authentification invalides');
+          console.log('🔍 Aucun paramètre valide détecté:', {
+            accessToken: !!accessToken,
+            refreshToken: !!refreshToken,
+            type,
+            code
+          });
+          throw new Error('Paramètres d\'authentification invalides ou non reconnus');
         }
         
       } catch (err: any) {

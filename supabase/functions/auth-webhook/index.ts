@@ -23,9 +23,17 @@ serve(async (req) => {
     if (type === 'INSERT' && record?.id) {
       console.log('👤 Création de profil pour utilisateur:', record.id)
       
-      // Create Supabase client
-      const supabaseUrl = Deno.env.get('SUPABASE_URL')!
-      const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+      // Create Supabase client - CORRECTION DES NOMS DE VARIABLES
+      const supabaseUrl = Deno.env.get('SUPABASE_URL') || 'https://pohqkspsdvvbqrgzfayl.supabase.co'
+      const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || Deno.env.get('SERVICE_ROLE_KEY')
+      
+      if (!supabaseServiceKey) {
+        console.error('❌ Erreur: SUPABASE_SERVICE_ROLE_KEY non configurée')
+        return new Response(
+          JSON.stringify({ error: 'Service role key not configured' }),
+          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        )
+      }
       
       const supabase = createClient(supabaseUrl, supabaseServiceKey)
       
@@ -104,9 +112,17 @@ serve(async (req) => {
       console.log('✅ Email confirmé pour utilisateur:', record.id)
       console.log('🎁 Attribution des 10 points de bienvenue...')
       
-      // Create Supabase client
-      const supabaseUrl = Deno.env.get('SUPABASE_URL')!
-      const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+      // Create Supabase client - CORRECTION DES NOMS DE VARIABLES
+      const supabaseUrl = Deno.env.get('SUPABASE_URL') || 'https://pohqkspsdvvbqrgzfayl.supabase.co'
+      const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || Deno.env.get('SERVICE_ROLE_KEY')
+      
+      if (!supabaseServiceKey) {
+        console.error('❌ Erreur: SUPABASE_SERVICE_ROLE_KEY non configurée')
+        return new Response(
+          JSON.stringify({ error: 'Service role key not configured' }),
+          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        )
+      }
       
       const supabase = createClient(supabaseUrl, supabaseServiceKey)
       

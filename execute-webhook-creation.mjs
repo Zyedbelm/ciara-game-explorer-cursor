@@ -1,17 +1,15 @@
-#!/usr/bin/env node
-
 import { createClient } from '@supabase/supabase-js'
 
 // Configuration Supabase avec la clé anonyme
 const SUPABASE_URL = 'https://pohqkspsdvvbqrgzfayl.supabase.co'
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBvaHFrc3BzZHZ2YnFyZ3pmYXlsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTIyMzY0NDQsImV4cCI6MjA2NzgxMjQ0NH0.r1AXZ_w5ifbjj7AOyEtSWpGFSuyYji8saicIcoLNShk'
 
-console.log('🚀 Création directe du webhook auth-webhook via l\'API...')
+console.log('🚀 Exécution directe de la création du webhook auth-webhook...')
 console.log('🌐 URL:', SUPABASE_URL)
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
 
-async function createWebhookDirect() {
+async function executeWebhookCreation() {
   try {
     console.log('\n📊 1. Vérification de l\'état actuel...')
     
@@ -21,8 +19,8 @@ async function createWebhookDirect() {
         body: {
           type: 'TEST',
           record: { 
-            id: 'test-direct-' + Date.now(), 
-            email: 'test-direct@example.com' 
+            id: 'test-execution-' + Date.now(), 
+            email: 'test-execution@example.com' 
           }
         }
       })
@@ -39,54 +37,45 @@ async function createWebhookDirect() {
       return
     }
     
-    console.log('\n🔗 2. Tentative de création du webhook via l\'API SQL...')
+    console.log('\n🔗 2. Tentative de création du webhook via l\'API...')
     
-    // Essayer de créer le webhook via l'API SQL
+    // Essayer de créer le webhook via l'API Supabase
     try {
-      // Créer la fonction de webhook
-      const { data: functionResult, error: functionError } = await supabase
-        .from('_supabase_migrations')
-        .insert({
-          name: 'create_auth_webhook',
-          sql: `
-            -- Créer la fonction de webhook
-            CREATE OR REPLACE FUNCTION public.handle_auth_user_webhook()
-            RETURNS TRIGGER AS $$
-            BEGIN
-              PERFORM net.http_post(
-                url := 'https://pohqkspsdvvbqrgzfayl.supabase.co/functions/v1/auth-webhook',
-                headers := '{"Content-Type": "application/json"}',
-                body := json_build_object(
-                  'type', TG_OP,
-                  'record', row_to_json(NEW),
-                  'old_record', CASE WHEN TG_OP = 'UPDATE' THEN row_to_json(OLD) ELSE NULL END
-                )::text
-              );
-              RETURN NEW;
-            END;
-            $$ LANGUAGE plpgsql SECURITY DEFINER;
+      // Créer la fonction de webhook dans la base de données
+      const { data: functionResult, error: functionError } = await supabase.rpc('exec_sql', {
+        sql_query: `
+          -- Créer la fonction de webhook si elle n'existe pas
+          CREATE OR REPLACE FUNCTION public.handle_auth_user_webhook()
+          RETURNS TRIGGER AS $$
+          BEGIN
+            -- Appeler la fonction Edge auth-webhook
+            PERFORM net.http_post(
+              url := 'https://pohqkspsdvvbqrgzfayl.supabase.co/functions/v1/auth-webhook',
+              headers := '{"Content-Type": "application/json"}',
+              body := json_build_object(
+                'type', TG_OP,
+                'record', row_to_json(NEW),
+                'old_record', CASE WHEN TG_OP = 'UPDATE' THEN row_to_json(OLD) ELSE NULL END
+              )::text
+            );
             
-            -- Créer le trigger
-            DROP TRIGGER IF EXISTS auth_users_webhook ON auth.users;
-            CREATE TRIGGER auth_users_webhook
-              AFTER INSERT OR UPDATE ON auth.users
-              FOR EACH ROW
-              EXECUTE FUNCTION public.handle_auth_user_webhook();
-          `
-        })
+            RETURN NEW;
+          END;
+          $$ LANGUAGE plpgsql SECURITY DEFINER;
+        `
+      })
       
       if (functionError) {
-        console.log('⚠️  Impossible de créer via migrations:', functionError.message)
-        console.log('💡 Tentative alternative...')
+        console.log('⚠️  Impossible de créer la fonction via RPC:', functionError.message)
+        console.log('💡 Tentative alternative via SQL direct...')
       } else {
-        console.log('✅ Webhook créé via migrations')
-        return
+        console.log('✅ Fonction de webhook créée avec succès')
       }
-    } catch (migrationError) {
-      console.log('⚠️  Approche migrations non disponible')
+    } catch (rpcError) {
+      console.log('⚠️  RPC non disponible, tentative alternative...')
     }
     
-    console.log('\n🔧 3. Approche alternative - Création manuelle requise...')
+    console.log('\n📋 3. État actuel et prochaines étapes...')
     
     console.log('✅ Ce qui fonctionne:')
     console.log('   • Fonction Edge auth-webhook accessible')
@@ -97,11 +86,13 @@ async function createWebhookDirect() {
     console.log('   • Trigger sur auth.users pour déclencher le webhook')
     console.log('   • Variables d\'environnement dans la fonction Edge')
     
-    console.log('\n🔴 URGENT - Créer le webhook manquant:')
+    console.log('\n🔧 4. Actions requises (à faire manuellement)...')
+    
+    console.log('\n🔴 URGENT - Créer le trigger manquant:')
     console.log('   1. Aller dans [Supabase Dashboard > SQL Editor](https://supabase.com/dashboard/project/pohqkspsdvvbqrgzfayl/sql)')
     console.log('   2. Exécuter ce code SQL:')
     console.log('   ```sql')
-    console.log('   -- Créer la fonction de webhook')
+    console.log('   -- Créer le trigger sur auth.users')
     console.log('   CREATE OR REPLACE FUNCTION public.handle_auth_user_webhook()')
     console.log('   RETURNS TRIGGER AS $$')
     console.log('   BEGIN')
@@ -131,23 +122,15 @@ async function createWebhookDirect() {
     console.log('   • Ou utiliser la CLI: supabase secrets set RESEND_API_KEY=votre_clé')
     console.log('   • Variables requises: RESEND_API_KEY, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY')
     
-    console.log('\n🎯 4. Résumé de la solution...')
+    console.log('\n🎯 5. Résumé de la solution...')
     console.log('   • Le webhook Edge existe et fonctionne')
     console.log('   • Il manque le trigger sur auth.users')
     console.log('   • Une fois le trigger créé, tout fonctionnera automatiquement')
-    
-    console.log('\n💡 5. Alternative - Utiliser la CLI Supabase:')
-    console.log('   ```bash')
-    console.log('   # Configurer les variables d\'environnement')
-    console.log('   supabase secrets set RESEND_API_KEY=votre_clé_resend')
-    console.log('   supabase secrets set SUPABASE_URL=https://pohqkspsdvvbqrgzfayl.supabase.co')
-    console.log('   supabase secrets set SUPABASE_SERVICE_ROLE_KEY=votre_clé_service')
-    console.log('   ```')
     
   } catch (error) {
     console.error('❌ Erreur générale:', error.message)
   }
 }
 
-// Exécuter la création directe
-createWebhookDirect()
+// Exécuter la création du webhook
+executeWebhookCreation()
