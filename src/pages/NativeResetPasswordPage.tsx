@@ -93,19 +93,35 @@ const NativeResetPasswordPage = () => {
             return;
           }
           
-          console.log('✅ Session établie avec succès');
+          console.log('✅ Session établie avec succès via tokens');
           setSessionReady(true);
           
           // Nettoyer l'URL des paramètres (query et hash)
           window.history.replaceState({}, document.title, '/reset-password');
         } else {
-          console.log('⚠️ Aucun token de recovery - redirection vers auth');
-          toast({
-            title: "Accès refusé",
-            description: "Veuillez utiliser le lien de réinitialisation de votre email",
-            variant: "destructive"
-          });
-          navigate('/auth', { replace: true });
+          // Pas de tokens dans l'URL - vérifier s'il y a déjà une session active
+          console.log('🔍 Pas de tokens recovery - vérification session existante...');
+          
+          const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+          
+          if (sessionError) {
+            console.error('❌ Erreur récupération session:', sessionError);
+            navigate('/auth', { replace: true });
+            return;
+          }
+          
+          if (session) {
+            console.log('✅ Session existante trouvée - autorisation reset password');
+            setSessionReady(true);
+          } else {
+            console.log('⚠️ Aucune session - redirection vers auth');
+            toast({
+              title: "Accès refusé",
+              description: "Veuillez utiliser le lien de réinitialisation de votre email",
+              variant: "destructive"
+            });
+            navigate('/auth', { replace: true });
+          }
         }
       } catch (err) {
         console.error('❌ Erreur callback:', err);
