@@ -106,21 +106,55 @@ const AuthPage = () => {
     setResetLoading(true);
     
     try {
-      // UTILISER LA NOUVELLE EDGE FUNCTION CUSTOM
-      const { data, error } = await supabase.functions.invoke('send-password-reset-custom', {
-        body: {
-          email: resetEmail,
-          userName: '' // Sera récupéré automatiquement par la fonction
-        }
-      });
+      console.log('🔐 Tentative reset password pour:', resetEmail);
       
-      if (error) {
-        throw error;
+      // STRATÉGIE HYBRIDE: Essayer Edge Function puis fallback natif
+      let resetSuccess = false;
+      let resetMethod = '';
+      
+      // 1. Essayer Edge Function custom d'abord
+      try {
+        const { data, error } = await supabase.functions.invoke('send-password-reset-custom', {
+          body: {
+            email: resetEmail,
+            userName: '' 
+          }
+        });
+        
+        if (!error && data?.success) {
+          resetSuccess = true;
+          resetMethod = 'Edge Function custom';
+          console.log('✅ Edge Function réussie');
+        } else {
+          console.log('⚠️ Edge Function échouée, tentative fallback natif...');
+          throw new Error('Edge Function failed');
+        }
+      } catch (edgeFunctionError) {
+        console.log('🔄 Fallback vers méthode Supabase native...');
+        
+        // 2. Fallback vers méthode native Supabase
+        const { error: nativeError } = await supabase.auth.resetPasswordForEmail(resetEmail, {
+          redirectTo: window.location.origin.includes('localhost') 
+            ? 'http://localhost:8080/reset-password'
+            : 'https://ciara.city/reset-password'
+        });
+        
+        if (!nativeError) {
+          resetSuccess = true;
+          resetMethod = 'Supabase native';
+          console.log('✅ Méthode native réussie');
+        } else {
+          throw nativeError;
+        }
+      }
+      
+      if (!resetSuccess) {
+        throw new Error('Toutes les méthodes ont échoué');
       }
 
       toast({
         title: "Email envoyé !",
-        description: "Un lien de réinitialisation a été envoyé à votre adresse email. Vérifiez votre boîte de réception et cliquez sur le lien dans l'heure qui suit.",
+        description: `Un lien de réinitialisation a été envoyé via ${resetMethod}. Vérifiez votre boîte de réception et cliquez sur le lien dans l'heure qui suit.`,
         variant: "default"
       });
       

@@ -215,6 +215,37 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log('🔗 URL de redirection:', redirectUrl);
 
+    // Vérifier si l'utilisateur existe
+    const { data: existingUsers } = await supabase.auth.admin.listUsers({
+      filter: `email.eq.${email}`
+    });
+
+    if (existingUsers.users.length === 0) {
+      console.log('⚠️ Utilisateur inexistant, création automatique...');
+      
+      // Créer l'utilisateur s'il n'existe pas
+      const { error: createError } = await supabase.auth.admin.createUser({
+        email: email,
+        email_confirm: true, // Confirmer automatiquement
+        user_metadata: { 
+          name: userName || 'Nouvel utilisateur' 
+        }
+      });
+      
+      if (createError) {
+        console.error('❌ Erreur création utilisateur:', createError);
+        return new Response(
+          JSON.stringify({ error: "Failed to create user for reset" }),
+          { 
+            status: 500, 
+            headers: { ...corsHeaders, "Content-Type": "application/json" } 
+          }
+        );
+      }
+      
+      console.log('✅ Utilisateur créé avec succès');
+    }
+
     // Générer le lien de reset password
     const { data: resetData, error: resetError } = await supabase.auth.admin.generateLink({
       type: 'recovery',
@@ -226,8 +257,12 @@ const handler = async (req: Request): Promise<Response> => {
 
     if (resetError) {
       console.error('❌ Erreur génération lien reset:', resetError);
+      console.error('📋 Détails erreur:', JSON.stringify(resetError, null, 2));
       return new Response(
-        JSON.stringify({ error: "Failed to generate reset link" }),
+        JSON.stringify({ 
+          error: "Failed to generate reset link", 
+          details: resetError.message 
+        }),
         { 
           status: 500, 
           headers: { ...corsHeaders, "Content-Type": "application/json" } 

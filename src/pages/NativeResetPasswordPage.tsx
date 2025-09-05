@@ -99,7 +99,9 @@ const NativeResetPasswordPage = () => {
           // Nettoyer l'URL des paramètres (query et hash)
           window.history.replaceState({}, document.title, '/reset-password');
         } else {
-          // Pas de tokens dans l'URL - vérifier s'il y a déjà une session active
+          // Pas de tokens dans l'URL - DEUX POSSIBILITÉS :
+          // 1. Lien Supabase natif → callback automatique établit session
+          // 2. Accès direct → vérifier session existante
           console.log('🔍 Pas de tokens recovery - vérification session existante...');
           
           const { data: { session }, error: sessionError } = await supabase.auth.getSession();
