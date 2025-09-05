@@ -1,10 +1,7 @@
 /**
- * 🚀 PAGE DE CALLBACK NATIVE SUPABASE
+ * 🚀 PAGE DE CALLBACK NATIVE SUPABASE - VERSION CORRIGÉE
  * 
- * Approche SIMPLE : Utiliser UNIQUEMENT les fonctions natives Supabase
- * - Pas de logique complexe
- * - Pas de gestionnaire personnalisé
- * - JUSTE les fonctions Supabase standards
+ * Gestion correcte des magic links et reset password avec établissement de session
  */
 
 import React, { useEffect, useState } from 'react';
@@ -28,57 +25,98 @@ const NativeAuthCallbackPage = () => {
       try {
         console.log('🔄 NativeAuthCallbackPage - URL complète:', window.location.href);
         
-        // APPROCHE SIMPLE : Laisser Supabase gérer automatiquement
-        // Supabase détecte automatiquement les paramètres et établit la session
+        // Vérifier les paramètres URL
+        const params = new URLSearchParams(window.location.search);
+        const accessToken = params.get('access_token');
+        const refreshToken = params.get('refresh_token');
+        const type = params.get('type');
         
-        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-        console.log('🔄 Session après callback:', session);
+        console.log('🔄 Paramètres détectés:', { 
+          accessToken: !!accessToken, 
+          refreshToken: !!refreshToken, 
+          type 
+        });
         
-        if (sessionError) {
-          console.log('🔄 Erreur de session:', sessionError);
-          setError('Erreur lors de la récupération de la session');
-          return;
-        }
-        
-        if (session) {
-          console.log('🔄 Session trouvée, connexion réussie');
-          setSuccess(true);
+        if (accessToken && refreshToken) {
+          console.log('🔄 Tokens détectés, établissement session...');
           
-          toast({
-            title: "Connexion réussie !",
-            description: "Vous êtes maintenant connecté",
-            variant: "default"
+          // Établir la session avec les tokens
+          const { data, error: sessionError } = await supabase.auth.setSession({
+            access_token: accessToken,
+            refresh_token: refreshToken
           });
           
-          // Redirection vers le profil
-          setTimeout(() => {
-            navigate('/profile', { replace: true });
-          }, 2000);
-        } else {
-          console.log('🔄 Pas de session trouvée, attente...');
+          if (sessionError) {
+            console.error('❌ Erreur établissement session:', sessionError);
+            setError('Lien invalide ou expiré');
+            setLoading(false);
+            return;
+          }
           
-          // Attendre un peu et réessayer (Supabase peut prendre du temps)
-          setTimeout(async () => {
-            const { data: { session: retrySession } } = await supabase.auth.getSession();
+          if (data.session) {
+            console.log('✅ Session établie avec succès pour:', data.session.user.email);
+            setSuccess(true);
             
-            if (retrySession) {
-              console.log('🔄 Session trouvée après retry');
-              setSuccess(true);
-              
-              toast({
-                title: "Connexion réussie !",
-                description: "Vous êtes maintenant connecté",
-                variant: "default"
-              });
-              
-              setTimeout(() => {
-                navigate('/profile', { replace: true });
-              }, 1000);
-            } else {
-              console.log('🔄 Pas de session après retry');
-              setError('Lien d\'authentification invalide ou expiré');
+            // Déterminer la redirection selon le type
+            let redirectPath = '/profile';
+            let message = 'Connexion magique réussie ! ✨';
+            
+            if (type === 'recovery') {
+              redirectPath = '/reset-password';
+              message = 'Redirection vers le formulaire de réinitialisation...';
             }
-          }, 2000);
+            
+            toast({
+              title: message,
+              description: "Vous êtes maintenant connecté",
+              variant: "default"
+            });
+            
+            // Nettoyer l'URL des paramètres
+            window.history.replaceState({}, document.title, redirectPath);
+            
+            // Redirection
+            setTimeout(() => {
+              navigate(redirectPath, { replace: true });
+            }, 2000);
+          } else {
+            console.error('❌ Pas de session dans la réponse');
+            setError('Erreur lors de l\'authentification');
+          }
+        } else {
+          console.log('🔄 Pas de tokens - vérification session existante...');
+          
+          // Vérifier s'il y a déjà une session active
+          const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+          
+          if (sessionError) {
+            console.log('❌ Erreur récupération session:', sessionError);
+            setError('Erreur lors de la récupération de la session');
+            setLoading(false);
+            return;
+          }
+          
+          if (session) {
+            console.log('✅ Session existante trouvée');
+            setSuccess(true);
+            
+            toast({
+              title: "Déjà connecté !",
+              description: "Redirection vers votre profil...",
+              variant: "default"
+            });
+            
+            setTimeout(() => {
+              navigate('/profile', { replace: true });
+            }, 1000);
+          } else {
+            console.log('⚠️ Aucune session - redirection vers auth');
+            setError('Lien invalide ou expiré');
+            
+            setTimeout(() => {
+              navigate('/auth', { replace: true });
+            }, 3000);
+          }
         }
         
       } catch (err: any) {
@@ -98,31 +136,18 @@ const NativeAuthCallbackPage = () => {
       <div className="min-h-screen bg-gradient-alpine relative overflow-hidden">
         <div className="absolute inset-0 bg-black/20" />
         
-        <div className="relative container mx-auto px-4 min-h-screen flex items-center justify-center">
-          <div className="w-full max-w-md">
-            <Card className="border-0 shadow-2xl bg-white/95 backdrop-blur-sm">
-              <CardContent className="p-8 text-center">
-                <div className="flex items-center justify-center mb-4">
-                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                </div>
-                <h2 className="text-xl font-semibold text-gray-800 mb-2">
-                  Authentification en cours...
-                </h2>
-                <p className="text-gray-600">
-                  Utilisation des fonctions natives Supabase.
-                </p>
-                
-                {/* Debug en développement */}
-                {process.env.NODE_ENV === 'development' && (
-                  <div className="mt-4 p-3 bg-gray-50 rounded-md text-xs text-left">
-                    <p><strong>URL:</strong> {window.location.href}</p>
-                    <p><strong>Search:</strong> {window.location.search}</p>
-                    <p><strong>Hash:</strong> {window.location.hash}</p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </div>
+        <div className="relative z-10 min-h-screen flex items-center justify-center p-6">
+          <Card className="w-full max-w-md">
+            <CardHeader className="text-center">
+              <div className="mx-auto mb-4 w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center">
+                <Loader2 className="h-8 w-8 text-orange-600 animate-spin" />
+              </div>
+              <CardTitle>Authentification en cours...</CardTitle>
+              <CardDescription>
+                Nous traitons votre demande d'authentification
+              </CardDescription>
+            </CardHeader>
+          </Card>
         </div>
       </div>
     );
@@ -134,90 +159,52 @@ const NativeAuthCallbackPage = () => {
       <div className="min-h-screen bg-gradient-alpine relative overflow-hidden">
         <div className="absolute inset-0 bg-black/20" />
         
-        <div className="relative container mx-auto px-4 min-h-screen flex items-center justify-center">
-          <div className="w-full max-w-md">
-            <Card className="border-0 shadow-2xl bg-white/95 backdrop-blur-sm">
-              <CardHeader className="text-center">
-                <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <CheckCircle className="h-8 w-8 text-green-600" />
-                </div>
-                <CardTitle className="text-2xl text-green-700">
-                  Connexion réussie !
-                </CardTitle>
-                <CardDescription>
-                  Vous allez être redirigé vers votre profil.
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Button
-                  onClick={() => navigate('/profile')}
-                  className="w-full bg-primary hover:bg-primary/90"
-                >
-                  Aller au profil maintenant
-                </Button>
-              </CardContent>
-            </Card>
-          </div>
+        <div className="relative z-10 min-h-screen flex items-center justify-center p-6">
+          <Card className="w-full max-w-md">
+            <CardHeader className="text-center">
+              <div className="mx-auto mb-4 w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
+                <CheckCircle className="h-8 w-8 text-green-600" />
+              </div>
+              <CardTitle>Connexion réussie ! ✨</CardTitle>
+              <CardDescription>
+                Vous êtes maintenant connecté. Redirection en cours...
+              </CardDescription>
+            </CardHeader>
+          </Card>
         </div>
       </div>
     );
   }
 
   // État d'erreur
-  if (error) {
-    return (
-      <div className="min-h-screen bg-gradient-alpine relative overflow-hidden">
-        <div className="absolute inset-0 bg-black/20" />
-        
-        <div className="absolute top-6 left-6 z-10">
-          <Button
-            variant="ghost"
-            className="text-white hover:bg-white/10"
-            onClick={() => navigate('/auth')}
-          >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Retour à la connexion
-          </Button>
-        </div>
-
-        <div className="relative container mx-auto px-4 min-h-screen flex items-center justify-center">
-          <div className="w-full max-w-md">
-            <Card className="border-0 shadow-2xl bg-white/95 backdrop-blur-sm">
-              <CardHeader className="text-center">
-                <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <AlertCircle className="h-8 w-8 text-red-600" />
-                </div>
-                <CardTitle className="text-2xl text-red-700">
-                  Erreur d'authentification
-                </CardTitle>
-                <CardDescription>
-                  {error}
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <Button
-                  onClick={() => navigate('/auth')}
-                  className="w-full bg-primary hover:bg-primary/90"
-                >
-                  Retour à la connexion
-                </Button>
-                
-                <Button
-                  onClick={() => navigate('/auth?tab=reset')}
-                  variant="outline"
-                  className="w-full"
-                >
-                  Demander un nouveau lien
-                </Button>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
+  return (
+    <div className="min-h-screen bg-gradient-alpine relative overflow-hidden">
+      <div className="absolute inset-0 bg-black/20" />
+      
+      <div className="relative z-10 min-h-screen flex items-center justify-center p-6">
+        <Card className="w-full max-w-md">
+          <CardHeader className="text-center">
+            <div className="mx-auto mb-4 w-16 h-16 bg-red-100 rounded-full flex items-center justify-center">
+              <AlertCircle className="h-8 w-8 text-red-600" />
+            </div>
+            <CardTitle>Erreur d'authentification</CardTitle>
+            <CardDescription>
+              {error || "Une erreur s'est produite lors de l'authentification"}
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="text-center">
+            <Button 
+              onClick={() => navigate('/auth', { replace: true })}
+              className="w-full"
+            >
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Retour à la connexion
+            </Button>
+          </CardContent>
+        </Card>
       </div>
-    );
-  }
-
-  return null;
+    </div>
+  );
 };
 
 export default NativeAuthCallbackPage;

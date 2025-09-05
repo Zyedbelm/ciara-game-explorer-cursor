@@ -7,7 +7,7 @@
  * - Interface simple et claire
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -23,10 +23,71 @@ const NativeResetPasswordPage = () => {
   
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [sessionReady, setSessionReady] = useState(false);
   const [formData, setFormData] = useState({
     password: '',
     confirmPassword: ''
   });
+
+  // Vérifier et établir la session au chargement
+  useEffect(() => {
+    const handleAuthCallback = async () => {
+      try {
+        console.log('🔐 Vérification session reset password - URL:', window.location.href);
+        
+        // Vérifier les paramètres URL pour les tokens
+        const params = new URLSearchParams(window.location.search);
+        const accessToken = params.get('access_token');
+        const refreshToken = params.get('refresh_token');
+        const type = params.get('type');
+        
+        if (accessToken && refreshToken && type === 'recovery') {
+          console.log('🔐 Tokens de recovery détectés, établissement session...');
+          
+          // Établir la session avec les tokens
+          const { data, error } = await supabase.auth.setSession({
+            access_token: accessToken,
+            refresh_token: refreshToken
+          });
+          
+          if (error) {
+            console.error('❌ Erreur établissement session:', error);
+            toast({
+              title: "Erreur",
+              description: "Lien de réinitialisation invalide ou expiré",
+              variant: "destructive"
+            });
+            navigate('/auth', { replace: true });
+            return;
+          }
+          
+          console.log('✅ Session établie avec succès');
+          setSessionReady(true);
+          
+          // Nettoyer l'URL des paramètres
+          window.history.replaceState({}, document.title, '/reset-password');
+        } else {
+          console.log('⚠️ Aucun token de recovery - redirection vers auth');
+          toast({
+            title: "Accès refusé",
+            description: "Veuillez utiliser le lien de réinitialisation de votre email",
+            variant: "destructive"
+          });
+          navigate('/auth', { replace: true });
+        }
+      } catch (err) {
+        console.error('❌ Erreur callback:', err);
+        toast({
+          title: "Erreur",
+          description: "Problème lors de la validation du lien",
+          variant: "destructive"
+        });
+        navigate('/auth', { replace: true });
+      }
+    };
+    
+    handleAuthCallback();
+  }, [navigate, toast]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData(prev => ({
@@ -60,9 +121,19 @@ const NativeResetPasswordPage = () => {
     setLoading(true);
     
     try {
-      console.log('🔐 Tentative de mise à jour du mot de passe avec Supabase natif');
+      if (!sessionReady) {
+        throw new Error('Session non établie. Veuillez utiliser le lien de votre email.');
+      }
       
-      // UTILISER LA FONCTION NATIVE SUPABASE
+      console.log('🔐 Tentative de mise à jour du mot de passe...');
+      
+      // Vérifier que nous avons bien une session active
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        throw new Error('Session expirée. Veuillez demander un nouveau lien.');
+      }
+      
+      // Mettre à jour le mot de passe
       const { error } = await supabase.auth.updateUser({
         password: formData.password
       });
