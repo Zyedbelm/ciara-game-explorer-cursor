@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -17,6 +17,9 @@ import { useNavigate } from 'react-router-dom';
 import { useCitySlug } from '@/hooks/useCitySlug';
 import JourneyGeneratorModal from '@/components/ai/JourneyGeneratorModal';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
+import RewardsNotificationBadge from '@/components/common/RewardsNotificationBadge';
 
 interface QuickAction {
   id: string;
@@ -32,6 +35,39 @@ const SimplifiedNav: React.FC = () => {
   const navigate = useNavigate();
   const citySlug = useCitySlug();
   const isMobile = useIsMobile();
+  const { profile } = useAuth();
+  const [pendingRewardsCount, setPendingRewardsCount] = useState(0);
+
+  // Récupérer le compteur de bons en attente
+  useEffect(() => {
+    const getPendingRewardsCount = async () => {
+      if (!profile?.user_id) {
+        setPendingRewardsCount(0);
+        return;
+      }
+
+      try {
+        const { count, error } = await supabase
+          .from('reward_redemptions')
+          .select('*', { count: 'exact', head: true })
+          .eq('user_id', profile.user_id)
+          .eq('status', 'pending');
+
+        if (error) {
+          console.error('Error fetching pending rewards count:', error);
+          setPendingRewardsCount(0);
+          return;
+        }
+
+        setPendingRewardsCount(count || 0);
+      } catch (error) {
+        console.error('Error fetching pending rewards count:', error);
+        setPendingRewardsCount(0);
+      }
+    };
+
+    getPendingRewardsCount();
+  }, [profile?.user_id]);
 
   const quickActions: QuickAction[] = [
     {
@@ -106,12 +142,15 @@ const SimplifiedNav: React.FC = () => {
           >
             <CardContent className="p-3 sm:p-4">
               <div className="flex items-start gap-3">
-                <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center ${
+                <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center relative ${
                   action.variant === 'default' ? 'bg-primary/20 text-primary' :
                   action.variant === 'accent' ? 'bg-accent/20 text-accent-foreground' :
                   'bg-muted text-muted-foreground'
                 }`}>
                   {action.icon}
+                  {action.id === 'rewards' && (
+                    <RewardsNotificationBadge count={pendingRewardsCount} className="absolute -top-1 -right-1" />
+                  )}
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">

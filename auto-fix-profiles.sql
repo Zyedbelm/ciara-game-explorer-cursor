@@ -181,3 +181,5 @@ BEGIN
     RAISE NOTICE 'Vous pouvez maintenant tester le système d''emails.';
 END $$;
 
+
+

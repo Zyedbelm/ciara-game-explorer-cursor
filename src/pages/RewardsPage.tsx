@@ -344,10 +344,10 @@ const RewardsPage = () => {
 
       const transformedRewards = data.map(reward => ({
         ...reward,
-        partner: {
+        partner: reward.partners ? {
           ...reward.partners,
           city: reward.partners.cities
-        }
+        } : null
       }));
 
       setRewards(transformedRewards);
@@ -418,7 +418,7 @@ const RewardsPage = () => {
           ...redemption.reward,
           partner: {
             ...redemption.reward.partner,
-            city: redemption.reward.partner.cities
+            city: redemption.reward.partner?.cities
           }
         } : null;
         
@@ -605,9 +605,9 @@ const RewardsPage = () => {
           body: {
             voucherId: redemption.id,
             redemptionCode: redemption.redemption_code,
-            partnerEmail: redemption.reward.partner.email,
-            partnerName: redemption.reward.partner.name,
-            partnerAddress: redemption.reward.partner.address,
+            partnerEmail: redemption.reward.partner?.email,
+            partnerName: redemption.reward.partner?.name || 'Partenaire non défini',
+            partnerAddress: redemption.reward.partner?.address,
             rewardTitle: redemption.reward.title,
             rewardDescription: redemption.reward.description,
             pointsSpent: redemption.points_spent,
@@ -717,20 +717,19 @@ const RewardsPage = () => {
 
   // Filter rewards based on geographical selection and search
   const filteredRewards = rewards.filter(reward => {
-    // Vérifier que le partenaire existe
-    if (!reward.partner) return false;
+    // SUPPRIMÉ: if (!reward.partner) return false; - Les récompenses peuvent exister sans partenaire
     
     const matchesSearch = !searchTerm || 
       reward.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       reward.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      reward.partner.name.toLowerCase().includes(searchTerm.toLowerCase());
+      (reward.partner?.name && reward.partner.name.toLowerCase().includes(searchTerm.toLowerCase()));
 
     // Filtrage géographique - si aucune ville sélectionnée, montrer toutes les récompenses
     const matchesCountry = selectedCountry === 'all' || 
-      (reward.partner.city?.country_id && reward.partner.city.country_id === selectedCountry);
+      (reward.partner?.city?.country_id && reward.partner.city.country_id === selectedCountry);
     
     const matchesCity = selectedCity === 'all' || 
-      (reward.partner.city_id && reward.partner.city_id === selectedCity);
+      (reward.partner?.city_id && reward.partner.city_id === selectedCity);
 
     return matchesSearch && matchesCountry && matchesCity;
   });
@@ -801,10 +800,20 @@ const RewardsPage = () => {
             </TabsTrigger>
             <TabsTrigger 
               value="earned" 
-              className="flex flex-col items-center justify-center p-2 space-y-1 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+              className="flex flex-col items-center justify-center p-2 space-y-1 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground relative"
               style={{ flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}
             >
-              <Trophy className="h-5 w-5 mb-1" />
+              <div className="relative">
+                <Trophy className="h-5 w-5 mb-1" />
+                {pendingRewardsCount > 0 && (
+                  <Badge 
+                    variant="destructive" 
+                    className="absolute -top-2 -right-2 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs font-bold animate-pulse"
+                  >
+                    {pendingRewardsCount > 99 ? '99+' : pendingRewardsCount}
+                  </Badge>
+                )}
+              </div>
               <span className="text-xs font-medium">
                 {currentLanguage === 'en' ? 'My Earned Rewards' : currentLanguage === 'de' ? 'Meine Verdienten Belohnungen' : 'Mes Récompenses Gagnées'}
               </span>
@@ -833,14 +842,14 @@ const RewardsPage = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredRewards.map((reward) => {
               const isAvailable = canRedeem(reward);
-              const hasGPSLocation = reward.partner.latitude && reward.partner.longitude;
+              const hasGPSLocation = reward.partner?.latitude && reward.partner?.longitude;
               
               const openGoogleMaps = () => {
-                if (reward.partner.latitude && reward.partner.longitude) {
+                if (reward.partner?.latitude && reward.partner?.longitude) {
                   // Use GPS coordinates if available
                   const url = `https://www.google.com/maps/dir/?api=1&destination=${reward.partner.latitude},${reward.partner.longitude}&travelmode=walking`;
                   window.open(url, '_blank');
-                } else if (reward.partner.address) {
+                } else if (reward.partner?.address) {
                   // Fallback to address
                   const url = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(reward.partner.address)}&travelmode=walking`;
                   window.open(url, '_blank');
@@ -862,10 +871,10 @@ const RewardsPage = () => {
                     <div className="flex items-center justify-between mb-4">
                       <div className="flex items-center gap-3">
                         <div className="w-12 h-12 bg-muted rounded-full flex items-center justify-center">
-                          {reward.partner.logo_url ? (
+                          {reward.partner?.logo_url ? (
                             <img 
                               src={reward.partner.logo_url} 
-                              alt={reward.partner.name}
+                              alt={reward.partner.name || 'Partenaire'}
                               className="w-8 h-8 object-contain"
                             />
                           ) : (
@@ -873,8 +882,8 @@ const RewardsPage = () => {
                           )}
                         </div>
                         <div>
-                          <h3 className="font-semibold">{reward.partner.name}</h3>
-                          <p className="text-sm text-muted-foreground">{reward.partner.category}</p>
+                          <h3 className="font-semibold">{reward.partner?.name || 'Partenaire non défini'}</h3>
+                          <p className="text-sm text-muted-foreground">{reward.partner?.category || 'Non spécifié'}</p>
                         </div>
                       </div>
                       {hasGPSLocation && (
@@ -893,13 +902,13 @@ const RewardsPage = () => {
                     
                     {/* Address and City Tag */}
                     <div className="space-y-2">
-                      {reward.partner.address && (
+                      {reward.partner?.address && (
                         <div className="flex items-center gap-2 text-xs text-muted-foreground truncate">
                           <MapPin className="h-3 w-3 flex-shrink-0" />
                           <span className="truncate">{reward.partner.address}</span>
                         </div>
                       )}
-                      {reward.partner.city ? (
+                      {reward.partner?.city ? (
                         <div className="flex items-center gap-2">
                           <Badge 
                             variant="outline" 
@@ -1005,7 +1014,7 @@ const RewardsPage = () => {
                             </div>
                             <div>
                               <h3 className="font-semibold text-sm">{redemption.reward.title}</h3>
-                              <p className="text-xs text-muted-foreground">{redemption.reward.partner.name}</p>
+                              <p className="text-xs text-muted-foreground">{redemption.reward.partner?.name || 'Partenaire non défini'}</p>
                             </div>
                           </div>
                           <Badge variant="secondary" className="bg-blue-100 text-blue-800 text-xs">
@@ -1110,7 +1119,7 @@ const RewardsPage = () => {
                                   </div>
                                   <div>
                                     <h3 className="font-semibold text-sm">{redemption.reward.title}</h3>
-                                    <p className="text-xs text-muted-foreground">{redemption.reward.partner.name}</p>
+                                    <p className="text-xs text-muted-foreground">{redemption.reward.partner?.name || 'Partenaire non défini'}</p>
                                   </div>
                                 </div>
                                 <Badge variant="default" className="bg-green-100 text-green-800 text-xs">
@@ -1200,7 +1209,7 @@ const RewardsPage = () => {
                                   </div>
                                   <div>
                                     <h3 className="font-semibold text-sm">{redemption.reward.title}</h3>
-                                    <p className="text-xs text-muted-foreground">{redemption.reward.partner.name}</p>
+                                    <p className="text-xs text-muted-foreground">{redemption.reward.partner?.name || 'Partenaire non défini'}</p>
                                   </div>
                                 </div>
                                 <Badge variant="destructive" className="text-xs">

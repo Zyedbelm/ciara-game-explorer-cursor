@@ -75,3 +75,5 @@ console.log('🔧 SUPPORT:');
 console.log('Si vous rencontrez des problèmes, partagez les logs du webhook');
 console.log('et les résultats des scripts SQL pour diagnostic immédiat.');
 
+
+

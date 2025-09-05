@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import {
@@ -14,6 +14,8 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/hooks/useAuth';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { supabase } from '@/integrations/supabase/client';
+import RewardsNotificationBadge from '@/components/common/RewardsNotificationBadge';
 import {
   User,
   Settings,
@@ -36,6 +38,38 @@ const UserMenu: React.FC<UserMenuProps> = ({ variant = 'default' }) => {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   const isTransparent = variant === 'transparent';
+  const [pendingRewardsCount, setPendingRewardsCount] = useState(0);
+
+  // Récupérer le compteur de bons en attente
+  useEffect(() => {
+    const getPendingRewardsCount = async () => {
+      if (!profile?.user_id) {
+        setPendingRewardsCount(0);
+        return;
+      }
+
+      try {
+        const { count, error } = await supabase
+          .from('reward_redemptions')
+          .select('*', { count: 'exact', head: true })
+          .eq('user_id', profile.user_id)
+          .eq('status', 'pending');
+
+        if (error) {
+          console.error('Error fetching pending rewards count:', error);
+          setPendingRewardsCount(0);
+          return;
+        }
+
+        setPendingRewardsCount(count || 0);
+      } catch (error) {
+        console.error('Error fetching pending rewards count:', error);
+        setPendingRewardsCount(0);
+      }
+    };
+
+    getPendingRewardsCount();
+  }, [profile?.user_id]);
 
   // Show loading state to prevent flash
   if (loading) {
@@ -163,9 +197,12 @@ const UserMenu: React.FC<UserMenuProps> = ({ variant = 'default' }) => {
         </DropdownMenuItem>
         
         <DropdownMenuItem asChild>
-          <Link to="/rewards" className="flex items-center">
-            <Trophy className="mr-2 h-4 w-4" />
-            <span>{t('rewards')}</span>
+          <Link to="/rewards" className="flex items-center justify-between w-full">
+            <div className="flex items-center">
+              <Trophy className="mr-2 h-4 w-4" />
+              <span>{t('rewards')}</span>
+            </div>
+            <RewardsNotificationBadge count={pendingRewardsCount} />
           </Link>
         </DropdownMenuItem>
 
