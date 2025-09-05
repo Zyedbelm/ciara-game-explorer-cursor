@@ -106,9 +106,12 @@ const AuthPage = () => {
     setResetLoading(true);
     
     try {
-      // UTILISER LA FONCTION NATIVE SUPABASE
-      const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
-        redirectTo: `${window.location.origin}/reset-password`
+      // UTILISER LA NOUVELLE EDGE FUNCTION CUSTOM
+      const { data, error } = await supabase.functions.invoke('send-password-reset-custom', {
+        body: {
+          email: resetEmail,
+          userName: '' // Sera récupéré automatiquement par la fonction
+        }
       });
       
       if (error) {
@@ -116,8 +119,8 @@ const AuthPage = () => {
       }
 
       toast({
-        title: "Email envoyé",
-        description: "Un lien de réinitialisation a été envoyé à votre adresse email. Vérifiez votre boîte de réception et cliquez sur le lien dans les 24h.",
+        title: "Email envoyé !",
+        description: "Un lien de réinitialisation a été envoyé à votre adresse email. Vérifiez votre boîte de réception et cliquez sur le lien dans l'heure qui suit.",
         variant: "default"
       });
       
@@ -148,11 +151,11 @@ const AuthPage = () => {
     setMagicLinkLoading(true);
     
     try {
-      // UTILISER LA FONCTION NATIVE SUPABASE
-      const { error } = await supabase.auth.signInWithOtp({
-        email: resetEmail,
-        options: {
-          emailRedirectTo: `${window.location.origin}/profile`
+      // UTILISER LA NOUVELLE EDGE FUNCTION CUSTOM
+      const { data, error } = await supabase.functions.invoke('send-magic-link-custom', {
+        body: {
+          email: resetEmail,
+          userName: '' // Sera récupéré automatiquement par la fonction
         }
       });
 
@@ -161,8 +164,8 @@ const AuthPage = () => {
       }
 
       toast({
-        title: t('magic_link_sent'),
-        description: t('check_email_magic_link'),
+        title: "Magic Link envoyé ✨",
+        description: "Un lien magique a été envoyé à votre adresse email. Cliquez dessus pour vous connecter instantanément !",
         variant: "default"
       });
       

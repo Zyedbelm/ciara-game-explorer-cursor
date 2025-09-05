@@ -29,6 +29,12 @@ verify_jwt = false
 [functions.send-journey-completion]
 verify_jwt = true
 
+[functions.send-password-reset-custom]
+verify_jwt = false
+
+[functions.send-magic-link-custom]
+verify_jwt = false
+
 # Configuration API sécurisée
 [api]
 # Port to use for the API URL.
