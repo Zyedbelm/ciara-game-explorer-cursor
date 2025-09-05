@@ -25,11 +25,34 @@ const NativeAuthCallbackPage = () => {
       try {
         console.log('🔄 NativeAuthCallbackPage - URL complète:', window.location.href);
         
-        // Vérifier les paramètres URL
+        // Vérifier d'abord les erreurs dans le hash
+        const hashParams = new URLSearchParams(window.location.hash.substring(1));
+        const hashError = hashParams.get('error');
+        const errorCode = hashParams.get('error_code');
+        
+        if (hashError) {
+          console.error('❌ Erreur dans le hash:', { hashError, errorCode });
+          let errorMessage = "Lien d'authentification invalide";
+          if (errorCode === 'otp_expired') {
+            errorMessage = "Le lien d'authentification a expiré";
+          }
+          setError(errorMessage);
+          setLoading(false);
+          return;
+        }
+        
+        // Vérifier les paramètres URL (query params puis hash)
         const params = new URLSearchParams(window.location.search);
-        const accessToken = params.get('access_token');
-        const refreshToken = params.get('refresh_token');
-        const type = params.get('type');
+        let accessToken = params.get('access_token');
+        let refreshToken = params.get('refresh_token');
+        let type = params.get('type');
+        
+        // Si pas de tokens dans query params, vérifier dans le hash
+        if (!accessToken && !refreshToken) {
+          accessToken = hashParams.get('access_token');
+          refreshToken = hashParams.get('refresh_token');
+          type = hashParams.get('type');
+        }
         
         console.log('🔄 Paramètres détectés:', { 
           accessToken: !!accessToken, 

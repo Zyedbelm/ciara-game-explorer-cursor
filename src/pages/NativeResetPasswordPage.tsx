@@ -35,11 +35,43 @@ const NativeResetPasswordPage = () => {
       try {
         console.log('🔐 Vérification session reset password - URL:', window.location.href);
         
-        // Vérifier les paramètres URL pour les tokens
+        // Vérifier d'abord les erreurs dans le hash
+        const hashParams = new URLSearchParams(window.location.hash.substring(1));
+        const hashError = hashParams.get('error');
+        const errorCode = hashParams.get('error_code');
+        const errorDescription = hashParams.get('error_description');
+        
+        if (hashError) {
+          console.error('❌ Erreur dans le hash:', { hashError, errorCode, errorDescription });
+          
+          let errorMessage = "Lien de réinitialisation invalide";
+          if (errorCode === 'otp_expired') {
+            errorMessage = "Le lien de réinitialisation a expiré. Veuillez en demander un nouveau.";
+          } else if (hashError === 'access_denied') {
+            errorMessage = "Lien de réinitialisation invalide ou déjà utilisé.";
+          }
+          
+          toast({
+            title: "Lien expiré",
+            description: errorMessage,
+            variant: "destructive"
+          });
+          navigate('/auth', { replace: true });
+          return;
+        }
+        
+        // Vérifier les paramètres URL pour les tokens (query params)
         const params = new URLSearchParams(window.location.search);
-        const accessToken = params.get('access_token');
-        const refreshToken = params.get('refresh_token');
-        const type = params.get('type');
+        let accessToken = params.get('access_token');
+        let refreshToken = params.get('refresh_token');
+        let type = params.get('type');
+        
+        // Si pas de tokens dans query params, vérifier dans le hash
+        if (!accessToken && !refreshToken) {
+          accessToken = hashParams.get('access_token');
+          refreshToken = hashParams.get('refresh_token');
+          type = hashParams.get('type');
+        }
         
         if (accessToken && refreshToken && type === 'recovery') {
           console.log('🔐 Tokens de recovery détectés, établissement session...');
@@ -64,7 +96,7 @@ const NativeResetPasswordPage = () => {
           console.log('✅ Session établie avec succès');
           setSessionReady(true);
           
-          // Nettoyer l'URL des paramètres
+          // Nettoyer l'URL des paramètres (query et hash)
           window.history.replaceState({}, document.title, '/reset-password');
         } else {
           console.log('⚠️ Aucun token de recovery - redirection vers auth');
